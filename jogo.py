@@ -56,15 +56,6 @@ LABELS = {
     'C': 'Opção C',
 }
 
-# Guardado aqui para referência futura, mas não está sendo usado no login agora!
-SENHAS = {
-    "👑 Painel Apresentador": "mestre123",
-    "📈 Telão (Bolsa)": "telao123",
-    "Empresa Alfa": "alfa",
-    "Empresa Beta": "beta",
-    "Empresa Gama": "gama"
-}
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. Auditoria Final Automatizada (Estrutura de Consequências Financeiras)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -105,40 +96,16 @@ def aplicar_auditoria_final():
         d["precos"].append(round(valor_final, 2))
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. Fluxo de Autenticação Simplificado (MODO DE TESTE - SEM SENHA)
+# 5. Seletor de Perfil na Barra Lateral (MODO DE TESTE LIVRE - SEM BLOQUEIOS)
 # ─────────────────────────────────────────────────────────────────────────────
-if "usuario_logado" not in st.session_state:
-    st.session_state["usuario_logado"] = None
+# O perfil agora é escolhido direto na barra lateral. Sem telas intermediárias ou travas.
+perfil = st.sidebar.selectbox(
+    "👤 Alternar Visão (Modo Dev):", 
+    ["Empresa Alfa", "Empresa Beta", "Empresa Gama", "👑 Painel Apresentador", "📈 Telão (Bolsa)"]
+)
 
-if st.session_state["usuario_logado"] is None:
-    st.title("🔓 Simulador de Governança (Acesso Livre)")
-    st.markdown("Selecione o perfil desejado para entrar diretamente.")
-    
-    perfil_escolhido = st.selectbox(
-        "Quem está acessando?", 
-        ["Escolha uma opção...", "Empresa Alfa", "Empresa Beta", "Empresa Gama", "👑 Painel Apresentador", "📈 Telão (Bolsa)"]
-    )
-    
-    if perfil_escolhido != "Escolha uma opção...":
-        # Removido o campo de senha temporariamente para agilizar os seus testes
-        if st.button("🚪 Entrar no Simulador", use_container_width=True):
-            st.session_state["usuario_logado"] = perfil_escolhido 
-            st.success(f"Conectando como {perfil_escolhido}...")
-            st.rerun() 
-            
-    st.stop() 
-
-perfil = st.session_state["usuario_logado"]
-
-# Menu superior de controle de sessão
-col_perfil, col_logout = st.columns([6, 1])
-with col_perfil:
-    st.markdown(f"**Conectado como:** `{perfil}`")
-with col_logout:
-    if st.button("🚪 Sair", use_container_width=True):
-        st.session_state["usuario_logado"] = None 
-        st.rerun()
-st.markdown("---")
+st.sidebar.markdown("---")
+st.sidebar.info("💡 Troque de perfil acima para testar o sistema instantaneamente.")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # VISÃO DO ALUNO: EXIBIÇÃO DIRETA DAS INFORMAÇÕES E RÁDIO LIMPO
@@ -181,7 +148,7 @@ Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado s
                 st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 2")
                 st.subheader("🔍 Reconhecimento de Receitas e Franchising (CPC 47 / IFRS 15)")
                 
-                st.warning("""Para acelerar a expansão, a companhia venda 50 novas franquias master. No ato da assinatura dos contratos, recebeu um montante expressivo a título de 'Taxa de Franquia Inicial' para transferência de know-how e treinamento de abertura. 
+                st.warning("""Para acelerar a expansão, a companhia vendeu 50 novas franquias master. No ato da assinatura dos contratos, recebeu um montante expressivo a título de 'Taxa de Franquia Inicial' para transferência de know-how e treinamento de abertura. 
 
 A Diretoria Comercial quer reconhecer 100% dessa receita imediatamente neste exercício para bater a meta de faturamento e valorizar as ações. No entanto, o CPC 47 exige avaliar se as obrigações de desempenho são cumpridas ao longo do tempo da franquia (5 anos) ou em um momento específico.""")
                 
@@ -220,14 +187,11 @@ A administração é confrontada a realizar o Teste de Impairment. Reconhecer a 
             
             if st.button("🗳️ Homologar Resolução em Ata", key=f"b_{empresa_atual}_{rodada}", use_container_width=True):
                 d[f"voto_r{rodada}"] = escolha
-                st.success("Voto computado em ata! Aguardando o encerramento da rodada pelo mestre.")
+                st.success("Voto computado em ata! Alterne para o 'Painel Apresentador' para rodar o mercado.")
                 st.rerun()
         else:
             st.success(f"✅ Resolução homologada com sucesso para o Período {rodada}!\n\n**Posicionamento escolhido:** {LABELS[d[f'voto_r{rodada}']]}")
             st.info("⏳ Aguardando o encerramento do período de deliberação global pelo Painel de Controle.")
-            
-            if st.button("🔄 Sincronizar Status com o Servidor", use_container_width=True):
-                st.rerun()
 
     elif rodada == 4:
         st.markdown("### ⚖️ RELATÓRIO DE ASSEGURAÇÃO DOS AUDITORES INDEPENDENTES")
@@ -314,7 +278,7 @@ elif perfil == "📈 Telão (Bolsa)":
 
     fig, ax = plt.subplots(figsize=(11, 4))
     rotulos_eixo = ["Abertura", "Exercício 1", "Exercício 2", "Exercício 3", "Veredito"]
-    cores = ["#1976D2", "#388E3C", "#F57C00"]
+    cores = ["#1976D2", "#388E3C", "#F57F00"]
     for i, (nome, d) in enumerate(db.dados_empresas.items()):
         x = rotulos_eixo[: len(d["precos"])]
         ax.plot(x, d["precos"], marker="o", linewidth=2.5, label=nome, color=cores[i])
