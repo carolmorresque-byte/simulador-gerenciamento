@@ -130,17 +130,22 @@ if perfil in EMPRESAS:
             if rodada == 1:
                 st.warning(
                     "**🏬 CENÁRIO RISCO SACADO:**\n\n"
-                    "O encerramento do ano fiscal se aproxima. O volume de compras da sua rede varejista cresceu "
-                    "organicamente devido à abertura de novas lojas, o que gerou um aumento natural nas contas "
-                    "de estoques e fornecedores. Contudo, para financiar essa operação sem queimar caixa imediato, "
-                    "o CFO utilizou intensamente operações de risco sacado, acumulando um saldo de R$ 1,2 bilhão "
-                    "com o banco Épsilon.\n\n"
-                    "O board exige que o índice de alavancagem (Dívida Líquida / EBITDA) permaneça abaixo de 3x "
-                    "para evitar a quebra de covenants restritivos. Se vocês reclassificarem essa operação como "
-                    "dívida financeira bancária, o índice vai para 4,2x, disparando o vencimento antecipado das "
-                    "debêntures da empresa. O grande debate na diretoria é se a extensão de prazos obtida com os "
-                    "bancos configura um passivo operacional puro ou uma decisão gerencial de financiamento."
-                )
+                   "A nossa rede varejista encerra o período enfrentando um forte aperto de liquidez. Como solução de fôlego operacional, "
+    "o CFO intensificou as operações de risco sacado com o banco Épsilon. O mecanismo permitiu que os fornecedores "
+    "antecipassem os recebíveis com o banco, enquanto a nossa empresa ganhou prazo para pagar, arcando com juros embutidos na transação. "
+    "Na realidade atual do negócio, essa operação tornou-se vital: se não utilizássemos o risco sacado, os fornecedores não "
+    "teriam capital de giro para nos abastecer e a empresa ficaria sem produtos para preencher as gôndolas.\n\n"
+    "Com o saldo acumulado da operação batendo a marca de R$ 1,2 bilhão, a liderança se vê encurralada: o encerramento do ano fiscal se aproxima, "
+    "o conselho cobra o atingimento das metas corporativas de lucro e os limites contratuais (covenants) de endividamento estão no limite. "
+    "Se reclassificarmos essa operação como dívida financeira bancária, o índice vai para 4,2x, disparando o vencimento antecipado das "
+    "debêntures da empresa. Para piorar, os rumores de mercado acenderam o alerta no banco Épsilon, que já sinalizou que pode travar as "
+    "antecipações e exigir a liquidação imediata dos saldos vencidos caso o balanço mostre qualquer sinal de fragilidade.\n\n"
+    "O DILEMA:\n"
+    "Como o comitê executivo definirá o tratamento contábil dessa operação na DRE e no Balanço Patrimonial para o fechamento deste exercício, "
+    "sabendo que a decisão afetará diretamente o cumprimento das metas corporativas, o gatilho dos covenants e o risco de o banco Épsilon "
+    "cortar o oxigênio financeiro da companhia e desabastecer as lojas?"
+)
+        
                 
                 st.markdown("### 🔍 Detalhamento das Opções:")
                 
