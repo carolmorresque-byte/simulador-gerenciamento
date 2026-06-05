@@ -46,18 +46,19 @@ IMPACTOS = {
     3: {'A': 0.85, 'B': 1.10, 'C': 0.80},
 }
 
+# Alterado conforme image_6f3cbe.png para remover os gerenciamentos e manter limpo
 LABELS = {
-    'A': 'A — Sem Gerenciamento (Operacional)',
-    'B': 'B — Gerenciamento Técnico (CPC)',
-    'C': 'C — Gerenciamento Fraudulento',
+    'A': 'Opção A',
+    'B': 'Opção B',
+    'C': 'Opção C',
 }
 
 SENHAS = {
     "👑 Painel Apresentador": "mestre123",
     "📈 Telão (Bolsa)": "telao123",
-    "Empresa Alfa": "alfa123",
-    "Empresa Beta": "beta123",
-    "Empresa Gama": "gama123"
+    "Empresa Alfa": "alfa",
+    "Empresa Beta": "beta",
+    "Empresa Gama": "gama"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ if "usuario_logado" not in st.session_state:
 
 if st.session_state["usuario_logado"] is None:
     st.title("🔒 Simulador de Governança")
-    st.markdown("Selecione o seu perfil de acesso e insira a credencial definida pelo organizador.")
+    st.markdown("Selecione a sua empresa e insira o nome na senha.")
     
     perfil_escolhido = st.selectbox(
         "Quem está acessando?", 
@@ -123,7 +124,7 @@ if st.session_state["usuario_logado"] is None:
                 st.success("Conectando ao servidor...")
                 st.rerun()
             else:
-                st.error("❌ Senha incorreta. Verifique com o instrutor.")
+                st.error("❌ Senha incorreta. Verifique com o apresentador.")
     st.stop()
 
 perfil = st.session_state["usuario_logado"]
@@ -139,7 +140,7 @@ with col_logout:
 st.markdown("---")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# VISÃO DO ALUNO: FLUXO DE EXERCÍCIOS ATUALIZADO
+# VISÃO DO ALUNO: EXIBIÇÃO DIRETA DAS INFORMAÇÕES E RÁDIO LIMPO
 # ═════════════════════════════════════════════════════════════════════════════
 if perfil in EMPRESAS:
     empresa_atual = perfil
@@ -156,53 +157,47 @@ if perfil in EMPRESAS:
         if not voto_ja_realizado:
             
             if rodada == 1:
-                # Alterado para "Deliberação Estratégica — Exercício 1"
-                st.markdown("### 📋 Deliberação Estratégica — Exercício 1")
-                
-                # Alterado para "Questão de Liquidez: Operação de Risco Sacado"
+                st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 1")
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
                 st.warning(
-                    "A companhia encerrou o 4º trimestre sob pressões de liquidez em seu fluxo de caixa operacional. "
+                    "A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. "
                     "Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, "
                     "mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento "
                     "de passivos comerciais, com o pagamento dos juros embutidos.\n\n"
-                    "Sob a ótica operacional, a continuidade dessa estrutura mostrou-se essencial para garantir o abastecimento da malha "
-                    "logística e manter estoques reguladores durante a sazonalidade de vendas.\n\n"
-                    "Contudo, a governança e o planejamento financeiro permanecem limitados pelas diretrizes do Conselho, que impõem um "
-                    "teto de alavancagem financeira (Dívida Líquida/EBITDA) de 3,0x, como proteção contra cláusulas restritivas (covenants). "
-                    "Caso haja reclassificação compulsória dessa modalidade para endividamento bancário explícito, o indicador alcançaria 4,2x, "
-                    "deflagrando o vencimento antecipado das debêntures emitidas.\n\n"
-                    "**O debate técnico central gira em torno de:** Definir se a dilação de prazo obtida com os bancos configura um passivo operacional "
-                    "puro ou se representa uma decisão gerencial de financiamento."
+                    ""A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.\n\n"
+                   "Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:\n\n"
+
+    "**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. "
+    "O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.\n\n"
+
+    "Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. "
+    "Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.\n\n"
+    "**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
                 )
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
                 
-                # Exibição Aberta e Direta das Opções (Sem expander/clique)
-                st.markdown("#### 📌 Opção A — Reclassificação como Endividamento Financeiro Puro")
+               # Opção A
+                st.markdown("#### 📌 Opção A — Reclassificação como Dívida Financeira")
                 st.markdown("**Balanço Patrimonial (BP):** Empréstimos e Financiamentos (Passivo Financeiro)")
-                st.markdown("**DRE:** Despesas Financeiras (Resultado Financeiro, abaixo do EBITDA)")
-                st.markdown("**Justificativa:** A obrigação comercial original extinguiu-se quando o banco pagou o fornecedor à vista, transformando a operação em uma dívida bancária líquida e certa.")
-                st.markdown("**Impacto:** Alavancagem salta para 4,2x, gerando quebra imediata de covenants. O Lucro Líquido cai devido ao custo financeiro puro.")
-                
+                st.markdown("**DRE:** Despesas Financeiras (Resultado Financeiro)")
+                st.markdown("**Impacto:** A Dívida Líquida aumenta e a alavancagem alcança 4,2x, provocando o descumprimento do covenant financeiro previsto nos contratos de financiamento. Como consequência, a companhia pode enfrentar restrições de crédito, aumento do custo de captação e vencimento antecipado das dívidas.")
+
                 st.markdown("---")
-                
-                st.markdown("#### 📌 Opção B — Manutenção como Passivo Comercial Setorial")
+               # Opção B
+                st.markdown("#### 📌 Opção B — Manutenção como Passivo Operacional")
                 st.markdown("**Balanço Patrimonial (BP):** Fornecedores Conveniados / Risco Sacado (Passivo Operacional)")
-                st.markdown("**DRE:** Custo de Carregamento embutido diretamente no Custo das Mercadorias Vendidas (CMV, acima do EBITDA)")
-                st.markdown("**Justificativa:** A dilação de prazo reflete uma condição comercial setorial legítima, mantendo os riscos operacionais atrelados à cadeia produtiva de suprimentos.")
-                st.markdown("**Impacto:** Preservação da alavancagem em 3,0x, evitando o vencimento das debêntures, mas comprimindo a margem EBITDA devido ao CMV mais alto.")
-                
+                st.markdown("**DRE:** Encargos reconhecidos como Despesas Financeiras")
+                st.markdown("**Impacto:** A alavancagem permanece em 2,9x, preservando o cumprimento do covenant financeiro e evitando impactos imediatos nos contratos de financiamento. A decisão, entretanto, deverá ser adequadamente suportada e divulgada nas demonstrações financeiras.")
+
                 st.markdown("---")
                 
-                st.markdown("#### 📌 Opção C — Diferimento Consecutivo e Ocultação de Encargos")
-                st.markdown("**Balanço Patrimonial (BP):** Contas a Pagar Operacionais Comuns (Subavaliação do Passivo Exigível)")
-                st.markdown("**DRE:** Diferimento dos encargos financeiros com ativação artificial em Estoques (Acima do EBITDA)")
-                st.markdown("**Justificativa:** Prática agressiva de gerenciamento para ocultar temporariamente o custo real do capital de terceiros e inflar os indicadores de performance.")
-                st.markdown("**Impacto:** Manutenção artificial da alavancagem em 3,0x e inflamento cosmético do lucro, gerando severo risco de fraude e exposição regulatória.")
-                
-                st.markdown("---")
+               st.markdown("#### 📌 Opção C — Diferimento dos Encargos da Operação")
+                st.markdown("**Balanço Patrimonial (BP):** Contas Operacionais a Pagar")
+                st.markdown("**DRE:** Reconhecimento parcial ou diferido dos encargos associados à operação")
+                st.markdown("**Impacto:** Os indicadores financeiros permanecem mais favoráveis no curto prazo, com menor impacto sobre o resultado e a alavancagem. Entretanto, a decisão pode gerar questionamentos por parte da auditoria independente, investidores, credores e órgãos reguladores quanto à adequação do tratamento contábil adotado.")
+                                st.markdown("---")
 
             elif rodada == 2:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício 2")
@@ -211,7 +206,7 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício 3")
                 st.warning("**🏬 DILEMA ESTRATÉGICO: MENSURAÇÃO DE ATIVOS E IMPAIRMENT:** Teste de recuperabilidade de ativos de longo prazo e estoques obsoletos sob pressão macroeconômica (CPC 01 / IAS 36).")
 
-            # Componente de rádio atualizado com os nomes completos solicitados
+            # Botão de rádio limpo (Opção A, Opção B, Opção C)
             escolha = st.radio(
                 "Selecione a resolução estratégica da sua empresa:", 
                 ["A", "B", "C"],
