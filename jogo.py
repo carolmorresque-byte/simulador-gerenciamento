@@ -46,7 +46,7 @@ IMPACTOS = {
     3: {'A': 0.85, 'B': 1.10, 'C': 0.80},
 }
 
-# Alterado conforme image_6f3cbe.png para remover os gerenciamentos e manter limpo
+# Alterado para manter o layout limpo
 LABELS = {
     'A': 'Opção A',
     'B': 'Opção B',
@@ -160,6 +160,7 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 1")
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
+                # Bloco corrigido e alinhado conforme image_6d6341.png
                 st.warning(
                     "A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. "
                     "Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, "
@@ -171,7 +172,7 @@ if perfil in EMPRESAS:
                     "O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.\n\n"
                     "Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. "
                     "Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.\n\n"
-                    "**Sua decision:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
+                    "**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
                 )
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
