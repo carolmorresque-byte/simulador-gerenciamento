@@ -1,5 +1,6 @@
 import streamlit as st
 import matplotlib.pyplot as plt
+import time
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Configuração da Página (Mobile Friendly e Sem Menus Desnecessários)
@@ -8,9 +9,9 @@ st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", lay
 
 st.markdown("""
     <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;} 
+    footer {visibility: hidden;}    
+    header {visibility: hidden;}    
     </style>
     """, unsafe_allow_html=True)
 
@@ -19,12 +20,15 @@ st.markdown("""
 # ─────────────────────────────────────────────────────────────────────────────
 class BancoDadosMemoria:
     def __init__(self):
-        self.rodada_atual = 1
+        self.rodada_atual = 1 
         self.dados_empresas = {
             nome: {
-                "precos": [50.0],
-                "voto_r1": None, "voto_r2": None, "voto_r3": None,
-                "status": "Operando", "noticia_r4": "",
+                "precos": [50.0],  
+                "voto_r1": None,   
+                "voto_r2": None,   
+                "voto_r3": None,   
+                "status": "Operando", 
+                "noticia_r4": "",  
             }
             for nome in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
         }
@@ -52,6 +56,7 @@ LABELS = {
     'C': 'Opção C',
 }
 
+# Guardado aqui para referência futura, mas não está sendo usado no login agora!
 SENHAS = {
     "👑 Painel Apresentador": "mestre123",
     "📈 Telão (Bolsa)": "telao123",
@@ -76,7 +81,7 @@ def aplicar_auditoria_final():
         qtd_c = [v1, v2, v3].count('C')
 
         if qtd_c == 0:
-            valor_final = d["precos"][-1]
+            valor_final = d["precos"][-1] 
             if f"{v1}{v2}{v3}" == "BBB":
                 d["status"] = "🏆 EXCELÊNCIA TÉCNICA E ÉTICA"
                 d["noticia_r4"] = "🏆 **Adoção estrita do CPC/IFRS!** Governança corporativa robusta e transparência total com o mercado de capitais."
@@ -88,26 +93,26 @@ def aplicar_auditoria_final():
                 d["noticia_r4"] = "⚖️ **Governança preservada.** A entidade manteve conformidade ética ponderada por decisões conservadoras pontuais."
 
         elif qtd_c == 1:
-            valor_final = 10.00
+            valor_final = 10.00 
             d["status"] = "🚨 RECLASSIFICAÇÃO COMPULSÓRIA E INVESTIGAÇÃO"
             d["noticia_r4"] = "🚨 **Gerenciamento agressivo exposto.** Descoberta de inconformidade material nos demonstrativos. O Comitê de Auditoria e órgãos reguladores abriram inquérito."
 
         else:
-            valor_final = 1.00
+            valor_final = 1.00 
             d["status"] = "🚔 FRAUDE ESTRUTURAL: DEFAULT E LITISCONSÓRCIO"
             d["noticia_r4"] = "🚔 **Colapso reputacional e patrimonial.** Descoberta de manipulação dolosa continuada (*window dressing*). Executivos destituídos e responsabilizados legalmente. Ativos em liquidação judicial."
 
         d["precos"].append(round(valor_final, 2))
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 5. Fluxo de Autenticação Baseado em Sessão Local
+# 5. Fluxo de Autenticação Simplificado (MODO DE TESTE - SEM SENHA)
 # ─────────────────────────────────────────────────────────────────────────────
 if "usuario_logado" not in st.session_state:
     st.session_state["usuario_logado"] = None
 
 if st.session_state["usuario_logado"] is None:
-    st.title("🔒 Simulador de Governança")
-    st.markdown("Selecione a sua empresa e insira o nome na senha.")
+    st.title("🔓 Simulador de Governança (Acesso Livre)")
+    st.markdown("Selecione o perfil desejado para entrar diretamente.")
     
     perfil_escolhido = st.selectbox(
         "Quem está acessando?", 
@@ -115,26 +120,23 @@ if st.session_state["usuario_logado"] is None:
     )
     
     if perfil_escolhido != "Escolha uma opção...":
-        senha_digitada = st.text_input("Senha correspondente:", type="password")
-        
-        if st.button("🚪 Autenticar e Entrar", use_container_width=True):
-            if senha_digitada == SENHAS[perfil_escolhido]:
-                st.session_state["usuario_logado"] = perfil_escolhido
-                st.success("Conectando ao servidor...")
-                st.rerun()
-            else:
-                st.error("❌ Senha incorreta. Verifique com o apresentador.")
-    st.stop()
+        # Removido o campo de senha temporariamente para agilizar os seus testes
+        if st.button("🚪 Entrar no Simulador", use_container_width=True):
+            st.session_state["usuario_logado"] = perfil_escolhido 
+            st.success(f"Conectando como {perfil_escolhido}...")
+            st.rerun() 
+            
+    st.stop() 
 
 perfil = st.session_state["usuario_logado"]
 
-# Menu superior
+# Menu superior de controle de sessão
 col_perfil, col_logout = st.columns([6, 1])
 with col_perfil:
     st.markdown(f"**Conectado como:** `{perfil}`")
 with col_logout:
     if st.button("🚪 Sair", use_container_width=True):
-        st.session_state["usuario_logado"] = None
+        st.session_state["usuario_logado"] = None 
         st.rerun()
 st.markdown("---")
 
@@ -159,50 +161,55 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 1")
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
-                # O local correto do texto (dentro da árvore de renderização do Exercício 1)
-                st.warning("A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
+                st.warning("""A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
 
 A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.
 
-Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:
+**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas.
 
-**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.
-
-Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.
-
-**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração.")
+Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant.""")
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
-                
-                # Opção A
                 st.markdown("#### 📌 Opção A — Reclassificação como Dívida Financeira")
-                st.markdown("**Balanço Patrimonial (BP):** Empréstimos e Financiamentos (Passivo Financeiro)")
-                st.markdown("**DRE:** Despesas Financeiras (Resultado Financeiro)")
-                st.markdown("**Impacto:** A Dívida Líquida aumenta e a alavancagem alcança 4,2x, provocando o descumprimento do covenant financeiro previsto nos contratos de financiamento. Como consequência, a companhia pode enfrentar restrições de crédito, aumento do custo de captação e vencimento antecipado das dívidas.")
-
-                st.markdown("---")
-                # Opção B
+                st.markdown("**Impacto:** A Dívida Líquida aumenta e a alavancagem alcança 4,2x, quebrando o covenant. A empresa enfrenta restrições imediatas e aumento do custo de captação.")
                 st.markdown("#### 📌 Opção B — Manutenção como Passivo Operacional")
-                st.markdown("**Balanço Patrimonial (BP):** Fornecedores Conveniados / Risco Sacado (Passivo Operacional)")
-                st.markdown("**DRE:** Encargos reconhecidos como Despesas Financeiras")
-                st.markdown("**Impacto:** A alavancagem permanece em 2,9x, preservando o cumprimento do covenant financeiro e evitando impactos imediatos nos contratos de financiamento. A decisão, entretanto, deverá ser adequadamente suportada e divulgada nas demonstrações finances.")
-
-                st.markdown("---")
-                # Opção C
+                st.markdown("**Impacto:** A alavancagem permanece estável em 2,9x, preservando os covenants. Exige divulgação robusta e transparente em Notas Explicativas sobre o modelo de risco sacado.")
                 st.markdown("#### 📌 Opção C — Diferimento dos Encargos da Operação")
-                st.markdown("**Balanço Patrimonial (BP):** Contas Operacionais a Pagar")
-                st.markdown("**DRE:** Reconhecimento parcial ou diferido dos encargos associados à operação")
-                st.markdown("**Impacto:** Os indicadores financeiros permanecem mais favoráveis no curto prazo, com menor impacto sobre o resultado e a alavancagem. Entretanto, a decisão pode gerar questionamentos por parte da auditoria independente, investidores, credores e órgãos reguladores quanto à adequação do tratamento contábil adotado.")
-                st.markdown("---")
+                st.markdown("**Impacto:** Prática altamente agressiva de postergar ou mascarar os juros associados. Mantém indicadores inflados artificialmente no curto prazo, gerando alto risco de contestação pelos auditores.")
 
             elif rodada == 2:
-                st.markdown("### 📋 Deliberação Estratégica — Exercício 2")
-                st.warning("**🏬 DILEMA ESTRATÉGICO: RECONHECIMENTO DE RECEITAS E FRANCHISING:** Alocação de receitas antecipadas e contratos de expansão sob a ótica do CPC 47 (IFRS 15).")
-            elif rodada == 3:
-                st.markdown("### 📋 Deliberação Estratégica — Exercício 3")
-                st.warning("**🏬 DILEMA ESTRATÉGICO: MENSURAÇÃO DE ATIVOS E IMPAIRMENT:** Teste de recuperabilidade de ativos de longo prazo e estoques obsoletos sob pressão macroeconômica (CPC 01 / IAS 36).")
+                st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 2")
+                st.subheader("🔍 Reconhecimento de Receitas e Franchising (CPC 47 / IFRS 15)")
+                
+                st.warning("""Para acelerar a expansão, a companhia venda 50 novas franquias master. No ato da assinatura dos contratos, recebeu um montante expressivo a título de 'Taxa de Franquia Inicial' para transferência de know-how e treinamento de abertura. 
 
-            # Botão de rádio limpo e configurado explicitamente na vertical
+A Diretoria Comercial quer reconhecer 100% dessa receita imediatamente neste exercício para bater a meta de faturamento e valorizar as ações. No entanto, o CPC 47 exige avaliar se as obrigações de desempenho são cumpridas ao longo do tempo da franquia (5 anos) ou em um momento específico.""")
+                
+                st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
+                st.markdown("#### 📌 Opção A — Diferimento Total Conservador")
+                st.markdown("**Impacto:** Retém o faturamento imediato e reconhece a receita de forma estritamente linear ao longo de 5 anos. Reduz o lucro atual e derruba a cotação da ação a curto prazo, mas blinda a governança.")
+                st.markdown("#### 📌 Opção B — Reconhecimento Proporcional por Marcos de Entrega")
+                st.markdown("**Impacto:** Reconhece a receita conforme as lojas vão sendo efetivamente inauguradas e o suporte inicial concluído. Abordagem equilibrada que reflete a realidade econômica sob o CPC 47.")
+                st.markdown("#### 📌 Opção C — Reconhecimento Integral Imediato")
+                st.markdown("**Impacto:** Registra 100% da receita de todas as taxas na assinatura do contrato. Infla brutalmente o lucro operacional e dispara o valuation das ações, mas ignora as obrigações de longo prazo e viola as normas contábeis.")
+
+            elif rodada == 3:
+                st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 3")
+                st.subheader("🔍 Mensuração de Ativos e Teste de Recuperabilidade (CPC 01 / IAS 36)")
+                
+                st.warning("""Uma forte desaceleração macroeconômica gerou obsolescência em massa em estoques eletrônicos de centros de distribuição antigos. Além disso, as projeções de geração de caixa de 20 lojas físicas de grande porte despencaram, indicando que o valor recuperável dessas estruturas é menor do que o valor registrado no balanço.
+
+A administração é confrontada a realizar o Teste de Impairment. Reconhecer a desvalorização derrubará o EBITDA e anulará o bônus anual do comitê executivo.""")
+                
+                st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
+                st.markdown("#### 📌 Opção A — Postergação de Provisões")
+                st.markdown("**Impacto:** Ajusta apenas o mínimo burocrático de estoques e adia o teste de impairment das lojas para o próximo ano sob justificativa de 'instabilidade temporária'. Protege o patrimônio líquido atual, mas carrega ativos podres.")
+                st.markdown("#### 📌 Opção B — Reconhecimento Integral de Perdas")
+                st.markdown("**Impacto:** Realiza o teste completo de impairment imediatamente e baixa integralmente o valor das lojas e estoques obsoletos contra o resultado. O lucro desaba, mas a contabilidade fica limpa e transparente.")
+                st.markdown("#### 📌 Opção C — Ajuste Otimista de Fluxo de Caixa")
+                st.markdown("**Impacto:** Modifica as premissas matemáticas dos fluxos de caixa futuros no modelo de impairment, usando taxas de crescimento irreais para forçar que o valor recuperável das lojas pareça maior do que é. Mascara as perdas operacionais.")
+
+            st.markdown("---")
             escolha = st.radio(
                 "Selecione a resolução estratégica da sua empresa:", 
                 ["A", "B", "C"],
@@ -213,7 +220,7 @@ Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado s
             
             if st.button("🗳️ Homologar Resolução em Ata", key=f"b_{empresa_atual}_{rodada}", use_container_width=True):
                 d[f"voto_r{rodada}"] = escolha
-                d["precos"].append(round(d["precos"][-1] * IMPACTOS[rodada][escolha], 2))
+                st.success("Voto computado em ata! Aguardando o encerramento da rodada pelo mestre.")
                 st.rerun()
         else:
             st.success(f"✅ Resolução homologada com sucesso para o Período {rodada}!\n\n**Posicionamento escolhido:** {LABELS[d[f'voto_r{rodada}']]}")
@@ -227,7 +234,7 @@ Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado s
         status = d.get("status", "")
         noticia = d.get("noticia_r4", "")
         
-        if "PRISAO" in status or "LITISCONSÓRCIO" in status:
+        if "FRAUDE" in status or "LITISCONSÓRCIO" in status:
             st.error(f"**{status}**\n\n{noticia}\n\n**Valor Residual de Liquidação Judicial:** R$ {d['precos'][-1]:.2f}")
         elif "EXCELÊNCIA" in status:
             st.success(f"**{status}**\n\n{noticia}\n\n**Preço de Fechamento de Mercado:** R$ {d['precos'][-1]:.2f}")
@@ -244,8 +251,18 @@ elif perfil == "👑 Painel Apresentador":
     col1, col2 = st.columns(2)
     with col1:
         if db.rodada_atual <= 3:
-            txt_botao = f"🚀 ENCERRAR EXERCÍCIO {db.rodada_atual} E AVANÇAR" if db.rodada_atual < 3 else "⚖️ EMITIR PARECER FINAL DE AUDITORIA"
+            txt_botao = f"🚀 ENCERRAR EXERCÍCIO {db.rodada_atual} E CALCULAR MERCADO" if db.rodada_atual < 3 else "⚖️ EMITIR PARECER FINAL DE AUDITORIA"
             if st.button(txt_botao, type="primary", use_container_width=True):
+                
+                r = db.rodada_atual
+                for nome, d_emp in db.dados_empresas.items():
+                    if d_emp[f"voto_r{r}"] is None:
+                        d_emp[f"voto_r{r}"] = 'A' 
+                    
+                    voto_aplicado = d_emp[f"voto_r{r}"]
+                    novo_preco = d_emp["precos"][-1] * IMPACTOS[r][voto_aplicado]
+                    d_emp["precos"].append(round(novo_preco, 2))
+                
                 db.rodada_atual += 1
                 if db.rodada_atual == 4:
                     aplicar_auditoria_final()
@@ -280,13 +297,13 @@ elif perfil == "👑 Painel Apresentador":
             st.write(f"Exercício 3: {'🟢 ' + d['voto_r3'] if d['voto_r3'] else '❌ Ausente'}")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# VISÃO PROJETOR: HOME BROKER CENTRAL DA SALA
+# VISÃO PROJETOR: HOME BROKER CENTRAL DA SALA (AUTO-REFRESH ATIVADO)
 # ═════════════════════════════════════════════════════════════════════════════
 elif perfil == "📈 Telão (Bolsa)":
     st.title("📊 BOLSA DE VALORES — HOME BROKER REAL TIME")
     st.subheader(f"Período de Negociação: Exercício {db.rodada_atual if db.rodada_atual <= 3 else 'Fim de Jogo'}")
     
-    st.button("🔄 Forçar Recarga do Painel Geral")
+    st.caption("🔄 Atualização em tempo real (Loop automático a cada 3 segundos)...")
 
     cols = st.columns(3)
     for i, (nome, d) in enumerate(db.dados_empresas.items()):
@@ -304,7 +321,7 @@ elif perfil == "📈 Telão (Bolsa)":
         ax.text(len(d["precos"]) - 1, d["precos"][-1] + 1.5,
                 f"R${d['precos'][-1]:.2f}", fontsize=9, color=cores[i], fontweight="bold")
     ax.set_ylabel("Preço de Fechamento (R$)")
-    ax.set_ylim(-5, 130)
+    ax.set_ylim(-5, 150)
     ax.grid(True, linestyle="--", alpha=0.4)
     ax.legend(loc="upper left")
     st.pyplot(fig)
@@ -313,3 +330,6 @@ elif perfil == "📈 Telão (Bolsa)":
         st.markdown("<h2>🏁 PARECER FINAL CONSOLIDADO</h2>", unsafe_allow_html=True)
         for nome, d in db.dados_empresas.items():
             st.info(f"**{nome}** — {d['status']} | **Fechamento Líquido:** R$ {d['precos'][-1]:.2f}")
+
+    time.sleep(3)
+    st.rerun()
