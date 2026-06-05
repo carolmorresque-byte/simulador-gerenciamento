@@ -46,7 +46,6 @@ IMPACTOS = {
     3: {'A': 0.85, 'B': 1.10, 'C': 0.80},
 }
 
-# Alterado para manter o layout limpo
 LABELS = {
     'A': 'Opção A',
     'B': 'Opção B',
@@ -160,14 +159,14 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 1")
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
-                # Substituído por aspas triplas para evitar quebras de concatenação acidentais
+                # O local correto do texto (dentro da árvore de renderização do Exercício 1)
                 st.warning("""A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
 
 A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.
 
 Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:
 
-**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final_ de cada trimestre. O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.
+**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.
 
 Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.
 
@@ -186,7 +185,7 @@ Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado s
                 st.markdown("#### 📌 Opção B — Manutenção como Passivo Operacional")
                 st.markdown("**Balanço Patrimonial (BP):** Fornecedores Conveniados / Risco Sacado (Passivo Operacional)")
                 st.markdown("**DRE:** Encargos reconhecidos como Despesas Financeiras")
-                st.markdown("**Impacto:** A alavancagem permanece em 2,9x, preservando o cumprimento do covenant financeiro e evitando impactos imediatos nos contratos de financiamento. A decisão, entretanto, deverá ser adequadamente suportada e divulgada nas demonstrações financeiras.")
+                st.markdown("**Impacto:** A alavancagem permanece em 2,9x, preservando o cumprimento do covenant financeiro e evitando impactos imediatos nos contratos de financiamento. A decisão, entretanto, deverá ser adequadamente suportada e divulgada nas demonstrações finances.")
 
                 st.markdown("---")
                 # Opção C
