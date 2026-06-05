@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Simulador de Varejo - Governança", layout="wide")
 
-# Esconde o menu padrão do Streamlit no topo para evitar que mudem configurações
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
@@ -52,7 +51,7 @@ LABELS = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 4. Auditoria Final Automatizada
+# 4. Auditoria Final Automatizada (LIMPA E SEM TEXTOS DE INTERFACE)
 # ─────────────────────────────────────────────────────────────────────────────
 def aplicar_auditoria_final():
     for nome, d in db_global["dados_empresas"].items():
@@ -109,14 +108,13 @@ else:
     perfil = "🔒 Bloqueado"
 
 # ═════════════════════════════════════════════════════════════════════════════
-# CASO 1: CELULAR DOS ALUNOS (APENAS ENXERGAM SEU GRUPO, SEM SIDEBAR)
+# CASO 1: CELULAR DOS ALUNOS (AQUI FICAM OS TEXTOS DOS CENÁRIOS)
 # ═════════════════════════════════════════════════════════════════════════════
 if perfil in EMPRESAS:
     empresa_atual = perfil
     d = db_global["dados_empresas"][empresa_atual]
     rodada = db_global["rodada_atual"]
 
-    # Interface focada para Mobile
     st.markdown(f"## 🏢 {empresa_atual}")
     st.markdown(f"**Ano Atual:** {rodada if rodada <= 3 else 'Final'} | **Sua Ação:** R$ {d['precos'][-1]:.2f}")
     st.markdown("---")
@@ -128,24 +126,21 @@ if perfil in EMPRESAS:
             st.markdown(f"### 📋 Decisão Diretoria — **Ano {rodada}**:")
             
             if rodada == 1:
+                # O TEXTO CORRETO UNIFICADO COM O SEU PRINT DO GITHUB ENTRA AQUI:
                 st.warning(
                     "**🏬 CENÁRIO RISCO SACADO:**\n\n"
-                   "A nossa rede varejista encerra o período enfrentando um forte aperto de liquidez. Como solução de fôlego operacional, "
-    "o CFO intensificou as operações de risco sacado com o banco Épsilon. O mecanismo permitiu que os fornecedores "
-    "antecipassem os recebíveis com o banco, enquanto a nossa empresa ganhou prazo para pagar, arcando com juros embutidos na transação. "
-    "Na realidade atual do negócio, essa operação tornou-se vital: se não utilizássemos o risco sacado, os fornecedores não "
-    "teriam capital de giro para nos abastecer e a empresa ficaria sem produtos para preencher as gôndolas.\n\n"
-    "Com o saldo acumulado da operação batendo a marca de R$ 1,2 bilhão, a liderança se vê encurralada: o encerramento do ano fiscal se aproxima, "
-    "o conselho cobra o atingimento das metas corporativas de lucro e os limites contratuais (covenants) de endividamento estão no limite. "
-    "Se reclassificarmos essa operação como dívida financeira bancária, o índice vai para 4,2x, disparando o vencimento antecipado das "
-    "debêntures da empresa. Para piorar, os rumores de mercado acenderam o alerta no banco Épsilon, que já sinalizou que pode travar as "
-    "antecipações e exigir a liquidação imediata dos saldos vencidos caso o balanço mostre qualquer sinal de fragilidade.\n\n"
-    "O DILEMA:\n"
-    "Como o comitê executivo definirá o tratamento contábil dessa operação na DRE e no Balanço Patrimonial para o fechamento deste exercício, "
-    "sabendo que a decisão afetará diretamente o cumprimento das metas corporativas, o gatilho dos covenants e o risco de o banco Épsilon "
-    "cortar o oxigênio financeiro da companhia e desabastecer as lojas?"
-)
-        
+                    "A nossa rede varejista encerra o período enfrentando um forte aperto de liquidez. "
+                    "Como solução de fôlego operacional, o CFO intensificou as operações de risco sacado com o banco Épsilon. "
+                    "O mecanismo permitiu que os fornecedores antecipassem os recebíveis com o banco, enquanto a nossa "
+                    "empresa ganhou prazo para pagar, arcando com juros embutidos na transação.\n\n"
+                    "Na realidade atual do negócio, essa operação tornou-se vital: se não utilizássemos o risco sacado, "
+                    "os fornecedores não conseguiriam abastecer a empresa e ficaríamos sem produtos para preencher as gôndolas. "
+                    "Contudo, o board exige que o índice de alavancagem (Dívida Líquida / EBITDA) permaneça abaixo de 3x "
+                    "para evitar a quebra de covenants restritivos. Se vocês reclassificarem essa operação como "
+                    "dívida financeira bancária, o índice vai para 4,2x, disparando o vencimento antecipado das "
+                    "debêntures da empresa. O grande debate na diretoria é se a extensão de prazos obtida com os "
+                    "bancos configura um passivo operacional puro ou uma decisão gerencial de financiamento."
+                )
                 
                 st.markdown("### 🔍 Detalhamento das Opções:")
                 
@@ -159,14 +154,13 @@ if perfil in EMPRESAS:
                     st.markdown("**Balanço Patrimonial (BP):** Fornecedores ou Fornecedores Conveniados (Passivo Operacional)")
                     st.markdown("**DRE:** Custo da Mercadoria Vendida (CMV) — *como custo de aquisição embutido na compra*")
                     st.markdown("**Justificativa:** A extensão de prazo é uma condição comercial do setor e o risco principal permanece ligado à entrega da mercadoria, mantendo a natureza operacional do passivo.")
-                    st.markdown("**Impacto:** Alavancagem blindada em 3,0x, evitando o vencimento antecipado das debêntures. EBITDA é pressionado pelo CMV maior. Exige forte disclosure em Nota Explicativa.")
+                    st.markdown("**Impacto:** Alavancagem blindada em 3,0x, evitando o vencimento antecipado das debêntures. EBITDA é-[#1976D2] pressionado pelo CMV maior. Exige forte disclosure em Nota Explicativa.")
 
                 with st.expander("📌 **Opção C — Detalhes Técnicos**"):
                     st.markdown("**Balanço Patrimonial (BP):** Fornecedores comuns (Passivo Operacional)")
                     st.markdown("**DRE:** Estorno no CMV / Ativação no Estoque (*lançado contra verbas de desconto comerciais*)")
                     st.markdown("**Justificativa:** Ocultação do passivo financeiro. Cria-se um direito de bônus comercial/desconto com fornecedores para anular o impacto dos juros cobrados pelo banco na DRE.")
                     st.markdown("**Impacto:** Alavancagem mantida artificialmente em 3,0x. EBITDA e Lucro Líquido vêm inflados. Alto risco de detecção por inconsistência grave entre Lucro e Caixa Operacional.")
-                
                 st.markdown("---")
 
             elif rodada == 2:
