@@ -139,7 +139,7 @@ with col_logout:
 st.markdown("---")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# VISÃO DO ALUNO: TOTALMENTE ISOLADA COM SEU TEXTO REVISADO
+# VISÃO DO ALUNO: SELEÇÃO SIMPLIFICADA PARA OPÇÃO A, B E C
 # ═════════════════════════════════════════════════════════════════════════════
 if perfil in EMPRESAS:
     empresa_atual = perfil
@@ -197,7 +197,7 @@ if perfil in EMPRESAS:
             elif rodada == 3:
                 st.warning("**🏬 DILEMA ESTRATÉGICO: MENSURAÇÃO DE ATIVOS E IMPAIRMENT:** Teste de recuperabilidade de ativos de longo prazo e estoques obsoletos sob pressão macroeconômica (CPC 01 / IAS 36).")
 
-            # Interface de votação direta por rádio botões simples (A, B, C)
+            # Botões de rádio alterados para exibir estritamente: Opção A, Opção B e Opção C
             escolha = st.radio(
                 "Selecione a resolução estratégica da sua empresa:", 
                 ["A", "B", "C"],
