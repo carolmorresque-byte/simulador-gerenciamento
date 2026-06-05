@@ -165,39 +165,37 @@ if perfil in EMPRESAS:
                     "Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, "
                     "mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento "
                     "de passivos comerciais, com o pagamento dos juros embutidos.\n\n"
-                    ""A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.\n\n"
-                   "Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:\n\n"
-
-    "**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. "
-    "O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.\n\n"
-
-    "Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. "
-    "Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.\n\n"
-    "**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
+                    "A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.\n\n"
+                    "Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:\n\n"
+                    "**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. "
+                    "O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.\n\n"
+                    "Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. "
+                    "Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.\n\n"
+                    "**Sua decision:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
                 )
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
                 
-               # Opção A
+                # Opção A
                 st.markdown("#### 📌 Opção A — Reclassificação como Dívida Financeira")
                 st.markdown("**Balanço Patrimonial (BP):** Empréstimos e Financiamentos (Passivo Financeiro)")
                 st.markdown("**DRE:** Despesas Financeiras (Resultado Financeiro)")
                 st.markdown("**Impacto:** A Dívida Líquida aumenta e a alavancagem alcança 4,2x, provocando o descumprimento do covenant financeiro previsto nos contratos de financiamento. Como consequência, a companhia pode enfrentar restrições de crédito, aumento do custo de captação e vencimento antecipado das dívidas.")
 
                 st.markdown("---")
-               # Opção B
+                # Opção B
                 st.markdown("#### 📌 Opção B — Manutenção como Passivo Operacional")
                 st.markdown("**Balanço Patrimonial (BP):** Fornecedores Conveniados / Risco Sacado (Passivo Operacional)")
                 st.markdown("**DRE:** Encargos reconhecidos como Despesas Financeiras")
                 st.markdown("**Impacto:** A alavancagem permanece em 2,9x, preservando o cumprimento do covenant financeiro e evitando impactos imediatos nos contratos de financiamento. A decisão, entretanto, deverá ser adequadamente suportada e divulgada nas demonstrações financeiras.")
 
                 st.markdown("---")
-                
-               st.markdown("#### 📌 Opção C — Diferimento dos Encargos da Operação")
+                # Opção C
+                st.markdown("#### 📌 Opção C — Diferimento dos Encargos da Operação")
                 st.markdown("**Balanço Patrimonial (BP):** Contas Operacionais a Pagar")
                 st.markdown("**DRE:** Reconhecimento parcial ou diferido dos encargos associados à operação")
                 st.markdown("**Impacto:** Os indicadores financeiros permanecem mais favoráveis no curto prazo, com menor impacto sobre o resultado e a alavancagem. Entretanto, a decisão pode gerar questionamentos por parte da auditoria independente, investidores, credores e órgãos reguladores quanto à adequação do tratamento contábil adotado.")
-                                st.markdown("---")
+                st.markdown("---")
 
             elif rodada == 2:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício 2")
@@ -206,12 +204,13 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício 3")
                 st.warning("**🏬 DILEMA ESTRATÉGICO: MENSURAÇÃO DE ATIVOS E IMPAIRMENT:** Teste de recuperabilidade de ativos de longo prazo e estoques obsoletos sob pressão macroeconômica (CPC 01 / IAS 36).")
 
-            # Botão de rádio limpo (Opção A, Opção B, Opção C)
+            # Botão de rádio limpo e configurado explicitamente na vertical
             escolha = st.radio(
                 "Selecione a resolução estratégica da sua empresa:", 
                 ["A", "B", "C"],
                 format_func=lambda x: LABELS[x], 
-                key=f"v_{empresa_atual}_{rodada}"
+                key=f"v_{empresa_atual}_{rodada}",
+                horizontal=False
             )
             
             if st.button("🗳️ Homologar Resolução em Ata", key=f"b_{empresa_atual}_{rodada}", use_container_width=True):
