@@ -160,7 +160,7 @@ if perfil in EMPRESAS:
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
                 # O local correto do texto (dentro da árvore de renderização do Exercício 1)
-                st.warning("""A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
+                st.warning("A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
 
 A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.
 
@@ -170,7 +170,7 @@ Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusul
 
 Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.
 
-**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração.""")
+**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração.")
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
                 
