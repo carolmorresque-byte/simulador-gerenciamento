@@ -160,20 +160,18 @@ if perfil in EMPRESAS:
                 st.markdown("### 📋 Deliberação Estratégica — Exercício ANO 1")
                 st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
                 
-                # Bloco corrigido e alinhado conforme image_6d6341.png
-                st.warning(
-                    "A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. "
-                    "Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, "
-                    "mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento "
-                    "de passivos comerciais, com o pagamento dos juros embutidos.\n\n"
-                    "A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.\n\n"
-                    "Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:\n\n"
-                    "**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre. "
-                    "O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.\n\n"
-                    "Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. "
-                    "Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.\n\n"
-                    "**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração."
-                )
+                # Substituído por aspas triplas para evitar quebras de concatenação acidentais
+                st.warning("""A companhia encerrou período sob pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, mecanismo que antecipou recebíveis de fornecedores estratégicos e permitiu o alongamento do prazo médio de pagamento de passivos comerciais, com o pagamento dos juros embutidos.
+
+A estratégia tornou-se essencial para a continuidade do negócio. Sem essa estrutura, parte dos fornecedores estratégicos poderia interromper o fornecimento de mercadorias, comprometendo as vendas e os resultados da companhia.
+
+Entretanto, os contratos de financiamento da empresa contêm a seguinte cláusula:
+
+**Cláusula 7.2 – Covenant Financeiro:** A Companhia deverá manter índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final_ de cada trimestre. O descumprimento desse limite poderá resultar no vencimento antecipado das dívidas, aumento das taxas de financiamento e restrições à contratação de novos créditos.
+
+Atualmente, o índice encontra-se em 2,9x. Caso as operações de risco sacado sejam reclassificadas como dívida financeira bancária, a alavancagem subiria para 4,2x, provocando a quebra imediata do covenant. Além disso, o atingimento dessa meta influencia a remuneração variável da diretoria e a participação nos lucros e resultados (PLR) dos colaboradores elegíveis.
+
+**Sua decisão:** determinar a classificação contábil da operação de risco sacado, avaliando os impactos sobre os indicadores financeiros, os contratos com credores e os incentivos da administração.""")
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
                 
