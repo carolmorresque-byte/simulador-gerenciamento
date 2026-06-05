@@ -47,9 +47,9 @@ IMPACTOS = {
 }
 
 LABELS = {
-    'A': 'Opção A',
-    'B': 'Opção B',
-    'C': 'Opção C',
+    'A': 'A — Sem Gerenciamento (Operacional)',
+    'B': 'B — Gerenciamento Técnico (CPC)',
+    'C': 'C — Gerenciamento Fraudulento',
 }
 
 SENHAS = {
@@ -139,7 +139,7 @@ with col_logout:
 st.markdown("---")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# VISÃO DO ALUNO: SELEÇÃO SIMPLIFICADA PARA OPÇÃO A, B E C
+# VISÃO DO ALUNO: FLUXO DE EXERCÍCIOS ATUALIZADO
 # ═════════════════════════════════════════════════════════════════════════════
 if perfil in EMPRESAS:
     empresa_atual = perfil
@@ -147,16 +147,21 @@ if perfil in EMPRESAS:
     rodada = db.rodada_atual
 
     st.markdown(f"## 🏢 {empresa_atual}")
-    st.markdown(f"**Período Fiscal:** Ano {rodada if rodada <= 3 else 'Encerramento'} | **Valuation Atual da Ação:** R$ {d['precos'][-1]:.2f}")
+    st.markdown(f"**Período Fiscal:** Exercício {rodada if rodada <= 3 else 'Encerramento'} | **Valuation Atual da Ação:** R$ {d['precos'][-1]:.2f}")
     st.markdown("---")
 
     voto_ja_realizado = d[f"voto_r{rodada}"] is not None if rodada <= 3 else False
 
     if rodada <= 3:
         if not voto_ja_realizado:
-            st.markdown(f"### 📋 Deliberação do Conselho de Administração — **Ano {rodada}**:")
             
             if rodada == 1:
+                # Alterado para "Deliberação Estratégica — Exercício 1"
+                st.markdown("### 📋 Deliberação Estratégica — Exercício 1")
+                
+                # Alterado para "Questão de Liquidez: Operação de Risco Sacado"
+                st.subheader("🔍 Questão de Liquidez: Operação de Risco Sacado")
+                
                 st.warning(
                     "A companhia encerrou o 4º trimestre sob pressões de liquidez em seu fluxo de caixa operacional. "
                     "Para preservar o ciclo operacional, a Diretoria Financeira estruturou operações de risco sacado junto ao Banco Épsilon, "
@@ -174,30 +179,39 @@ if perfil in EMPRESAS:
                 
                 st.markdown("### 🔍 Memorial Descritivo das Opções em Pauta:")
                 
-                with st.expander("📌 Opção A — Detalhes Técnicos"):
-                    st.markdown("**Balanço Patrimonial (BP):** Passivo Circulante / Não Circulante — Empréstimos e Financiamentos (Passivo Financeiro).")
-                    st.markdown("**Demonstração do Resultado (DRE):** Encargos Financeiros da Operação segregados no Resultado Financeiro Líquido (abaixo do EBITDA).")
-                    st.markdown("**Justificativa Técnica:** Princípio da Primazia da Essência sobre a Forma (CPC 00 / IFRS Base). Uma vez que a obrigação comercial primária foi liquidada à vista pelo intermediário bancário, configura-se a extinção do passivo comercial e a originação de uma obrigação estritamente financeira, líquida e certa com o repassador do capital.")
-                    st.markdown("**Impacto Patrimonial:** Majoração imediata do endividamento bruto. Alavancagem atinge 4,2x, ensejando quebra de *covenants* e risco de execução judicial por credores de longo prazo. O lucro líquido é pressionado pelo custo financeiro pro rata.")
-
-                with st.expander("📌 Opção B — Detalhes Técnicos"):
-                    st.markdown("**Balanço Patrimonial (BP):** Passivo Circulante — Fornecedores Conveniados / Risco Sacado (Passivo Operacional de Natureza Comercial).")
-                    st.markdown("**Demonstração do Resultado (DRE):** Custo de carregamento embutido e apropriado diretamente no Custo das Mercadorias Vendidas (CMV).")
-                    st.markdown("**Justificativa Técnica:** Manutenção da natureza causal da transação (CPC 26 / IAS 1). A dilação de prazo configura uma condição comercial setorial legítima; os riscos e benefícios associados aos ativos subjacentes permanecem intrínsecos à cadeia produtiva, mantendo a classificação na atividade operacional.")
-                    st.markdown("**Impacto Patrimonial:** Preservação do índice de alavancagem reportado em 3,0x, mitigando o risco de exigibilidade antecipada das debêntures. Ocorre, contudo, compressão na margem EBITDA em função do CMV majorado. Exige divulgação robusta e explícita em Notas Explicativas.")
-
-                with st.expander("📌 Opção C — Detalhes Técnicos"):
-                    st.markdown("**Balanço Patrimonial (BP):** Passivo Circulante — Contas a Pagar Operacionais Comuns (Subavaliação de Passivo Exigível).")
-                    st.markdown("**Demonstração do Resultado (DRE):** Diferimento dos encargos financeiros com compensação indevida no Lucro Bruto através do estorno de provisões ou ativação artificial em estoques.")
-                    st.markdown("**Justificativa Técnica:** Abordagem agressiva de gerenciamento de resultados (*earnings management*). Ocultação sistemática do custo de capital de terceiros com o propósito de blindar artificialmente as métricas de performance demandadas pelo mercado.")
-                    st.markdown("**Impacto Patrimonial:** Manutenção cosmética da alavancagem em 3,0x com inflamento artificial do EBITDA e do Lucro Líquido. Alinha os indicadores às metas de curto prazo, mas introduz uma desconexão crítica entre o resultado de competência reportado e a real geração de caixa operacional. Severa exposição a passivos regulatórios e contingências de auditoria.")
+                # Exibição Aberta e Direta das Opções (Sem expander/clique)
+                st.markdown("#### 📌 Opção A — Reclassificação como Endividamento Financeiro Puro")
+                st.markdown("**Balanço Patrimonial (BP):** Empréstimos e Financiamentos (Passivo Financeiro)")
+                st.markdown("**DRE:** Despesas Financeiras (Resultado Financeiro, abaixo do EBITDA)")
+                st.markdown("**Justificativa:** A obrigação comercial original extinguiu-se quando o banco pagou o fornecedor à vista, transformando a operação em uma dívida bancária líquida e certa.")
+                st.markdown("**Impacto:** Alavancagem salta para 4,2x, gerando quebra imediata de covenants. O Lucro Líquido cai devido ao custo financeiro puro.")
+                
+                st.markdown("---")
+                
+                st.markdown("#### 📌 Opção B — Manutenção como Passivo Comercial Setorial")
+                st.markdown("**Balanço Patrimonial (BP):** Fornecedores Conveniados / Risco Sacado (Passivo Operacional)")
+                st.markdown("**DRE:** Custo de Carregamento embutido diretamente no Custo das Mercadorias Vendidas (CMV, acima do EBITDA)")
+                st.markdown("**Justificativa:** A dilação de prazo reflete uma condição comercial setorial legítima, mantendo os riscos operacionais atrelados à cadeia produtiva de suprimentos.")
+                st.markdown("**Impacto:** Preservação da alavancagem em 3,0x, evitando o vencimento das debêntures, mas comprimindo a margem EBITDA devido ao CMV mais alto.")
+                
+                st.markdown("---")
+                
+                st.markdown("#### 📌 Opção C — Diferimento Consecutivo e Ocultação de Encargos")
+                st.markdown("**Balanço Patrimonial (BP):** Contas a Pagar Operacionais Comuns (Subavaliação do Passivo Exigível)")
+                st.markdown("**DRE:** Diferimento dos encargos financeiros com ativação artificial em Estoques (Acima do EBITDA)")
+                st.markdown("**Justificativa:** Prática agressiva de gerenciamento para ocultar temporariamente o custo real do capital de terceiros e inflar os indicadores de performance.")
+                st.markdown("**Impacto:** Manutenção artificial da alavancagem em 3,0x e inflamento cosmético do lucro, gerando severo risco de fraude e exposição regulatória.")
+                
+                st.markdown("---")
 
             elif rodada == 2:
+                st.markdown("### 📋 Deliberação Estratégica — Exercício 2")
                 st.warning("**🏬 DILEMA ESTRATÉGICO: RECONHECIMENTO DE RECEITAS E FRANCHISING:** Alocação de receitas antecipadas e contratos de expansão sob a ótica do CPC 47 (IFRS 15).")
             elif rodada == 3:
+                st.markdown("### 📋 Deliberação Estratégica — Exercício 3")
                 st.warning("**🏬 DILEMA ESTRATÉGICO: MENSURAÇÃO DE ATIVOS E IMPAIRMENT:** Teste de recuperabilidade de ativos de longo prazo e estoques obsoletos sob pressão macroeconômica (CPC 01 / IAS 36).")
 
-            # Botões de rádio alterados para exibir estritamente: Opção A, Opção B e Opção C
+            # Componente de rádio atualizado com os nomes completos solicitados
             escolha = st.radio(
                 "Selecione a resolução estratégica da sua empresa:", 
                 ["A", "B", "C"],
@@ -210,7 +224,7 @@ if perfil in EMPRESAS:
                 d["precos"].append(round(d["precos"][-1] * IMPACTOS[rodada][escolha], 2))
                 st.rerun()
         else:
-            st.success(f"✅ Resolução homologada com sucesso para o Período {rodada}! Posicionamento: {LABELS[d[f'voto_r{rodada}']]} ")
+            st.success(f"✅ Resolução homologada com sucesso para o Período {rodada}!\n\n**Posicionamento escolhido:** {LABELS[d[f'voto_r{rodada}']]}")
             st.info("⏳ Aguardando o encerramento do período de deliberação global pelo Painel de Controle.")
             
             if st.button("🔄 Sincronizar Status com o Servidor", use_container_width=True):
@@ -233,12 +247,12 @@ if perfil in EMPRESAS:
 # ═════════════════════════════════════════════════════════════════════════════
 elif perfil == "👑 Painel Apresentador":
     st.title("👑 PAINEL CENTRAL DE COMANDO")
-    st.subheader(f"Status Atual do Mercado: Ano {db.rodada_atual}")
+    st.subheader(f"Status Atual do Mercado: Exercício {db.rodada_atual}")
 
     col1, col2 = st.columns(2)
     with col1:
         if db.rodada_atual <= 3:
-            txt_botao = f"🚀 ENCERRAR ANO {db.rodada_atual} E AVANÇAR" if db.rodada_atual < 3 else "⚖️ EMITIR PARECER FINAL DE AUDITORIA"
+            txt_botao = f"🚀 ENCERRAR EXERCÍCIO {db.rodada_atual} E AVANÇAR" if db.rodada_atual < 3 else "⚖️ EMITIR PARECER FINAL DE AUDITORIA"
             if st.button(txt_botao, type="primary", use_container_width=True):
                 db.rodada_atual += 1
                 if db.rodada_atual == 4:
@@ -269,16 +283,16 @@ elif perfil == "👑 Painel Apresentador":
             st.markdown(f"#### {nome}")
             st.metric("Valuation Atual", f"R$ {d['precos'][-1]:.2f}")
             
-            st.write(f"Ano 1: {'🟢 ' + d['voto_r1'] if d['voto_r1'] else '❌ Ausente'}")
-            st.write(f"Ano 2: {'🟢 ' + d['voto_r2'] if d['voto_r2'] else '❌ Ausente'}")
-            st.write(f"Ano 3: {'🟢 ' + d['voto_r3'] if d['voto_r3'] else '❌ Ausente'}")
+            st.write(f"Exercício 1: {'🟢 ' + d['voto_r1'] if d['voto_r1'] else '❌ Ausente'}")
+            st.write(f"Exercício 2: {'🟢 ' + d['voto_r2'] if d['voto_r2'] else '❌ Ausente'}")
+            st.write(f"Exercício 3: {'🟢 ' + d['voto_r3'] if d['voto_r3'] else '❌ Ausente'}")
 
 # ═════════════════════════════════════════════════════════════════════════════
 # VISÃO PROJETOR: HOME BROKER CENTRAL DA SALA
 # ═════════════════════════════════════════════════════════════════════════════
 elif perfil == "📈 Telão (Bolsa)":
     st.title("📊 BOLSA DE VALORES — HOME BROKER REAL TIME")
-    st.subheader(f"Período de Negociação: Ano {db.rodada_atual if db.rodada_atual <= 3 else 'Fim de Jogo'}")
+    st.subheader(f"Período de Negociação: Exercício {db.rodada_atual if db.rodada_atual <= 3 else 'Fim de Jogo'}")
     
     st.button("🔄 Forçar Recarga do Painel Geral")
 
@@ -290,7 +304,7 @@ elif perfil == "📈 Telão (Bolsa)":
     st.markdown("---")
 
     fig, ax = plt.subplots(figsize=(11, 4))
-    rotulos_eixo = ["Abertura", "Ano 1", "Ano 2", "Ano 3", "Veredito"]
+    rotulos_eixo = ["Abertura", "Exercício 1", "Exercício 2", "Exercício 3", "Veredito"]
     cores = ["#1976D2", "#388E3C", "#F57C00"]
     for i, (nome, d) in enumerate(db.dados_empresas.items()):
         x = rotulos_eixo[: len(d["precos"])]
