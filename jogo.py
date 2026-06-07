@@ -1,4 +1,3 @@
-
 import streamlit as st
 import matplotlib.pyplot as plt
 
@@ -286,6 +285,9 @@ perfil = st.session_state["usuario_logado"]
 # Resolve nome interno da empresa (ex: "α - Empresa Alfa" → "Empresa Alfa")
 nome_interno = EMPRESA_MAP.get(perfil)
 eh_empresa   = nome_interno is not None
+# Se veio de uma empresa (guardado em empresa_origem), trata como empresa também no Telão
+empresa_origem = st.session_state.get("empresa_origem")
+eh_empresa_no_telao = (perfil == "📈 Telão (Bolsa)") and (empresa_origem in EMPRESA_MAP)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Sidebar de navegação
@@ -294,15 +296,17 @@ with st.sidebar:
     st.markdown(f"**Logado como:** {perfil}")
     st.markdown("### 🔀 Navegar")
 
-    if eh_empresa:
-        # Empresas: ver Telão e voltar ao login
-        if st.button("📈 Ver Telão", use_container_width=True):
-            st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
-            st.rerun()
-        st.markdown("---")
-        if st.button("↩️ Página Inicial", use_container_width=True):
-            st.session_state["usuario_logado"] = None
-            st.rerun()
+    if eh_empresa or eh_empresa_no_telao:
+        # Empresas: alternam entre sua tela e o Telão apenas
+        if perfil == "📈 Telão (Bolsa)":
+            if st.button("🏢 Voltar para minha empresa", use_container_width=True):
+                st.session_state["usuario_logado"] = st.session_state.get("empresa_origem", perfil)
+                st.rerun()
+        else:
+            if st.button("📈 Ver Telão", use_container_width=True):
+                st.session_state["empresa_origem"] = perfil
+                st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
+                st.rerun()
     else:
         # Telão e Painel: navegam entre si + visualizam empresas
         if perfil != "📈 Telão (Bolsa)":
@@ -335,7 +339,7 @@ with st.sidebar:
 # VISUALIZAÇÃO DE EMPRESA (modo leitura — para Painel e Telão)
 # ─────────────────────────────────────────────────────────────────────────────
 empresa_visualizada = st.session_state.get("visualizar_empresa")
-if not eh_empresa and empresa_visualizada:
+if not eh_empresa and not eh_empresa_no_telao and empresa_visualizada:
     d      = db.dados_empresas[empresa_visualizada]
     rodada = db.rodada_atual
     st.markdown(f"## 👁️ Visualizando: {empresa_visualizada} | Exercício {rodada if rodada <= 4 else 'Fim'}")
@@ -467,8 +471,15 @@ Você tem um projeto promissor nas mãos — mas os números precisam aparecer *
 # ─────────────────────────────────────────────────────────────────────────────
 # VISÃO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "🎛️ Painel Apresentador":
-    st.title("🎛️ Painel de Comando")
+elif perfil == "🎛️ Painel Apresentador" and not eh_empresa_no_telao:
+    col_title, col_nav = st.columns([3, 1])
+    with col_title:
+        st.title("🎛️ Painel de Comando")
+    with col_nav:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("📈 Ir para o Telão →", use_container_width=True):
+            st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
+            st.rerun()
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -518,6 +529,14 @@ elif perfil == "🎛️ Painel Apresentador":
 # VISÃO TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📈 Telão (Bolsa)":
-    st.title("📈 Painel de Mercado")
+    col_title, col_nav = st.columns([3, 1])
+    with col_title:
+        st.title("📈 Painel de Mercado")
+    with col_nav:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🎛️ Ir para o Painel →", use_container_width=True):
+            st.session_state["usuario_logado"] = "🎛️ Painel Apresentador"
+            st.rerun()
+
     for nome, d in db.dados_empresas.items():
         st.metric(nome, f"R$ {d['precos'][-1]:.2f}")
