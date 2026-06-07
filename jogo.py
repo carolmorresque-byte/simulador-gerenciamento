@@ -285,64 +285,29 @@ perfil = st.session_state["usuario_logado"]
 # Resolve nome interno da empresa (ex: "α - Empresa Alfa" → "Empresa Alfa")
 nome_interno = EMPRESA_MAP.get(perfil)
 eh_empresa   = nome_interno is not None
-# Se veio de uma empresa (guardado em empresa_origem), trata como empresa também no Telão
-empresa_origem = st.session_state.get("empresa_origem")
-eh_empresa_no_telao = (perfil == "📈 Telão (Bolsa)") and (empresa_origem in EMPRESA_MAP)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Sidebar de navegação
 # ─────────────────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown(f"**Logado como:** {perfil}")
-    st.markdown("### 🔀 Navegar")
-
-    if eh_empresa or eh_empresa_no_telao:
-        # Empresas: alternam entre sua tela e o Telão apenas
-        if perfil == "📈 Telão (Bolsa)":
-            if st.button("🏢 Voltar para minha empresa", use_container_width=True):
-                st.session_state["usuario_logado"] = st.session_state.get("empresa_origem", perfil)
-                st.rerun()
-        else:
-            if st.button("📈 Ver Telão", use_container_width=True):
-                st.session_state["empresa_origem"] = perfil
-                st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
-                st.rerun()
-    else:
-        # Telão e Painel: navegam entre si + visualizam empresas
-        if perfil != "📈 Telão (Bolsa)":
-            if st.button("📈 Ir para o Telão", use_container_width=True):
-                st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
-                st.rerun()
-        if perfil != "🎛️ Painel Apresentador":
-            if st.button("🎛️ Ir para o Painel", use_container_width=True):
-                st.session_state["usuario_logado"] = "🎛️ Painel Apresentador"
-                st.rerun()
-
-        st.markdown("---")
-        st.markdown("**👁️ Ver empresa:**")
-        for chave, nome_emp in EMPRESA_MAP.items():
-            simbolo = chave.split(" ")[0]  # α, β ou γ
-            if st.button(f"{simbolo} {nome_emp}", use_container_width=True):
-                st.session_state["visualizar_empresa"] = nome_emp
-                st.rerun()
-        if st.session_state.get("visualizar_empresa"):
-            if st.button("✖️ Fechar visualização", use_container_width=True):
-                st.session_state["visualizar_empresa"] = None
-                st.rerun()
-
-        st.markdown("---")
-        if st.button("↩️ Voltar ao Login", use_container_width=True):
+    st.markdown("---")
+    if eh_empresa:
+        # Empresas: ver Telão ou trocar de empresa
+        if st.button("📈 Ver Telão", use_container_width=True):
+            st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
+            st.rerun()
+        if st.button("🔄 Trocar de Empresa", use_container_width=True):
             st.session_state["usuario_logado"] = None
             st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# VISUALIZAÇÃO DE EMPRESA (modo leitura — para Painel e Telão)
+# Bloco fantasma — removido
 # ─────────────────────────────────────────────────────────────────────────────
-empresa_visualizada = st.session_state.get("visualizar_empresa")
-if not eh_empresa and not eh_empresa_no_telao and empresa_visualizada:
-    d      = db.dados_empresas[empresa_visualizada]
+if False:
+    d      = db.dados_empresas.get("Empresa Alfa")
     rodada = db.rodada_atual
-    st.markdown(f"## 👁️ Visualizando: {empresa_visualizada} | Exercício {rodada if rodada <= 4 else 'Fim'}")
+    st.markdown(f"## 👁️ Visualizando")
     st.caption("Modo leitura — você está visualizando como observador.")
     st.markdown("---")
 
@@ -471,7 +436,7 @@ Você tem um projeto promissor nas mãos — mas os números precisam aparecer *
 # ─────────────────────────────────────────────────────────────────────────────
 # VISÃO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "🎛️ Painel Apresentador" and not eh_empresa_no_telao:
+elif perfil == "🎛️ Painel Apresentador":
     st.title("🎛️ Painel de Comando")
 
     col1, col2, col3 = st.columns([2, 1, 1])
