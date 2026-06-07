@@ -472,21 +472,19 @@ Você tem um projeto promissor nas mãos — mas os números precisam aparecer *
 # VISÃO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Apresentador" and not eh_empresa_no_telao:
-    col_title, col_nav = st.columns([3, 1])
-    with col_title:
-        st.title("🎛️ Painel de Comando")
-    with col_nav:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📈 Ir para o Telão →", use_container_width=True):
-            st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
-            st.rerun()
+    st.title("🎛️ Painel de Comando")
 
-    col1, col2 = st.columns([2, 1])
+    col1, col2, col3 = st.columns([2, 1, 1])
     with col1:
         if st.button(f"▶️ Encerrar Rodada {db.rodada_atual} e Avançar", use_container_width=True):
             if db.rodada_atual == 4:
                 aplicar_auditoria_final()
             db.rodada_atual += 1
+            st.rerun()
+
+    with col3:
+        if st.button("📈 Ir para o Telão →", use_container_width=True):
+            st.session_state["usuario_logado"] = "📈 Telão (Bolsa)"
             st.rerun()
 
     with col2:
@@ -529,12 +527,12 @@ elif perfil == "🎛️ Painel Apresentador" and not eh_empresa_no_telao:
 # VISÃO TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📈 Telão (Bolsa)":
-    col_title, col_nav = st.columns([3, 1])
+    col_title, col_nav = st.columns([4, 1])
     with col_title:
         st.title("📈 Painel de Mercado")
     with col_nav:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🎛️ Ir para o Painel →", use_container_width=True):
+        if st.button("🎛️ Painel →", use_container_width=True):
             st.session_state["usuario_logado"] = "🎛️ Painel Apresentador"
             st.rerun()
 
