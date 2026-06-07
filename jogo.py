@@ -82,11 +82,13 @@ LABELS = LABELS_DEFAULT
 
 SENHAS = {
     "🎛️ Painel Apresentador": "mestre123",
-    "📈 Telão (Bolsa)":        "telao123",
     "α - Empresa Alfa":        "alfa",
     "β - Empresa Beta":        "beta",
     "γ - Empresa Gama":        "gama",
 }
+
+# Perfis de acesso livre (sem senha)
+ACESSO_LIVRE = ["📈 Telão (Bolsa)"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. DRE por Rodada e Escolha
@@ -256,7 +258,7 @@ if st.session_state["usuario_logado"] is None:
     st.title("🔒 Simulador de Governança")
 
     opcoes_disponiveis = []
-    for chave in SENHAS.keys():
+    for chave in list(SENHAS.keys()) + ACESSO_LIVRE:
         nome_interno = EMPRESA_MAP.get(chave)
         if nome_interno and nome_interno in db.sessoes_ativas:
             opcoes_disponiveis.append(f"🔴 {chave} — Vaga preenchida")
@@ -268,16 +270,22 @@ if st.session_state["usuario_logado"] is None:
     if perfil_escolhido_raw.startswith("🔴"):
         st.error("🚫 Vaga preenchida! Busque outra empresa.")
     elif perfil_escolhido_raw != "Escolha uma opção...":
-        senha_digitada = st.text_input("Senha:", type="password")
-        if st.button("🚪 Autenticar"):
-            if senha_digitada == SENHAS[perfil_escolhido_raw]:
+        if perfil_escolhido_raw in ACESSO_LIVRE:
+            # Telão: acesso direto sem senha
+            if st.button("📈 Acessar Telão", use_container_width=True):
                 st.session_state["usuario_logado"] = perfil_escolhido_raw
-                nome_interno = EMPRESA_MAP.get(perfil_escolhido_raw)
-                if nome_interno:
-                    db.sessoes_ativas.add(nome_interno)
                 st.rerun()
-            else:
-                st.error("Senha incorreta.")
+        else:
+            senha_digitada = st.text_input("Senha:", type="password")
+            if st.button("🚪 Autenticar"):
+                if senha_digitada == SENHAS[perfil_escolhido_raw]:
+                    st.session_state["usuario_logado"] = perfil_escolhido_raw
+                    nome_interno = EMPRESA_MAP.get(perfil_escolhido_raw)
+                    if nome_interno:
+                        db.sessoes_ativas.add(nome_interno)
+                    st.rerun()
+                else:
+                    st.error("Senha incorreta.")
     st.stop()
 
 perfil = st.session_state["usuario_logado"]
