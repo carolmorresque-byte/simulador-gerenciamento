@@ -5,7 +5,7 @@ import time
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Configuração da Página
 # ─────────────────────────────────────────────────────────────────────────────
-st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
+st.set_page_config(page_title="Simulador Bolsa - Governança Corporativa", layout="wide")
 
 st.markdown("""
     <style>
@@ -68,15 +68,15 @@ LABELS_R1 = {
 }
 
 LABELS_R2 = {
-    'A': '📉 OPÇÃO A: Assumir Perda Cambial Imediata — Reconhece o impacto cambial direto na DRE e a desvalorização via provisão de estoque.',
-    'B': '⚖️ OPÇÃO B: Dilatar Ativos e Depreciação (CPC 16/23) — Ativa custos extras no estoque e alonga a vida útil dos ativos de 5 para 10 anos.',
-    'C': '🎭 OPÇÃO C: Crédito de Incentivo Comercial (Rebate Fake) — Registra descontos verbais futuros de 24 meses como receita imediata.',
+    'A': ' OPÇÃO A: Assumir Perda Cambial Imediata — Reconhece o impacto cambial direto na DRE e a desvalorização via provisão de estoque.',
+    'B': ' OPÇÃO B: Dilatar Ativos e Depreciação (CPC 16/23) — Ativa custos extras no estoque e alonga a vida útil dos ativos de 5 para 10 anos.',
+    'C': ' OPÇÃO C: Crédito de Incentivo Comercial (Rebate Fake) — Registra descontos verbais futuros de 24 meses como receita imediata.',
 }
 
 LABELS_R3 = {
-    'A': '✅ OPÇÃO A: Transparência Integral (PECLD) — Registra o calote real de R$ 200M in PDD/PECLD na DRE conforme o CPC 48 (IFRS 9).',
-    'B': '🚨 OPÇÃO B: Securitização via FIDC com Deságio — Transfere a carteira para um fundo. Aloca R$ 50M de prejuízo no Financeiro, blindando o EBITDA.',
-    'C': '💀 OPÇÃO C: Congelar Provisões e Antecipar Garantias — Omite os R$ 200M em perdas e antecipa R$ 80M de receitas futuras (Brecha CPC 47).',
+    'A': 'OPÇÃO A: Transparência Integral (PECLD) — Registra o calote real de R$ 200M in PDD/PECLD na DRE conforme o CPC 48 (IFRS 9).',
+    'B': ' OPÇÃO B: Securitização via FIDC com Deságio — Transfere a carteira para um fundo. Aloca R$ 50M de prejuízo no Financeiro, blindando o EBITDA.',
+    'C': ' OPÇÃO C: Congelar Provisões e Antecipar Garantias — Omite os R$ 200M em perdas e antecipa R$ 80M de receitas futuras (Brecha CPC 47).',
 }
 
 def get_labels(rodada: int) -> dict:
@@ -86,8 +86,8 @@ def get_labels(rodada: int) -> dict:
     return LABELS_R1
 
 NARRATIVAS = {
-    1: """### 🏭 1: O DILEMA DO RISCO SACADO e ANTECIPAÇÃO DE FORNECEDORES
-**Cenário:** O comitê de auditoria descobriu que a empresa realiza operações de *Forfait* (Risco Sacado) com grandes bancos para antecipar pagamentos de fornecedores. Os juros dessas operações vinham sendo incorporados ao custo das mercadorias ou transitando fora do balanço. Uma denúncia anônima ameaça ir à CVM caso a prática continue oculta.
+    1: """### 🏭 RODADA 1: O DILEMA DO RISCO SACADO e ANTECIPAÇÃO DE FORNECEDORES
+**Cenário:** O comitê de auditoria descobriu que a empresa realiza operações de Risco Sacado com grandes bancos para antecipar pagamentos de fornecedores. Os juros dessas operações vinham sendo incorporados ao custo das mercadorias ou transitando fora do balanço. Uma denúncia anônima ameaça ir à CVM caso a prática continue oculta.
 
 Sua mesa diretora precisa decidir como tratar a reclassificação desses juros antes da divulgação do balanço trimestral.""",
     
@@ -103,9 +103,9 @@ Escolha a estratégia de provisionamento para mitigar o impacto na percepção d
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3.5. Gerador de Notícias Dinâmicas (Mural Duplo: Melhor vs Pior)
+# 3.5. Gerador de Notícias Dinâmicas (Com Mensagem de Bônus por Velocidade)
 # ─────────────────────────────────────────────────────────────────────────────
-def gerar_manchete_dinamica(rodada_encerrada: int):
+def gerar_manchete_dinamica(rodada_encerrada: int, primeiro_colocado: str = None):
     precos_atuais = {nome: db.dados_empresas[nome]["precos"][-1] for nome in EMPRESAS}
     lista_ordenada = sorted(precos_atuais.items(), key=lambda x: x[1], reverse=True)
     
@@ -122,19 +122,23 @@ def gerar_manchete_dinamica(rodada_encerrada: int):
     topo_manchete, topo_texto = "", ""
     baixo_manchete, baixo_texto = "", ""
 
+    msg_bonus = ""
+    if primeiro_colocado:
+        msg_bonus = f"<br><br><span style='color: #1b5e20; font-weight: bold; background-color: #c8e6c9; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 11.5px; border: 1px solid #81c784;'>⏱️ A {primeiro_colocado} foi a primeira a homologar! O mercado aprecia a rapidez e concedeu bônus de +R$ 0,10 por ação.</span>"
+
     if todos_empatados:
-        topo_manchete = f"📈 MERCADO EM EQUILÍBRIO: SETOR CAMINHA EM BLOCO!"
-        topo_texto = f"SÃO PAULO — Sem distinção de performance nesta etapa, as bancadas mantiveram o valor de tela rigidamente pareado em R$ {preco_max:.2f}."
+        topo_manchete = f"MERCADO EM EQUILÍBRIO: SETOR CAMINHA EM BLOCO!"
+        topo_texto = f"SÃO PAULO — Sem distinção de performance técnica nesta etapa, as bancadas mantiveram o valor de tela rigidamente pareado em R$ {preco_max:.2f}.{msg_bonus}"
         baixo_manchete = f"💸 ESTABILIDADE TEMPORÁRIA: SEM VANTAGENS COMPETITIVAS"
-        baixo_texto = f"SÃO PAULO — Analistas reportam que a falta de divergência contábil congelou os investidores nas mesmas posições de mercado."
+        baixo_texto = f"SÃO PAULO — Analistas reportam que a falta de divergência contábil congelou investidores corporativos nas mesmas posições."
     else:
-        # Notícia de Cima: A Melhor Empresa (Sucesso/Alta)
+        # Melhor Empresa
         topo_manchete = f"🚀 BOOM NO PREGÃO: {txt_lideres} DISPARA NA LIDERANÇA! 💰"
-        topo_texto = f"SÃO PAULO — Investidores institucionais aplaudiram as manobras financeiras adotadas pela liderança. Os papéis dispararam com forte volume comprador, atingindo o topo histórico de R$ {preco_max:.2f}."
+        topo_texto = f"SÃO PAULO — Investidores institucionais aplaudiram as manobras financeiras adotadas pela liderança do setor. Os papéis dispararam com forte volume comprador, atingindo o topo histórico de R$ {preco_max:.2f}.{msg_bonus}"
         
-        # Notícia de Baixo: A Pior Empresa (Queda/Dinheiro Voando)
+        # Pior Empresa
         baixo_manchete = f"💸 CAPITAL EM FUGA: {txt_lanternas} DERRETE NA LANTERNA! 💸💸"
-        baixo_texto = f"SÃO PAULO — O mercado reagiu com extrema desconfiança e puniu as escolhas da gestão. O valuation voou para longe e as ações despencaram para a base do setor, cotadas a apenas R$ {preco_min:.2f}."
+        baixo_texto = f"SÃO PAULO — O mercado reagiu com extrema desconfiança e puniu severamente as escolhas da gestão. O valuation voou para longe e as ações despencaram para a base do setor, cotadas a apenas R$ {preco_min:.2f}."
 
     html_jornal = f"""
     <div style="background-color: #ffffff; border: 1px solid #ddd; font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 4px; overflow: hidden;">
@@ -143,7 +147,6 @@ def gerar_manchete_dinamica(rodada_encerrada: int):
             <div style="font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">EXERCÍCIO {rodada_encerrada}</div>
         </div>
         <div style="padding: 20px 15px;">
-            <!-- BLOCO DA MELHOR -->
             <div style="background-color: #2e7d32; color: #ffffff; padding: 12px 15px; border-radius: 2px; font-size: 15px; font-weight: bold; text-transform: uppercase; line-height: 1.3;">
                 {topo_manchete}
             </div>
@@ -151,7 +154,6 @@ def gerar_manchete_dinamica(rodada_encerrada: int):
                 <p style="font-size: 13px; color: #333333; margin: 0; text-align: justify; line-height: 1.4;">{topo_texto}</p>
             </div>
             
-            <!-- BLOCO DA PIOR -->
             <div style="background-color: #c62828; color: #ffffff; padding: 12px 15px; border-radius: 2px; font-size: 15px; font-weight: bold; text-transform: uppercase; line-height: 1.3;">
                 {baixo_manchete}
             </div>
@@ -358,7 +360,7 @@ elif perfil == "📰 Mídia (Notícias)":
         st.info("⏳ Nenhuma notícia extraordinária publicada neste ciclo operacional.")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR (Mestre)
+# TELA: PAINEL DO APRESENTADOR (Mestre) — LIMPO SEM BLOCO FANTASMA
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Apresentador":
     if st.button("⬅️ Voltar para a Home"):
@@ -385,16 +387,17 @@ elif perfil == "🎛️ Painel Apresentador":
             votos_da_rodada = [(n, db.dados_empresas[n]["tempo_voto"]) for n in EMPRESAS if db.dados_empresas[n][f"voto_r{rodada}"] is not None]
             ranking_velocidade = [item[0] for item in sorted(votos_da_rodada, key=lambda x: x[1] if x[1] else 0)]
             
+            primeiro_a_responder = ranking_velocidade[0] if ranking_velocidade else None
+            
             for nome in EMPRESAS:
                 voto = db.dados_empresas[nome][f"voto_r{rodada}"]
                 if voto:
                     preco_base = db.dados_empresas[nome]["precos"][-1] * IMPACTOS[rodada][voto]
-                    ajuste_tempo = 0.10 if (ranking_velocidade and nome == ranking_velocidade[0]) else (-0.10 if (len(ranking_velocidade) == 3 and nome == ranking_velocidade[-1]) else 0.0)
+                    ajuste_tempo = 0.10 if (nome == primeiro_a_responder) else (-0.10 if (len(ranking_velocidade) == 3 and nome == ranking_velocidade[-1]) else 0.0)
                     db.dados_empresas[nome]["precos"].append(round(preco_base + ajuste_tempo, 2))
                     db.dados_empresas[nome]["tempo_voto"] = None  
 
-            # O gerador duplo agora cria o bloco de Melhor e Pior dinamicamente
-            nova_manchete = gerar_manchete_dinamica(rodada)
+            nova_manchete = gerar_manchete_dinamica(rodada, primeiro_a_responder)
             db.historico_noticias.insert(0, nova_manchete)
             
             if db.rodada_atual == 3: aplicar_auditoria_final()
