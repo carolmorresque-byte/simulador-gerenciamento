@@ -400,8 +400,8 @@ elif perfil == "📰 Mídia (Notícias)":
     else: 
         st.info("⏳ Nenhuma notícia extraordinária publicada neste ciclo operacional.")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR (Mestre)
+## ─────────────────────────────────────────────────────────────────────────────
+# TELA: PAINEL DO APRESENTADOR (Mestre) - Processamento com Bônus/Ônus de Tempo
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Apresentador":
     if st.button("⬅️ Voltar para a Home"):
@@ -425,23 +425,42 @@ elif perfil == "🎛️ Painel Apresentador":
     with col1:
         texto_botao = f"▶ Encerrar Exercício {rodada} e Processar Resultados" if rodada < 3 else "🏁 Encerrar Ciclo e Gerar Auditoria Final"
         if rodada <= 3 and st.button(texto_botao, type="primary"):
+            # 1. Mapeia quem respondeu e captura os tempos de homologação
             votos_da_rodada = [(n, db.dados_empresas[n]["tempo_voto"]) for n in EMPRESAS if db.dados_empresas[n][f"voto_r{rodada}"] is not None]
             ranking_velocidade = [item[0] for item in sorted(votos_da_rodada, key=lambda x: x[1] if x[1] else 0)]
             
             primeiro_a_responder = ranking_velocidade[0] if ranking_velocidade else None
+            ultimo_a_responder = ranking_velocidade[-1] if len(ranking_velocidade) == 3 else None
             
+            # 2. Aplica as regras matemáticas na ação de cada empresa
             for nome in EMPRESAS:
                 voto = db.dados_empresas[nome][f"voto_r{rodada}"]
                 if voto:
-                    preco_base = db.dados_empresas[nome]["precos"][-1] * IMPACTOS[rodada][voto]
-                    ajuste_tempo = 0.10 if (nome == primeiro_a_responder) else (-0.10 if (len(ranking_velocidade) == 3 and nome == ranking_velocidade[-1]) else 0.0)
-                    db.dados_empresas[nome]["precos"].append(round(preco_base + ajuste_tempo, 2))
-                    # Mantemos o "tempo_voto" preservado para a tela do aluno consultar depois
+                    preco_anterior = db.dados_empresas[nome]["precos"][-1]
+                    
+                    # Impacto da decisão contábil escolhida
+                    preco_base = preco_anterior * IMPACTOS[rodada][voto]
+                    
+                    # Define o modificador de tempo (Bônus +0.10, Ônus -0.10)
+                    ajuste_tempo = 0.0
+                    if nome == primeiro_a_responder:
+                        ajuste_tempo = 0.10
+                    elif nome == ultimo_a_responder:
+                        ajuste_tempo = -0.10
+                    
+                    # Preço final da rodada = Decisão Técnica + Tempo de Resposta
+                    preco_final_rodada = round(preco_base + ajuste_tempo, 2)
+                    
+                    # Salva o novo valor no histórico da empresa (atualiza Telão e Gráficos)
+                    db.dados_empresas[nome]["precos"].append(preco_final_rodada)
 
-            nova_manchete = gerar_manchete_dinamica(rodada, primeiro_a_responder)
+            # 3. Dispara a criação do jornal (lendo os novos preços consolidados)
+            nova_manchete = gerar_manchete_dinamica(rodada)
             db.historico_noticias.insert(0, nova_manchete)
             
-            if db.rodada_atual == 3: aplicar_auditoria_final()
+            if db.rodada_atual == 3: 
+                aplicar_auditoria_final()
+                
             db.rodada_atual += 1
             st.rerun()
 
@@ -463,7 +482,6 @@ elif perfil == "🎛️ Painel Apresentador":
     
     time.sleep(4)
     st.rerun()
-
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS (ALUNOS)
 # ─────────────────────────────────────────────────────────────────────────────
