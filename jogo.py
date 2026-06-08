@@ -19,30 +19,19 @@ st.markdown("""
 # 2. Banco de Dados Global (Memória Central Compartilhada)
 # ─────────────────────────────────────────────────────────────────────────────
 class BancoDadosMemoria:
-    def __init__(self):
-        self.rodada_atual = 1
-        self.historico_noticias = []  
-        self.dados_empresas = {
-            nome: {
-                "precos": [20.0],
-                "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
-                "tempo_voto": None,  
-                "status": "Operando", "noticia_r4": "", "score_gr": 0,
-            }
-            for nome in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
-        }
-        self.sessoes_ativas = set()
-
-@st.cache_resource
-def obter_conexao_banco_global():
-    return BancoDadosMemoria()
-
-db = obter_conexao_banco_global()
-
-if not hasattr(db, 'sessoes_ativas'):
-    db.sessoes_ativas = set()
-if not hasattr(db, 'historico_noticias'):
-    db.historico_noticias = []
+    def __init__(self):
+        self.rodada_atual = 1
+        self.historico_noticias = []  
+        self.dados_empresas = {
+            nome: {
+                "precos": [20.0],
+                "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
+                "tempo_voto": None,  
+                "status": "Operando", "noticia_r4": "", "score_gr": 0,
+            }
+            for nome in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
+        }
+        self.sessoes_ativas = set()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Mapeamentos e Constantes Oficiais
