@@ -448,23 +448,32 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
             votos_finais = {f"r{r}": d[f"voto_r{r}"] for r in range(1, 4)}
             exibir_dre(votos_finais, 3)
 
-    with aba_jornal_aluno:
+  with aba_jornal_aluno:
         if db.historico_noticias:
             for n_html in db.historico_noticias:
                 st.html(n_html)
-        else: # <--- Este else precisa estar alinhado com o 'if db.historico_noticias:' acima
+        else:
             st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    # AQUI COMEÇA O BLOCO DA AUDITORIA (FORA DO TAB)
-    # Verifique se este 'if' está no mesmo nível do 'with aba_voto'
-    if rodada > 3: 
-        st.markdown(f"## 🏁 Relatório de Auditoria CVM")
-        votos_finais = {"voto_r1": d["voto_r1"], "voto_r2": d["voto_r2"], "voto_r3": d["voto_r3"]}
+    # Bloco Corrigido para Auditoria Final
+    if db.rodada_atual >= 4:
+        st.divider()
+        st.markdown(f"## 🏁 Relatório de Auditoria CVM: {nome_interno}")
         
+        # Consolida os votos para exibição
+        votos_finais = {
+            "r1": d["voto_r1"], 
+            "r2": d["voto_r2"], 
+            "r3": d["voto_r3"]
+        }
+        
+        # Processa penalidade apenas se não tiver sido processada
         if len(d["precos"]) == 4:
-            processar_rodada_4_consolidada(nome_interno, votos_finais, d["precos"][-1])
-        
+            preco_final = processar_rodada_4_consolidada(nome_interno, votos_finais, d["precos"][-1])
+            d["noticia_r4"] = "Auditoria concluída com base na governança adotada."
+            
         st.warning(f"**Veredito:** {d['status']}")
-        st.metric("Valor da Ação Pós-Auditoria", f"R$ {d['precos'][-1]:.2f}")
+        st.metric("Valor Final da Ação", f"R$ {d['precos'][-1]:.2f}")
+        
         plotar_grafico_empresa(nome_interno)
         exibir_dre(votos_finais, 3)
