@@ -632,9 +632,15 @@ elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
 
     st.title("📈 Painel Geral do Mercado de Capitais")
-    if st.button("⬅️ Voltar para a Home"):
-        st.session_state["pagina_atual"] = "🏠 Início"
-        st.rerun()
+    btn_col1, btn_col2, _ = st.columns([1, 1, 4])
+    with btn_col1:
+        if st.button("⬅️ Voltar para a Home", use_container_width=True):
+            st.session_state["pagina_atual"] = "🏠 Início"
+            st.rerun()
+    with btn_col2:
+        if st.button("📰 Ver Mídia / Notícias", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
     plotar_grafico_geral(estado)
 
