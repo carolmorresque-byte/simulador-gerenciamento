@@ -346,56 +346,38 @@ if perfil == "🏠 Início":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO (BOLSA)
 # ─────────────────────────────────────────────────────────────────────────────
-# Dentro de: elif perfil == "📈 Telão (Bolsa)":
-        fig, ax = plt.subplots(figsize=(10, 3))
-        fig.patch.set_facecolor('#0e1117')
-        ax.set_facecolor('#1e222b')
-        ax.tick_params(colors='white')
-        
-        # ... (seu código de plotagem permanece igual)
-
-        # CORREÇÃO AQUI: Define eixos e labels de forma segura
-        labels_disponiveis = ['Abertura', 'Ex. 1', 'Ex. 2', 'Ex. 3', 'Auditoria']
-        ax.set_xticks(range(maior_tamanho))
-        ax.set_xticklabels(labels_disponiveis[:maior_tamanho])
-        
-        ax.legend(facecolor='#1e222b', edgecolor='#444', labelcolor='white')
-        st.pyplot(fig)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: MÍDIA (NOTÍCIAS HISTÓRICAS)
-# ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "📰 Mídia (Notícias)":
-    st.title("📰 Portal Informativo - FEED COMPLETO GC NEWS")
+## TELA: TELÃO (BOLSA)
+elif perfil == "📈 Telão (Bolsa)":
+    st.title("📈 Painel Geral do Mercado de Capitais")
     if st.button("⬅️ Voltar para a Home"):
         st.session_state["pagina_atual"] = "🏠 Início"
         st.rerun()
-        
-    if db.historico_noticias:
-        for n_html in db.historico_noticias:
-            st.html(n_html)
-    else: 
-        st.info("⏳ Nenhuma notícia  publicada neste ciclo .")
 
-## ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR (Mestre) - Processamento com Bônus/Ônus de Tempo
-# ─────────────────────────────────────────────────────────────────────────────
-# Dentro do: if rodada <= 3 and st.button(texto_botao, type="primary"):
-# No final do bloco, dentro do if rodada <= 3:
-            
-            # ... (código de cálculo de preços existente)
-            
-            # Dispara a notícia da rodada atual
-            db.historico_noticias.insert(0, gerar_manchete_dinamica(rodada))
-            
-           # Lógica para Rodada 4 (CVM)
-            if rodada == 3:
-                aplicar_auditoria_final()
-                db.historico_noticias.insert(0, gerar_manchete_dinamica(4))
-                db.rodada_atual = 4 # Garante que o jogo entra na fase de auditoria
-            else:
-                db.rodada_atual += 1
-            st.rerun()
+    # Cálculo seguro do tamanho
+    tamanhos = [len(db.dados_empresas[emp]["precos"]) for emp in EMPRESAS]
+    maior_tamanho = max(tamanhos)
+    
+    fig, ax = plt.subplots(figsize=(10, 3))
+    fig.patch.set_facecolor('#0e1117')
+    ax.set_facecolor('#1e222b')
+    
+    for emp in EMPRESAS:
+        precos = db.dados_empresas[emp]["precos"]
+        ax.plot(range(len(precos)), precos, label=emp, marker='o')
+
+    # A ORDEM ABAIXO É O QUE EVITA O VALUEERROR:
+    # 1. Define os locais dos ticks (inteiros de 0 até o tamanho máximo)
+    ax.set_xticks(range(maior_tamanho))
+    
+    # 2. Define os rótulos baseados nesse mesmo range
+    labels_disponiveis = ['Abertura', 'R1', 'R2', 'R3', 'Auditoria']
+    ax.set_xticklabels(labels_disponiveis[:maior_tamanho])
+    
+    ax.tick_params(colors='white')
+    ax.legend(facecolor='#1e222b', edgecolor='#444', labelcolor='white')
+    ax.grid(color='#333', linestyle='--', alpha=0.5)
+    
+    st.pyplot(fig)
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS (ALUNOS)
 # ─────────────────────────────────────────────────────────────────────────────
