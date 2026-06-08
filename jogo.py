@@ -452,16 +452,19 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
         if db.historico_noticias:
             for n_html in db.historico_noticias:
                 st.html(n_html)
-       else: # Fim do jogo (Rodada 4 em diante)
-            st.markdown(f"## 🏁 Relatório de Auditoria CVM")
-            votos_finais = {"voto_r1": d["voto_r1"], "voto_r2": d["voto_r2"], "voto_r3": d["voto_r3"]}
-            
-            # Se for a primeira vez que entra aqui, calcula a ação da auditoria
-            if len(d["precos"]) == 4:
-                preco_final = processar_rodada_4_consolidada(nome_interno, votos_finais, d["precos"][-1])
-            
-            st.warning(f"**Veredito:** {d['status']}")
-            st.metric("Valor da Ação Pós-Auditoria", f"R$ {d['precos'][-1]:.2f}")
-            
-            plotar_grafico_empresa(nome_interno)
-            exibir_dre(votos_finais, 3)
+        else: # <--- Este else precisa estar alinhado com o 'if db.historico_noticias:' acima
+            st.info("⏳ Nenhuma notícia publicada neste ciclo.")
+
+    # AQUI COMEÇA O BLOCO DA AUDITORIA (FORA DO TAB)
+    # Verifique se este 'if' está no mesmo nível do 'with aba_voto'
+    if rodada > 3: 
+        st.markdown(f"## 🏁 Relatório de Auditoria CVM")
+        votos_finais = {"voto_r1": d["voto_r1"], "voto_r2": d["voto_r2"], "voto_r3": d["voto_r3"]}
+        
+        if len(d["precos"]) == 4:
+            processar_rodada_4_consolidada(nome_interno, votos_finais, d["precos"][-1])
+        
+        st.warning(f"**Veredito:** {d['status']}")
+        st.metric("Valor da Ação Pós-Auditoria", f"R$ {d['precos'][-1]:.2f}")
+        plotar_grafico_empresa(nome_interno)
+        exibir_dre(votos_finais, 3)
