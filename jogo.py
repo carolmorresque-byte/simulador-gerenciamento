@@ -703,26 +703,7 @@ elif perfil == "🎛️ Painel Apresentador":
 # ─────────────────────────────────────────────────────────────────────────────
 # VISÃO TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "📈 Telão (Bolsa)":
-    st.title("📈 Painel Geral do Mercado de Capitais")
-
-    telao_origem = st.session_state.get("telao_origem")
-    if telao_origem:
-        if st.button("← Voltar para o meu painel", use_container_width=True):
-            st.session_state["usuario_logado"] = telao_origem
-            st.rerun()
-
-    st.markdown("---")
-    aba_mercado, aba_jornal = st.tabs(["📈 Cotações e Gráficos", "📰 GC NEWS"])
-
-    with aba_mercado:
-        col1, col2, col3 = st.columns(3)
-        for i, nome in enumerate(EMPRESAS):
-            with [col1, col2, col3][i]:
-                preco_atual = db.dados_empresas[nome]["precos"][-1]
-                st.metric(label=nome, value=f"R$ {preco_atual:.2f}")
-
-        st.markdown("<br>##### Histórico de Desempenho Contínuo", unsafe_allow_html=True)
+st.markdown("<br>##### Histórico de Desempenho Contínuo", unsafe_allow_html=True)
         fig, ax = plt.subplots(figsize=(10, 3))
         fig.patch.set_facecolor('#0e1117')
         ax.set_facecolor('#1e222b')
@@ -730,19 +711,21 @@ elif perfil == "📈 Telão (Bolsa)":
         ax.grid(True, color='#444', linestyle='--', alpha=0.5)
         
         cores = {"Empresa Alfa": "#3498db", "Empresa Beta": "#e67e22", "Empresa Gama": "#2ecc71"}
+        
+        # Variável para sabermos o tamanho máximo do histórico atual
+        maior_tamanho_historico = 1
+        
         for nome in EMPRESAS:
             historico = db.dados_empresas[nome]["precos"]
+            if len(historico) > maior_tamanho_historico:
+                maior_tamanho_historico = len(historico)
             ax.plot(range(len(historico)), historico, marker='o', linewidth=2.5, color=cores.get(nome, "#fff"), label=nome)
         
-        ax.set_xticks(range(4))
-        ax.set_xticklabels(['Abertura', 'Ex. 1', 'Ex. 2', 'Ex. 3'][:len(historico)])
+        # CORREÇÃO AQUI: Ajusta dinamicamente os eixos para não quebrar o Matplotlib
+        labels_disponiveis = ['Abertura', 'Ex. 1', 'Ex. 2', 'Ex. 3']
+        
+        ax.set_xticks(range(maior_tamanho_historico))
+        ax.set_xticklabels(labels_disponiveis[:maior_tamanho_historico])
+        
         ax.legend()
         st.pyplot(fig)
-
-    with aba_jornal:
-        if db.manchete_jornal:
-            st.html(db.manchete_jornal)
-
-    # Refresh suave do telão
-    time.sleep(3)
-    st.rerun()
