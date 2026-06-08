@@ -45,7 +45,7 @@ if not hasattr(db, 'historico_noticias'):
     db.historico_noticias = []
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. Mapeamentos e Constantes Oficiais (Respostas sem Ícones)
+# 3. Mapeamentos e Constantes Oficiais
 # ─────────────────────────────────────────────────────────────────────────────
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
@@ -63,7 +63,7 @@ IMPACTOS = {
 
 LABELS_R1 = {
     'A': 'OPÇÃO A: Lançar em Passivo Financeiro — Encargos no resultado (-R$ 310M). EBITDA: R$ 1.000M | Lucro Líquido cai para R$ 690M.',
-    'B': 'OPÇÃO B: Lançar em Ativo Circulante (Estoques) — Juros ativados no estoque. EBITDA: R$ 1.000M | Lucro Líquido estável in R$ 700M.',
+    'B': 'OPÇÃO B: Lançar em Ativo Circulante (Estoques) — Juros ativados no estoque. EBITDA: R$ 1.000M | Lucro Líquido estável em R$ 700M.',
     'C': 'OPÇÃO C: Lançar em Passivo Operacional e Reduzir PDD — Reduz PDD para -R$ 100M. EBITDA sobe para R$ 1.050M | Lucro Líquido vai para R$ 750M.',
 }
 
@@ -86,7 +86,7 @@ def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
 
 NARRATIVAS = {
     1: """### 🏭 RODADA 1: RISCO SACADO E COVENANTS FINANCEIROS
-**Cenário:** A empresa enfrenta pressões de liquidez e, para manter suas operações, utilizou uma estrutura de risco sacado com o Banco Épsilon. Essa operação antecipa o recebimento para fornecedores estratégicos e estende o prazo de pagamento da companhia (com juros de R$ 10MM), evitando o desabastecimento.
+**Cenário:** A empresa enfrenta pressões de liquidez e, para manter suas operações, utilizou uma estrutura de risco sacado com o Banco Épsilon. Essa operation antecipa o recebimento para fornecedores estratégicos e estende o prazo de pagamento da companhia (com juros de R$ 10MM), evitando o desabastecimento.
 
 O principal problema é o impacto nos covenants financeiros:
 *   **Situação Atual:** O índice Dívida Líquida/EBITDA está em 2,9x (o limite contratual é 3,0x).
@@ -105,63 +105,68 @@ A diretoria se reúne em caráter de urgência para definir a manobra orçament�
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3.5. Gerador de Notícias Dinâmicas (Mural Temático por Rodada: Mar, Corrida e Boxe)
+# 3.5. Gerador de Notícias Dinâmicas (Foco Exclusivo em Cotações e Oscilações)
 # ─────────────────────────────────────────────────────────────────────────────
-def gerar_manchete_dinamica(rodada_encerrada: int, primeiro_colocado: str = None):
-    precos_atuais = {nome: db.dados_empresas[nome]["precos"][-1] for nome in EMPRESAS}
-    lista_ordenada = sorted(precos_atuais.items(), key=lambda x: x[1], reverse=True)
+def gerar_manchete_dinamica(rodada_encerrada: int):
+    # Pega o preço atual (pós-rodada) e o do mês anterior (antes do impacto)
+    dados_fechamento = {}
+    for nome in EMPRESAS:
+        historico = db.dados_empresas[nome]["precos"]
+        atual = historico[-1]
+        anterior = historico[-2] if len(historico) > 1 else 20.0
+        variacao = atual - anterior
+        dados_fechamento[nome] = {"atual": atual, "anterior": anterior, "var": variacao}
+
+    lista_ordenada = sorted(dados_fechamento.items(), key=lambda x: x[1]["atual"], reverse=True)
     
-    preco_max = lista_ordenada[0][1]
-    preco_min = lista_ordenada[-1][1]
+    lider_nome, lider_dados = lista_ordered[0]
+    lanterna_nome, lanterna_dados = lista_ordered[-1]
     
-    líderes = [nome for nome, p in precos_atuais.items() if p == preco_max]
-    lanternas = [nome for nome, p in precos_atuais.items() if p == preco_min]
-    todos_empatados = (preco_max == preco_min)
-    
-    txt_lideres = " e ".join(líderes)
-    txt_lanternas = " e ".join(lanternas)
+    todos_empatados = (lider_dados["atual"] == lanterna_dados["atual"])
     
     topo_manchete, topo_texto = "", ""
-    baixo_manchete, background_cor = "", ""
+    baixo_manchete, baixo_texto = "", ""
 
-    msg_bonus = ""
-    if primeiro_colocado:
-        msg_bonus = f"<br><br><span style='color: #1b5e20; font-weight: bold; background-color: #c8e6c9; padding: 4px 8px; border-radius: 4px; display: inline-block; font-size: 11.5px; border: 1px solid #81c784;'>⏱️ A {primeiro_colocado} foi a primeira! O mercado aprecia a rapidez e concedeu um bônus de R$ 0,10 por ação.</span>"
+    # Helper para formatar a variação de preço
+    def fmt_var(valor):
+        return f"+R$ {valor:.2f}" if valor >= 0 else f"-R$ {abs(valor):.2f}"
 
     # --- RODADA 1: MAR / NAVEGAÇÃO ---
     if rodada_encerrada == 1:
         if todos_empatados:
-            topo_manchete = "MAR CALMO: SETOR NAVEGA EM CONVENIO COMPARTILHADO"
-            topo_texto = f"SÃO PAULO — Sem ondas no mercado, todas as embarcações adotaram a mesma rota contábil no risco sacado. Os papéis fecharam rigidamente pareados em R$ {preco_max:.2f}.{msg_bonus}"
+            topo_manchete = "MAR CALMO: EMPRESAS REGISTRAM EQUILÍBRIO ABSOLUTO NO SETOR"
+            topo_texto = f"SÃO PAULO — Em um mês de águas tranquilas, todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}. Analistas apontam que a ausência de volatilidade refletiu estratégias idênticas de tesouraria."
         else:
-            topo_manchete = f"MAR EM FÚRIA: {txt_lideres} ESCAPA DA TEMPESTADE DOS COVENANTS!"
-            topo_texto = f"SÃO PAULO — Enquanto o mar dos covenants ameaçava afundar o setor, as manobras financeiras da liderança garantiram águas calmas e ventos favoráveis. As ações surfaram até R$ {preco_max:.2f}.{msg_bonus}"
-            baixo_manchete = f"NAUFRÁGIO À VISTA: {txt_lanternas} BATE NAS ROCHAS FINANCEIRAS!"
-            baixo_texto = f"SÃO PAULO — A classificação direta como dívida abriu um rombo no casco operacional. O mercado reagiu ao risco de vencimento antecipado e os papéis afundaram para R$ {preco_min:.2f}."
+            topo_manchete = f"MAR EM FÚRIA: {lider_nome} SURFA ONDA DE VALORIZAÇÃO E SOBE {fmt_var(lider_dados['var'])}!"
+            topo_texto = f"SÃO PAULO — Enquanto o setor enfrentava forte maremoto regulatório, a agilidade e a estratégia de mercado da {lider_nome} impulsionaram o papel, saindo de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f} neste mês."
+            
+            baixo_manchete = f"NAUFRÁGIO: {lanterna_nome} ENTRA EM REDEMOINHO E PERDE {fmt_var(lanterna_dados['var'])}"
+            baixo_texto = f"SÃO PAULO — Investidores puniram a lentidão institucional e a engenharia patrimonial da {lanterna_nome}. O papel colapsou perante o mês anterior, derretendo para o valor de tela de R$ {lanterna_dados['atual']:.2f}."
 
     # --- RODADA 2: CORRIDA / FÓRMULA 1 ---
     elif rodada_encerrada == 2:
         if todos_empatados:
-            topo_manchete = "SAFETY CAR NA PISTA: PILOTOS CONGELAM POSIÇÕES NA ALFÂNDEGA"
-            topo_texto = f"SÃO PAULO — O impacto do câmbio e o travamento dos smartphones agiram como uma bandeira amarela geral. Nenhuma escuderia arriscou a ultrapassagem e o grid fechou em R$ {preco_max:.2f}.{msg_bonus}"
+            topo_manchete = "SAFETY CAR NA PISTA: GRID REPETE FECHAMENTO DO MÊS ANTERIOR"
+            topo_texto = f"SÃO PAULO — Sem ultrapassagens no pregão, o mercado de varejo operou sob bandeira amarela. Os ativos congelaram em R$ {lider_dados['atual']:.2f} com variação nula entre as concorrentes."
         else:
-            topo_manchete = f"GP DA TESOURARIA: {txt_lideres} ASSUME A POLE POSITION APÓS O APAGÃO CAMBIAL!"
-            topo_texto = f"SÃO PAULO — Com uma estratégia cirúrgica nos boxes contábeis, a liderança driblou o atraso dos smartphones e acelerou forte na alocação de ativos. Papéis cravam a volta mais rápida a R$ {preco_max:.2f}.{msg_bonus}"
-            baixo_manchete = f"PNEU FURADO E MARGENS BATIDAS: {txt_lanternas} PERDE O CONTROLE NA CURVA DO PREÇO!"
-            baixo_texto = f"SÃO PAULO — O repasse agressivo de 30% fez a máquina fritar os pneus nas concessionárias. Sem tração nas vendas e com demurrage acumulada, as ações rodaram na pista e caíram para R$ {preco_min:.2f}."
+            topo_manchete = f"GP DA TESOURARIA: {lider_nome} METE O PÉ NO ACELERADOR E SALTA PARA R$ {lider_dados['atual']:.2f}!"
+            topo_texto = f"SÃO PAULO — Com uma arrancada agressiva nos boxes da governança, a {lider_nome} registrou uma espetacular alta de {fmt_var(lider_dados['var'])} em relação ao mês anterior, assumindo isolada a liderança do grid."
+            
+            baixo_manchete = f"RODOU NA CURVA: {lanterna_nome} PERDE TRAÇÃO NO MERCADO FINANCEIRO"
+            baixo_texto = f"SÃO PAULO — Após manobras arriscadas na precificação interna, a {lanterna_nome} viu seus papéis perderem {fmt_var(lanterna_dados['var'])} comparado ao fechamento passado, cruzando a linha de chegada a R$ {lanterna_dados['atual']:.2f}."
 
     # --- RODADA 3: BOXE / COMBATE ---
     else:
         if todos_empatados:
-            topo_manchete = "GONGADO: ROUND DO CREDIÁRIO TERMINA EM EMPATE TÉCNICO"
-            topo_texto = f"SÃO PAULO — Diante do cruzado de direita da inadimplência, as bancadas adotaram uma postura defensiva idêntica nas cordas do balanço. Setor pareado no ringue a R$ {preco_max:.2f}.{msg_bonus}"
+            topo_manchete = "GONGADO: ÚLTIMO ROUND TERMINA EM EMPATE OPERACIONAL"
+            topo_texto = f"SÃO PAULO — O combate contra a crise macroeconômica terminou sem um vencedor claro na bolsa. Todas as bancadas resistiram nas cordas e fecharam cotadas em R$ {lider_dados['atual']:.2f}."
         else:
-            topo_manchete = f"NOCAUTE FINANCEIRO: {txt_lideres} ESQUIVA DO CALOTE E SEGURA O CINTURÃO DO EBITDA!"
-            topo_texto = f"SÃO PAULO — Demonstrando jogo de cintura digno de campeão, as cartadas estratégicas de blindagem do resultado evitaram a lona. A bancada segue com o título e ações valorizadas em R$ {preco_max:.2f}.{msg_bonus}"
-            baixo_manchete = f"DIRETO NO QUEIXO: TRANSPARÊNCIA DA PECLD LEVA {txt_lanternas} À LONA!"
-            baixo_texto = f"SÃO PAULO — O impacto brutal do calote integral entrou sem defesa na DRE. Com o EBITDA completamente anulado pelo golpe do CPC 48, os papéis foram a nocaute técnico, despencando para R$ {preco_min:.2f}."
+            topo_manchete = f"NOCAUTE NA BOLSA: {lider_nome} SEGURA O CINTURÃO COM DISPARADA DE {fmt_var(lider_dados['var'])}!"
+            topo_texto = f"SÃO PAULO — Em um fechamento histórico, a {lider_nome} esquivou-se dos riscos de mercado e viu suas ações saltarem do patamar anterior de R$ {lider_dados['anterior']:.2f} para incríveis R$ {lider_dados['atual']:.2f}."
+            
+            baixo_manchete = f"DIRETO NO QUEIXO: {lanterna_nome} CAI À LONA E REGISTRA QUEDA DE {fmt_var(lanterna_dados['var'])}"
+            baixo_texto = f"SÃO PAULO — Sem forças para rebater o impacto dos números consolidados na DRE, a {lanterna_nome} sofreu uma severa fuga de capitais. Os papéis despencaram para R$ {lanterna_dados['atual']:.2f} no encerramento do ciclo."
 
-    # Formatação do layout visual do jornal
     html_jornal = f"""
     <div style="background-color: #ffffff; border: 1px solid #ddd; font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto 20px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-radius: 4px; overflow: hidden;">
         <div style="background-color: #cc0000; color: #ffffff; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;">
@@ -169,7 +174,7 @@ def gerar_manchete_dinamica(rodada_encerrada: int, primeiro_colocado: str = None
             <div style="font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">EXERCÍCIO {rodada_encerrada}</div>
         </div>
         <div style="padding: 20px 15px;">
-            <!-- BLOCO DA MANCHETE PRINCIPAL / LÍDER -->
+            <!-- LÍDER / SUBIU -->
             <div style="background-color: #2e7d32; color: #ffffff; padding: 12px 15px; border-radius: 2px; font-size: 15px; font-weight: bold; text-transform: uppercase; line-height: 1.3;">
                 {topo_manchete}
             </div>
@@ -177,7 +182,7 @@ def gerar_manchete_dinamica(rodada_encerrada: int, primeiro_colocado: str = None
                 <p style="font-size: 13px; color: #333333; margin: 0; text-align: justify; line-height: 1.4;">{topo_texto}</p>
             </div>
             
-            <!-- BLOCO DE QUEDA / LANTERNA (Apenas se não houver empate completo) -->
+            <!-- LANTERNA / CAIU -->
             {" " if todos_empatados else f'''
             <div style="background-color: #c62828; color: #ffffff; padding: 12px 15px; border-radius: 2px; font-size: 15px; font-weight: bold; text-transform: uppercase; line-height: 1.3;">
                 {baixo_manchete}
@@ -211,11 +216,8 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     if v2 == 'A': cmv -= 30_000_000.0
     elif v2 == 'B': depreciacao += 20_000_000.0
         
-    # Cálculo do EBITDA intermediário ao final da Rodada 2
     lucro_bruto_v2 = receita + cmv
     ebitda_v2 = lucro_bruto_v2 + pdd + depreciacao + outras_desp
-    
-    # Provisão exata para anular o EBITDA acumulado
     pecld_dinamica = ebitda_v2 
 
     # Rodada 3
@@ -434,7 +436,7 @@ elif perfil == "🎛️ Painel Apresentador":
                     preco_base = db.dados_empresas[nome]["precos"][-1] * IMPACTOS[rodada][voto]
                     ajuste_tempo = 0.10 if (nome == primeiro_a_responder) else (-0.10 if (len(ranking_velocidade) == 3 and nome == ranking_velocidade[-1]) else 0.0)
                     db.dados_empresas[nome]["precos"].append(round(preco_base + ajuste_tempo, 2))
-                    db.dados_empresas[nome]["tempo_voto"] = None  
+                    # Mantemos o "tempo_voto" preservado para a tela do aluno consultar depois
 
             nova_manchete = gerar_manchete_dinamica(rodada, primeiro_a_responder)
             db.historico_noticias.insert(0, nova_manchete)
@@ -510,6 +512,20 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
                     st.rerun()
             else:
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
+                
+                # --- CALCULA FEEDBACK INDIVIDUAL DE TEMPO (Apenas visível na tela da própria empresa) ---
+                votos_com_tempo = [(n, db.dados_empresas[n]["tempo_voto"]) for n in EMPRESAS if db.dados_empresas[n][f"voto_r{rodada}"] is not None]
+                ranking_temp = [item[0] for item in sorted(votos_com_tempo, key=lambda x: x[1] if x[1] else 0)]
+                
+                if ranking_temp and ranking_temp[0] == nome_interno:
+                    st.markdown("""<div style='background-color: #c8e6c9; border: 1px solid #81c784; color: #1b5e20; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;'>
+                    ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar a decisão! O mercado valorizou a rapidez de governança com +R$ 0,10 na ação.
+                    </div>""", unsafe_allow_html=True)
+                elif len(ranking_temp) == 3 and ranking_temp[-1] == nome_interno:
+                    st.markdown("""<div style='background-color: #ffcdd2; border: 1px solid #ef5350; color: #b71c1c; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;'>
+                    ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última a responder. A lentidão perante a crise gerou incerteza e custou -R$ 0,10 de desconto operacional.
+                    </div>""", unsafe_allow_html=True)
+                
                 votos_reais = {f"r{r}": d[f"voto_r{r}"] for r in range(1, rodada + 1)}
                 exibir_dre(votos_reais, rodada)
         else:
