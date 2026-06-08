@@ -96,44 +96,222 @@ SENHAS = {
 ACESSO_LIVRE = ["📈 Telão (Bolsa)"]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3.5. Gerador de Notícias Dinâmicas (GC NEWS)
+# 3.5. Gerador de Notícias Dinâmicas com Métricas Financeiras e Comparações
 # ─────────────────────────────────────────────────────────────────────────────
-def gerar_manchete_dinamica(rodada: int):
-    precos = {nome: db.dados_empresas[nome]["precos"][-1] for nome in EMPRESAS}
-    lista_ordenada = sorted(precos.items(), key=lambda x: x[1], reverse=True)
+def gerar_manchete_dinamica(rodada_encerrada: int):
+    precos_atuais = {nome: db.dados_empresas[nome]["precos"][-1] for nome in EMPRESAS}
+    precos_anteriores = {nome: db.dados_empresas[nome]["precos"][-2] for nome in EMPRESAS}
+    
+    lista_ordenada = sorted(precos_atuais.items(), key=lambda x: x[1], reverse=True)
     
     preco_max = lista_ordenada[0][1]
     preco_min = lista_ordenada[-1][1]
     
-    líderes = [nome for nome, p in precos.items() if p == preco_max]
-    lanternas = [nome for nome, p in precos.items() if p == preco_min]
+    líderes = [nome for nome, p in precos_atuais.items() if p == preco_max]
+    lanternas = [nome for nome, p in precos_atuais.items() if p == preco_min]
     
     todos_empatados = (preco_max == preco_min)
     
+    nome_lider_rep = líderes[0]
+    nome_lanterna_rep = lanternas[0]
+    
+    var_lider_pct = ((preco_max - precos_anteriores[nome_lider_rep]) / precos_anteriores[nome_lider_rep]) * 100
+    var_lanterna_pct = ((preco_min - precos_anteriores[nome_lanterna_rep]) / precos_anteriores[nome_lanterna_rep]) * 100
+    
+    distancia_pct = ((preco_max - preco_min) / preco_min) * 100 if preco_min > 0 else 0
+
     txt_lideres = " e ".join(líderes)
     txt_lanternas = " e ".join(lanternas)
 
-    if rodada == 1:
-        topo_manchete = f"FENÔMENO FINANCEIRO! {txt_lideres} dribla os juros altos e dispara no topo do mercado!"
-        topo_texto = f"SÃO PAULO — Em meio à forte retração do varejo, a estratégia de estruturação de balanço da {txt_lideres} blindou suas ações contra o avanço das taxas de juros."
-        baixo_manchete = f"ALERTA VERMELHO! {txt_lanternas} bate de frente com os covenants e amarga a lanterna!"
-        baixo_texto = f"SÃO PAULO — A falta de flexibilidade contábil custou caro. A {txt_lanternas} viu seus encargos financeiros explodirem na DRE, afundando a confiança do mercado."
-    elif rodada == 2:
-        topo_manchete = f"A PROVA DE BALAS! {txt_lideres} neutraliza o dólar a R$ 6,50 e decola de forma genial!"
-        topo_texto = f"SÃO PAULO — Enquanto o setor de importados virou uma zona de guerra cambial, a {txt_lideres} mostrou resiliência estratégica absurda, acelerando forte na bolsa de valores."
-        baixo_manchete = f"ENGOLINDO ÁGUA! Explosão do câmbio faz as ações da {txt_lanternas} derreterem no porto!"
-        baixo_texto = f"SÃO PAULO — Sem colete salva-vidas contra a disparada do dólar, a {txt_lanternas} foi atropelada pelos custos aduaneiros, disparando saídas de acionistas."
-    else:
-        topo_manchete = f"MINA DE OURO CONTÁBIL! {txt_lideres} ignora calotes e reporta lucros históricos!"
-        topo_texto = f"SÃO PAULO — O mercado financeiro está em puro delírio coletivo! Mesmo com a inadimplência do varejo disparando, a {txt_lideres} conseguiu apresentar um EBITDA astronômico."
-        baixo_manchete = f"NAUFRÁGIO DO CREDIÁRIO! {txt_lanternas} assume o rombo do calote e afunda sozinha!"
-        baixo_texto = f"SÃO PAULO — Realidade nua e crua. Ao registrar integralmente o calote de R$ 200 milhões nas contas a receber, a {txt_lanternas} viu seu valuation derreter."
+    votos_r1 = [db.dados_empresas[n]["voto_r1"] for n in EMPRESAS]
+    votos_r2 = [db.dados_empresas[n]["voto_r2"] for n in EMPRESAS]
+    votos_r3 = [db.dados_empresas[n]["voto_r3"] for n in EMPRESAS]
+    
+    topo_manchete, topo_texto = "", ""
+    baixo_manchete, bajo_texto = "", ""
 
     if todos_empatados:
         topo_manchete = "MERCADO EM ESTABILIDADE ABSOLUTA: Setor caminha em bloco!"
-        topo_texto = "SÃO PAULO — Sem distinção de performance, as empresas do setor adotaram posturas que mantiveram as cotações rigorosamente alinhadas."
-        baixo_manchete = "DISPUTA ACIRRADA: Margens idênticas congelam as posições na bolsa."
-        baixo_texto = "SÃO PAULO — Analistas apontam que a falta de dispersão nas escolhas das diretorias eliminou qualquer vantagem competitiva nesta rodada."
+        topo_texto = f"SÃO PAULO — Sem distinção de performance, as empresas do setor mantiveram as cotas rigorosamente em R$ {preco_max:.2f}."
+        baixo_manchete = "DISPUTA ACIRRADA: Margens idênticas congelam posições na bolsa."
+        baixo_texto = "SÃO PAULO — Analistas apontam que a falta de expressão eliminou vantagens competitivas nesta rodada."
+    
+    # =========================================================================
+    # RODADA 1: METÁFORA MARÍTIMA / TITANIC
+    # =========================================================================
+    elif rodada_encerrada == 1:
+        contagem_A = votos_r1.count('A')
+        contagem_B = votos_r1.count('B')
+        contagem_C = votos_r1.count('C')
+
+        nome_a = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r1"] == 'A'])
+        nome_b = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r1"] == 'B'])
+        nome_c = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r1"] == 'C'])
+
+        if contagem_A == 3:
+            topo_manchete = "🚢 NAUFRÁGIO EM MASSA! Todo o setor bate de frente com o iceberg dos juros!"
+            topo_texto = f"SÃO PAULO — Sem escapatória. A escolha agressiva pelo Passivo Financeiro arrastou todas as empresas para o fundo do pregão, congelando os papéis em R$ {preco_min:.2f}."
+            baixo_manchete = "SEM SOBREVIVENTES"
+            baixo_texto = "Nenhuma mesa conseguiu mitigar os encargos financeiros desta rodada."
+        elif contagem_B == 3:
+            topo_manchete = "🌊 MAR CALMO? Setor se protege em bloco e evita o naufrágio!"
+            topo_texto = f"SÃO PAULO — Ativar juros no estoque garantiu uma navegação segura. Todas as empresas mantiveram as ações estáveis na casa de R$ {preco_max:.2f}."
+            baixo_manchete = "NAVEGAÇÃO COORDENADA"
+            baixo_texto = "Estratégia idêntica neutralizou a volatilidade inicial do mercado."
+        elif contagem_C == 3:
+            topo_manchete = "🏝️ EL DORADO DO VAREJO! Super iates decolam com lucros históricos!"
+            topo_texto = f"SÃO PAULO — Reduzir PDD foi o motor de popa perfeito! O mercado comprou a narrativa de otimismo e inflou as ações para R$ {preco_max:.2f}."
+            baixo_manchete = "CÉU AZUL EM ALTO MAR"
+            baixo_texto = "Balanços altamente agressivos impulsionaram o valuation de todas as bancadas."
+
+        elif contagem_A == 2 and contagem_B == 1:
+            topo_manchete = f"🚢 O SETOR TITANIC! Mercado afunda {abs(var_lanterna_pct):.1f}%, mas a {nome_b} veste colete salva-vidas e cai só {abs(var_lider_pct):.1f}%!"
+            topo_texto = f"SÃO PAULO — Coloquem suas roupas de mergulho, acionistas, porque o clima é de naufrágio geral! O setor bateu no iceberg da crise e afundou. A {nome_b} reagiu rápido, vestiu seu colete a R$ {preco_max:.2f} e garantiu {distancia_pct:.1f}% de vantagem sobre as outras."
+            baixo_manchete = f"NAUFRÁGIO CONFIRMADO: {nome_a} bate no fundo do mar a R$ {preco_min:.2f}!"
+            baixo_texto = f"SÃO PAULO — O mercado puniu a falta de manobra das lanternas, cujas ações derreteram {abs(var_lanterna_pct):.1f}% no trimestre."
+        elif contagem_A == 2 and contagem_C == 1:
+            topo_manchete = f"🌊 CONTRA A MARÉ: Concorrentes afundam {abs(var_lanterna_pct):.1f}%, mas a gigante {nome_c} tinha seu bote reserva e dispara para R$ {preco_max:.2f}!"
+            topo_texto = f"SÃO PAULO — Enquanto uns naufragam com queda expressiva nas ações, a {nome_c} comemora seus lucros, abrindo uma cratera insana de {distancia_pct:.1f}% de distância da lanterna!"
+            baixo_manchete = f"SOB A ÁGUA: {nome_a} registra prejuízo estético e derrete na Bolsa!"
+            baixo_texto = f"SÃO PAULO — Pressionadas pelo passivo, as concorrentes amargaram uma desvalorização violenta, restando cotadas a R$ {preco_min:.2f}."
+        elif contagem_B == 2 and contagem_A == 1:
+            topo_manchete = f"⚓ NAVIO AFUNDANDO, QUEM TEM COLETE BOIA! Setor recua, mas a {nome_a} sem proteção é a que afunda primeiro!"
+            topo_texto = f"SÃO PAULO — Enquanto as concorrentes vestiram o colete e amorteceram a queda em {abs(var_lider_pct):.1f}% (R$ {preco_max:.2f}), a {nome_a} foi direto para o fundo do mar, virando a âncora do pregão ao despencar {abs(var_lanterna_pct):.1f}%."
+            baixo_manchete = f"ÂNCORA DO PREGÃO: {nome_a} desce ao nível abissal de R$ {preco_min:.2f}!"
+            baixo_texto = f"SÃO PAULO — Sem colchão contábil contra as taxas de juros, a empresa viu seu valor de mercado sumir na água."
+        elif contagem_B == 2 and contagem_C == 1:
+            topo_manchete = f"🌊 ENGOLINDO ÁGUA NO MAR! A {nome_c} acelera seu iate de luxo e deixa rivais boiando para trás!"
+            topo_texto = f"SÃO PAULO — Enquanto as concorrentes afundam e tentam respirar na superfície com queda de {abs(var_lanterna_pct):.1f}% (R$ {preco_min:.2f}), a {nome_c} mostra resiliência absoluta a R$ {preco_max:.2f} e abre {distancia_pct:.1f}% de distância."
+            baixo_manchete = f"REBOCADAS PELA CRISE: Ritmo lento prende {nome_b} nas marés baixas!"
+            baixo_texto = f"SÃO PAULO — A postura defensiva evitou a quebra, mas impediu o papel de acompanhar os motores de alta da líder."
+        elif contagem_C == 2 and contagem_A == 1:
+            topo_manchete = f"🏝️ ESQUECIDA EM ALTO MAR? Concorrentes em alta enquanto a {nome_a} afunda sozinha no mar!"
+            topo_texto = f"SÃO PAULO — O mercado vive duas realidades. As concorrentes pegaram o iate de luxo e viram as ações decolarem {var_lider_pct:+.1f}% (R$ {preco_max:.2f}), enquanto a {nome_a} foi abandonada no naufrágio caindo {abs(var_lanterna_pct):.1f}%."
+            baixo_manchete = f"🛟 FORA DO RESGATE: {nome_a} colide com iceberg de despesas e opera a R$ {preco_min:.2f}!"
+            baixo_texto = f"SÃO PAULO — Isolada na lanterna corporativa, a empresa ficou com uma incômoda desvantagem de {distancia_pct:.1f}% em relação ao topo."
+        elif contagem_C == 2 and contagem_B == 1:
+            topo_manchete = f"🌊 ESQUECIDA EM ALTO MAR? Concorrentes em alta enquanto a {nome_b} fica boiando!"
+            topo_texto = f"SÃO PAULO — As concorrentes pegaram o iate e viram as ações subirem {var_lider_pct:+.1f}% (R$ {preco_max:.2f}), enquanto a {nome_b} está em alto mar engolindo água, amargando {abs(var_lanterna_pct):.1f}% de prejuízo."
+            baixo_manchete = f"MANTENDO A CABEÇA FORA D'ÁGUA: {nome_b} amarga R$ {preco_min:.2f} mas evita o colapso total!"
+            baixo_texto = f"SÃO PAULO — Ainda bem que tinha salva-vidas (ficou {distancia_pct:.1f}% atrás da líder), impedindo que o papel virasse fumaça contábil."
+
+    # =========================================================================
+    # RODADA 2: METÁFORA DE CORRIDA / VELOCIDADE
+    # =========================================================================
+    elif rodada_encerrada == 2:
+        contagem_A = votos_r2.count('A')
+        contagem_B = votos_r2.count('B')
+        contagem_C = votos_r2.count('C')
+
+        nome_a = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r2"] == 'A'])
+        nome_b = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r2"] == 'B'])
+        nome_c = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r2"] == 'C'])
+
+        if contagem_A == 3:
+            topo_manchete = "🚨 ENGAVETAMENTO NA PISTA! Setor inteiro bate de frente no muro aduaneiro!"
+            topo_texto = f"SÃO PAULO — O conflito internacional derreteu os motores do varejo. Perdas generalizadas derrubaram o valor de tela de todas as equipes para R$ {preco_min:.2f}."
+            baixo_manchete = "GRID AVARIADO"
+            baixo_texto = "Investidores fogem assustados com os estoques travados no porto."
+        elif contagem_B == 3:
+            topo_manchete = "⚠️ BANDEIRA AMARELA! Pilotos puxam o freio de mão e recuam em bloco!"
+            topo_texto = f"SÃO PAULO — Movimento coordenado de desconfiança faz o mercado desacelerar {abs(var_lider_pct):.1f}%, congelando os carros de corrida em R$ {preco_max:.2f}."
+            baixo_manchete = "PILOTAGEM DEFENSIVA"
+            baixo_texto = "Nenhuma diretoria se arriscou e o grid de largada permaneceu travado."
+        elif contagem_C == 3:
+            topo_manchete = "🏎️ SINAL VERDE E JATO NO MOTOR! Setor quebra recordes na pista da Bolsa!"
+            topo_texto = f"SÃO PAULO — Todas as empresas voaram baixo! Resultados inacreditáveis empurram o papel coletivo para R$ {preco_max:.2f}, ignorando o caos do câmbio."
+            baixo_manchete = "VELOCIDADE MÁXIMA"
+            baixo_texto = "Rebates agressivos mascararam os gargalos logísticos do trimestre de forma unânime."
+
+        elif contagem_A == 2 and contagem_B == 1:
+            topo_manchete = f"💥 PILOTAGEM DE MESTRE! Setor bate no muro do porto, mas {nome_b} desvia do acidente e lidera!"
+            topo_texto = f"SÃO PAULO — O mercado teve prejuízos severos com o dólar, mas a {nome_b} usou o pneu certo, amortecendo a queda para {abs(var_lider_pct):.1f}% (R$ {preco_max:.2f}) e abrindo {distancia_pct:.1f}% sobre o resto do grid."
+            baixo_manchete = f"RODANDO NA CURVA: {nome_a} vai parar na brita cotada a R$ {preco_min:.2f}!"
+            baixo_texto = f"SÃO PAULO — O tombo cambial imediato furou os pneus das lanternas, que despencaram {abs(var_lanterna_pct):.1f}%."
+        elif contagem_A == 2 and contagem_C == 1:
+            topo_manchete = f"🚀 RENDIMENTO DE OUTRO PLANETA! Rivais rodam na pista com o dólar a R$ 6,50, mas {nome_c} aciona o nitro!"
+            topo_texto = f"SÃO PAULO — Enquanto as concorrentes derrapam feio no porto com perdas de {abs(var_lanterna_pct):.1f}%, a {nome_c} engatou a quinta marcha a R$ {preco_max:.2f} e colocou {distancia_pct:.1f}% de vantagem na tabela."
+            baixo_manchete = f"FUMAÇA NO MOTOR: {nome_a} perde tração e amarga cotação de R$ {preco_min:.2f}!"
+            baixo_texto = f"SÃO PAULO — Sem drible contábil, o passivo de importação pesou e jogou o carro na última posição do campeonato."
+        elif contagem_B == 2 and contagem_A == 1:
+            topo_manchete = f"🛑 MOTOR FUNDIDO! Pelotão mantém o ritmo, mas a {nome_a} erra a estratégia e para na brita!"
+            topo_texto = f"SÃO PAULO — Sem proteção cambial, a {nome_a} foi atropelada pelos custos aduaneiros, despencando {abs(var_lanterna_pct):.1f}% e virando lanterna isolada a R$ {preco_min:.2f}. As rivais seguraram o topo a R$ {preco_max:.2f}."
+            baixo_manchete = f"DESVANTAGEM MATERIAL: {nome_a} fica {distancia_pct:.1f}% atrás do pelotão de elite!"
+            baixo_texto = f"SÃO PAULO — Analistas apontam que a escolha radical de reconhecer as perdas expulsou os investidores institucionais da scuderia."
+        elif col_b_2_c_1 := (contagem_B == 2 and contagem_C == 1):
+            topo_manchete = f"🏆 COMENDO POEIRA! A pista encheu de obstáculos, mas a preparada {nome_c} acelera!"
+            topo_texto = f"SÃO PAULO — Enquanto as concorrentes assustadas reduzem a velocidade registrando R$ {preco_min:.2f}, a {nome_c} mostra que quem tem estratégia acelera no caos, batendo R$ {preco_max:.2f} e abrindo {distancia_pct:.1f}%."
+            baixo_manchete = f"FREIO DE MÃO PUXADO: {nome_b} despenca {abs(var_lanterna_pct):.1f}% por excesso de cautela!"
+            baixo_texto = f"SÃO PAULO — Alongar a vida útil mitigou custos imediatos, mas tirou a competitividade e agressividade do papel na bolsa."
+        elif contagem_C == 2 and contagem_A == 1:
+            topo_manchete = f"❌ DESQUALIFICADA DA CORRIDA? Líderes disparam na frente e a {nome_a} bate no guard-rail sozinha!"
+            topo_texto = f"SÃO PAULO — Duas realidades brutais! As líderes fecharam voando baixo a R$ {preco_max:.2f} (+{var_lider_pct:.1f}%), enquanto a {nome_a} ficou acumulando poeira no porto amargando uma distância catastrófica de {distancia_pct:.1f}% do topo."
+            baixo_manchete = f"CHOQUE CORPORATIVO: {nome_a} derrete para R$ {preco_min:.2f} após quebra aduaneira!"
+            baixo_texto = f"SÃO PAULO — Com o motor completamente fundido pelo impacto cambial bruto, a lanterna agora luta para voltar ao campeonato."
+        elif contagem_C == 2 and contagem_B == 1:
+            topo_manchete = f"🐢 DERRAPAGEM NA CURVA? Líderes disparam na pole e deixam a {nome_b} patinando para trás!"
+            topo_texto = f"SÃO PAULO — As gigantes cruzaram a linha com lucros expressivos a R$ {preco_max:.2f}, enquanto a {nome_b} ficou engasgada no trânsito aduaneiro a R$ {preco_min:.2f}, sustentando uma desvantagem de {distancia_pct:.1f}%."
+            baixo_manchete = f"RITMO PERDIDO: {nome_b} perde tração e vê o topo sumir no horizonte!"
+            baixo_texto = f"SÃO PAULO — A estratégia alternativa de amortecimento evitou o pior, mas foi incapaz de acompanhar os carros turbo do topo."
+
+    # =========================================================================
+    # RODADA 3: METÁFORA DE LUTA / BOXE
+    # =========================================================================
+    elif rodada_encerrada == 3:
+        contagem_A = votos_r3.count('A')
+        contagem_B = votos_r3.count('B')
+        contagem_C = votos_r3.count('C')
+
+        nome_a = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r3"] == 'A'])
+        nome_b = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r3"] == 'B'])
+        nome_c = " e ".join([n for n in EMPRESAS if db.dados_empresas[n]["voto_r3"] == 'C'])
+
+        if contagem_A == 3:
+            topo_manchete = "🚨 APAGÃO NO RINGUE! Calote generalizado nocauteia o varejo inteiro!"
+            topo_texto = f"SÃO PAULO — O dia foi de massacre. A inadimplência de 12% quebrou o queixo das diretorias. Todas despencaram de forma unânime para R$ {preco_min:.2f}."
+            baixo_manchete = "FIM DE JOGO COLETIVO"
+            baixo_texto = "Mercado sem dispersão técnica nesta rodada."
+        elif contagem_B == 3:
+            topo_manchete = "⚠️ SENTOU NAS CORDAS! Setor adota postura defensiva e recua em bloco!"
+            topo_texto = f"SÃO PAULO — Com medo do CPC 48, as empresas se encolheram no ringue para evitar perdas maiores, estabilizando as ações em R$ {preco_max:.2f}."
+            baixo_manchete = "DEFESA ACENTUADA"
+            baixo_texto = "Nenhuma corporação se arriscou no ataque contra a inadimplência generalizada."
+        elif contagem_C == 3:
+            topo_manchete = "🥊 CINTURÃO DOS PESOS PESADOS! Lucros históricos disparam em delírio coletivo!"
+            topo_texto = f"SÃO PAULO — Vitória por nocaute contra a crise! EBITDA astronômico inflado faz investidores vibrarem e as ações baterem R$ {preco_max:.2f}."
+            baixo_manchete = "DELÍRIO SISTÊMICO"
+            baixo_texto = "Apostas agressivas mascararam as perdas de crédito de forma integral em todas as bancadas."
+        
+        elif contagem_A == 2 and contagem_B == 1:
+            topo_manchete = f"🩹 BEIJANDO A LONA! Setor leva soco de R$ 200M de calote, mas a {nome_b} guarda a alta e resiste!"
+            topo_texto = f"SÃO PAULO — O fantasma da insolvência derrubou as rivais. A {nome_b} tomou o golpe mas seguiu de pé a R$ {preco_max:.2f}, com {distancia_pct:.1f}% de resiliência sobre a lanterna."
+            baixo_manchete = f"QUEDA NA RODADA: {nome_a} encolhe {abs(var_lanterna_pct):.1f}% ao assumir perdas imediatas!"
+            baixo_texto = f"SÃO PAULO — O impacto direto do CPC 48 destruiu o resultado de curto prazo da lanterna, jogando o papel para R$ {preco_min:.2f}."
+        elif contagem_A == 2 and contagem_C == 1:
+            topo_manchete = f"⚡ GOLPE DE MISERICÓRDIA! Concorrentes caem apagadas, mas {nome_c} aplica nocaute técnico na crise!"
+            topo_texto = f"SÃO PAULO — O CPC 48 triturou o balanço das rivais. Já a {nome_c} deu um show de esquiva, garantindo lucros a R$ {preco_max:.2f} e abrindo {distancia_pct:.1f}% de gap."
+            baixo_manchete = f"FORA DE COMBATE: Estratégia transparente custou queda de {abs(var_lanterna_pct):.1f}% para {nome_a}!"
+            baixo_texto = f"SÃO PAULO — Ao lançar integralmente as perdas, a {nome_a} viu seu balanço sangrar em praça pública."
+        elif contagem_B == 2 and contagem_A == 1:
+            topo_manchete = f"🩸 DIRETO NO QUEIXO! Setor se defende, mas a {nome_a} baixa a guarda e cai nocauteada!"
+            topo_texto = f"SÃO PAULO — Falta de malícia contábil! Enquanto rivais se protegeram, o calote de 12% pegou em cheio a {nome_a}, que despencou {abs(var_lanterna_pct):.1f}%."
+            baixo_manchete = f"DERROCADA MATERIAL: {nome_a} derrete para R$ {preco_min:.2f} e fica {distancia_pct:.1f}% atrás do topo!"
+            baixo_texto = f"SÃO PAULO — O mercado puniu duramente o conservadorismo transparente da {nome_a}, forçando liquidações de posições."
+        elif contagem_B == 2 and contagem_C == 1:
+            topo_manchete = f"🏆 CAMPEÃ INDESTRUTÍVEL! O ringue balançou, mas a {nome_c} castiga as rivais e fatura o prêmio!"
+            topo_texto = f"SÃO PAULO — Rivais acuadas nas cordas viram suas ações caírem. A {nome_c} mostrou quem manda no crediário, subindo {var_lider_pct:+.1f}% e abrindo {distancia_pct:.1f}% de distância."
+            baixo_manchete = f"DEFENSIVA RECUADA: {nome_b} fecha trimestre com queda de {abs(var_lanterna_pct):.1f}%!"
+            baixo_texto = f"SÃO PAULO — Amortecer os impactos em FIDC evitou a quebra, mas deixou as ações da {nome_b} estagnadas em R$ {preco_min:.2f}."
+        elif contagem_C == 2 and contagem_A == 1:
+            topo_manchete = f"☠️ TOALHA JOGADA! Líderes faturam o cinturão enquanto a {nome_a} sofre interdição médica no ringue!"
+            topo_texto = f"SÃO PAULO — Um racha violento! As líderes fecham cotadas a R$ {preco_max:.2f}. Já a {nome_a} assumu o rombo de R$ 200M de PECLD e foi direto para a UTI da insolvência técnica, ficando {distancia_pct:.1f}% atrás."
+            baixo_manchete = f"TOMBO HISTÓRICO: {nome_a} registra queda fulminante de {abs(var_lanterna_pct):.1f}% no trimestre!"
+            baixo_texto = f"SÃO PAULO — Com o caixa e patrimônio expostos ao CPC 48, a cotação despencou verticalmente para R$ {preco_min:.2f}."
+        elif contagem_C == 2 and contagem_B == 1:
+            topo_manchete = f"🤦‍♂️ APENAS ASSISTINDO A LUTA? Líderes faturam milhões enquanto a {nome_b} fica grogue nas cordas!"
+            topo_texto = f"SÃO PAULO — As gigantes castigaram o mercado e subiram {var_lider_pct:+.1f}%. A {nome_b} sobreviveu ao gongo (não faliu), mas ficou engolindo sangue a {distancia_pct:.1f}% de distância do topo."
+            baixo_manchete = f"PERDA DE RITMO: {nome_b} recua para R$ {preco_min:.2f} e vê rivais dispararem!"
+            baixo_texto = f"SÃO PAULO — A estratégia parcial de securitização reduziu danos mas não acompanhou os balanços inflados das líderes."
 
     html_jornal = f"""
     <div style="background-color: #ffffff; border: 1px solid #ddd; font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
@@ -152,10 +330,11 @@ def gerar_manchete_dinamica(rodada: int):
                         <span style="font-weight: bold; text-transform: uppercase;">{topo_texto.split(' — ')[0]}</span> — {topo_texto.split(' — ')[1] if ' — ' in topo_texto else topo_texto}
                     </p>
                 </div>
-                <div style="font-size: 35px; text-align: center; width: 65px; line-height: 1;">
-                    🌲<br><span style="font-size: 24px; color: #2ecc71; font-weight: bold;">▲</span>
+                <div style="font-size: 28px; text-align: center; width: 75px; line-height: 1.1; font-weight: bold; padding: 5px;">
+                    🪅🤑<br><span style="font-size: 20px; color: #2ecc71;">💸📈</span>
                 </div>
             </div>
+            
             <div style="background-color: #ff5c5c; color: #ffffff; padding: 12px 15px; border-radius: 2px; font-size: 16px; font-weight: bold; text-transform: uppercase; line-height: 1.3;">
                 {baixo_manchete}
             </div>
@@ -165,12 +344,12 @@ def gerar_manchete_dinamica(rodada: int):
                         <span style="font-weight: bold; text-transform: uppercase;">{baixo_texto.split(' — ')[0]}</span> — {baixo_texto.split(' — ')[1] if ' — ' in baixo_texto else baixo_texto}
                     </p>
                 </div>
-                <div style="font-size: 35px; text-align: center; width: 65px; line-height: 1;">
-                    📉<br><span style="font-size: 24px; color: #e74c3c; font-weight: bold;">▼</span>
+                <div style="font-size: 28px; text-align: center; width: 75px; line-height: 1.1; font-weight: bold; padding: 5px;">
+                    💸💸<br><span style="font-size: 22px; color: #e74c3c;">🤬📉</span>
                 </div>
             </div>
             <div style="font-size: 11px; font-weight: bold; color: #222222; border-top: 1px solid #ddd; padding-top: 12px; margin-top: 25px; letter-spacing: 0.5px;">
-                ATENÇÃO INVESTIDORES! MERCADO EM TEMPO REAL.
+                EDIÇÃO ATUALIZADA COMPARTILHADA COM O MERCADO.
             </div>
         </div>
     </div>
@@ -188,42 +367,29 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     outras_desp  = -2_200_000_000.0
     juros        = -300_000_000.0
     
-    nota_pdd = "Provisão normal de 3% sobre a carteira ativa."
-    nota_dep = "Depreciação linear padrão de instalações e frotas."
-    nota_jur = "Serviço de juros sobre dívidas estruturadas."
-    
     v1 = votos.get("r1")
     if v1 == 'A':
         juros = -310_000_000.0
-        nota_jur = "Despesa financeira de R$ 310M computada integralmente."
     elif v1 == 'B':
-        nota_jur = "R$ 10M de juros do Risco Sacado capitalizados no Ativo (Estoques)."
+        pass
     elif v1 == 'C':
         pdd = -100_000_000.0
-        nota_pdd = "⚠️ PDD suprimida artificialmente para R$ 100M para blindar covenants."
-        nota_jur = "⚠️ Custos de financiamento ocultados do Resultado Financeiro."
         
     v2 = votos.get("r2")
     if v2 == 'A':
         cmv -= 30_000_000.0
-        nota_pdd += " | Provisão realizada para obsolescência de estoques encalhados."
     elif v2 == 'B':
         depreciacao += 20_000_000.0
-        nota_dep = "⚠️ Manobra CPC 23: Extensão de vida útil reduziu despesa do trimestre pela metade."
     elif v2 == 'C':
-        nota_jur += " | ⚠️ Ativação de R$ 30M fictícios no Ativo sob rubrica de Incentivo Comercial."
+        pass
         
     v3 = votos.get("r3")
     if v3 == 'A':
         pdd -= 200_000_000.0
-        nota_pdd += " | 🚨 Ajuste severo de PECLD (CPC 48) refletindo a inadimplência de 12%."
     elif v3 == 'B':
         juros -= 50_000_000.0
-        nota_jur += " | Deságio comercial de R$ 50M lançado integralmente no Resultado Financeiro."
     elif v3 == 'C':
         receita += 80_000_000.0
-        nota_pdd += " | 🚨 Omissão dolosa de R$ 200M em perdas reais."
-        nota_jur += " | ⚠️ Violação do CPC 47: Receita plurianual de Garantia Estendida trazida a valor presente."
 
     lucro_bruto = receita + cmv
     ebitda = lucro_bruto + pdd + depreciacao + outras_desp
@@ -232,8 +398,7 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     return {
         "receita": receita, "cmv": abs(cmv), "lucro_bruto": lucro_bruto,
         "pdd": abs(pdd), "depreciacao": abs(depreciacao), "outras_desp": abs(outras_desp),
-        "ebitda": ebitda, "juros": abs(juros), "lucro_liq": lucro_liq,
-        "nota_pdd": nota_pdd, "nota_dep": nota_dep, "nota_jur": nota_jur
+        "ebitda": ebitda, "juros": abs(juros), "lucro_liq": lucro_liq
     }
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int):
@@ -270,11 +435,6 @@ def exibir_dre(votos_empresa: dict, rodada_exibida: int):
     html = "<table style='width:100%;border-collapse:collapse;'>" + rows + "</table><br>"
     st.markdown(html, unsafe_allow_html=True)
 
-    with st.expander("📝 Notas explicativas das escolhas contábeis acumuladas"):
-        st.markdown(f"**Créditos de Liquidação Duvidosa:** {dre['nota_pdd']}")
-        st.markdown(f"**Imobilizado & Depreciação:** {dre['nota_dep']}")
-        st.markdown(f"**Estrutura de Capital & Financiamento:** {dre['nota_jur']}")
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. Auditoria Baseada no Novo Score GR Sem Colisões (A=0, B=2, C=3)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -299,7 +459,7 @@ def aplicar_auditoria_final():
             d["noticia_r4"] = f"Score GR: {score_gr}. Uma fraude estrutural grave (Opção C) foi detectada no histórico. CVM instaurou processo sancionador."
         elif score_gr in [7, 8]:
             d["status"] = "❌ MANIPULAÇÃO SISTÊMICA (2 Fraudes)"
-            d["noticia_r4"] = f"Score GR: {score_gr}. Duas fraudes contábeis gravíssimas para ocultar perdas operacionais. Confiança do mercado derreteu."
+            d["noticia_r4"] = f"Score GR: {score_gr}. Duas fraudes contábeis gravíssimas para ocultar perdas operacionais. Confiança do mercado derretou."
         elif score_gr == 9:
             d["status"] = "🚔 FRAUDE ESTRUTURAL COMPLETA (3 Fraudes)"
             d["noticia_r4"] = "Score GR: 9. O colapso total. Todas as escolhas foram fraudes contábeis dolosas. Destituição do conselho e acionamento da polícia federal."
@@ -364,7 +524,7 @@ with st.sidebar:
         st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# VISÃO ALUNO (Com Sistema de Abas Integrado)
+# VISÃO ALUNO
 # ─────────────────────────────────────────────────────────────────────────────
 if eh_empresa:
     d = db.dados_empresas[nome_interno]
@@ -372,39 +532,12 @@ if eh_empresa:
 
     st.markdown(f"## 🏢 {perfil} | Exercício {rodada if rodada <= 3 else 'Fim'}")
     
-    # Abas para o Aluno navegar sem perder o painel de voto
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mercado (GC NEWS)"])
 
     NARRATIVAS = {
-        1: """### 🏭 1: O DILEMA DO RISCO SACADO 
-A empresa encerrou o período sob severas pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo de abastecimento de suas lojas, a companhia realizou a aquisição de **R$ 150 milhões** em eletroeletrônicos junto a indústrias parceiras. 
-
-Sem caixa livre para liquidar esses passivos comerciais nas datas originais de vencimento, a Diretoria Financeira estruturou uma operação de **Risco Sacado** junto ao Banco Épsilon. O banco quitou as faturas dos fornecedores à vista e concedeu prazo adicional à empresa, cobrando **R$ 10 milhões** em juros embutidos na transação.  
-
-A manutenção dessa estrutura de crédito tornou-se essencial para a continuidade do negócio. Contudo, os contratos de financiamento vigentes contêm a seguinte restrição:  
-
-> **Cláusula 7.2 (Covenant Financeiro):** *A Companhia deve manter o índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre, sob pena de vencimento antecipado das dívidas e bloqueio de novos créditos.*
-
-Para piorar o cenário, o Banco Central aumentou fortemente a taxa básica de juros do país neste trimestre. Com o crédito mais caro, os consumidores sumiram das lojas e as vendas gerais de eletrodomésticos despencaram 15%. Esse tombo inesperado esmagou a margem operacional, empurrando o EBITDA real para muito abaixo do esperado pelo mercado.""",
-        
-        2: """### 📰 RODADA 2: A CRISE DO DÓLAR
-A empresa fechou um pedido de 200 mil smartphones de última geração com indústrias parceiras nos EUA e na China. O acordo foi feito em **"moeda aberta"** (sem proteção de hedge), pois o câmbio estava estável em R$ 5,00. O pagamento ocorreria no desembaraço aduaneiro no porto, 60 dias após o embarque.  
-
-No trânsito marítimo, os EUA entram repentinamente em um conflito militar internacional. O mercado entra em pânico e o dólar dispara de **R$ 5,00 para R$ 6,50** em apenas dois meses.  
-
-**Problema: Explosão no Custo de Importação (CMV)**  
-O lote orçado por R$ 100 milhões agora custa **R$ 130 milhões** para ser retirado do porto. Um aumento surpresa de R$ 30 milhões por falha na gestão de risco cambial.  
-
-**Greve e Lentidão na Alfândega:** O estoque fica encalhado no porto por 45 dias além do previsto, gerando custos extras de armazenagem (*demurrage*) e atrasando as lojas. Tentando reaver a margem, a diretoria aumentou o preço nas lojas em 30%. O resultado foi imediato: **as vendas travam** e aparelhos acumulam poeira.""",
-        
-        3: """### 🚨 RODADA 3: O DESAFIO DA INSOLVÊNCIA
-Os efeitos prolongados da guerra internacional e a política monetária severa adotada pelo Banco Central resultaram em uma recessão profunda. A elevação do desemprego e a retração da renda deterioraram a capacidade de pagamento das famílias.  
-
-Como reflexo direto, a taxa de inadimplência da carteira de crédito próprio da companhia (Private Label e crediário), historicamente controlada em 3%, **escalou para 12%**.  
-
-**O Desafio Contábil e Patrimonial:** Os saldos em Contas a Receber sofreram severa perda de recuperabilidade. Em conformidade estrita com os critérios de perdas de crédito esperadas determinados pelo **CPC 48 (IFRS 9)**, a companhia é obrigada a reconhecer o aumento do risco de crédito de forma imediata.  
-
-A adequação patrimonial exige o provisionamento de uma despesa de PECLD de **R$ 200 milhões** na DRE. O lançamento integral desse montante anularia o EBITDA do período, evidenciando insolvência técnica e forçando uma severa revisão da auditoria."""
+        1: """### 🏭 1: O DILEMA DO RISCO SACADO \nA empresa encerrou o período sob severas pressões de liquidez em seu fluxo de caixa operacional. Para preservar o ciclo de abastecimento de suas lojas, a companhia realizou a aquisição de **R$ 150 milhões** em eletroeletrônicos junto a indústrias parceiras. \n\nSem caixa livre para liquidar esses passivos comerciais nas datas originais de vencimento, a Diretoria Financeira estruturou uma operação de **Risco Sacado** junto ao Banco Épsilon. O banco quitou as faturas dos fornecedores à vista e concedeu prazo adicionais à empresa, cobrando **R$ 10 milhões** em juros embutidos na transação.  \n\nA manutenção dessa estrutura de crédito tornou-se essencial para a continuidade do negócio. Contudo, os contratos de financiamento vigentes contêm a seguinte restrição:  \n\n> **Cláusula 7.2 (Covenant Financeiro):** *A Companhia deve manter o índice Dívida Líquida/EBITDA igual ou inferior a 3,0x ao final de cada trimestre, sob pena de vencimento antecipado das dívidas e bloqueio de novos créditos.*\n\nPara piorar o cenário, o Banco Central aumentou fortemente a taxa básica de juros do país neste trimestre. Com o crédito mais caro, os consumidores sumiram das lojas e as vendas gerais de eletrodomésticos despencaram 15%. Esse tombo inesperado esmagou a margem operacional, empurrando o EBITDA real para muito abaixo do esperado pelo mercado.""",
+        2: """### 📰 RODADA 2: A CRISE DO DÓLAR\nA empresa fechou um pedido de 200 mil smartphones de última geração com indústrias parceiras nos EUA e na China. O acordo foi feito em **"moeda aberta"** (sem proteção de hedge), pois o câmbio estava estável em R$ 5,00. O pagamento ocorreria no desembaraço aduaneiro no porto, 60 dias após o embarque.  \n\nNo trânsito marítimo, os EUA entram repentinamente em um conflito militar internacional. O mercado entra em pânico e o dólar dispara de **R$ 5,00 para R$ 6,50** em apenas dois meses.  \n\n**Problema: Explosão no Custo de Importação (CMV)**  \nO lote orçado por R$ 100 milhões agora custa **R$ 130 milhões** para ser retirado do porto. Um aumento surpresa de R$ 30 milhões por falha na gestão de risco cambial.  \n\n**Greve e Lentidão na Alfândega:** O estoque fica encalhado no porto por 45 dias além do previsto, gerando custos extras de armazenagem (*demurrage*) e atrasando as lojas. Tentando reaver a margem, a diretoria aumentou o preço nas lojas em 30%. O resultado foi imediato: **as vendas travam** e aparelhos acumulam poeira.""",
+        3: """### 🚨 RODADA 3: O DESAFIO DA INSOLVÊNCIA\nOs efeitos prolongados da guerra internacional e a política monetária severa adotada pelo Banco Central resultaram em uma recessão profunda. A elevação do desemprego e a retração da renda deterioraram a capacidade de pagamento das famílias.  \n\nComo reflexo direto, a taxa de inadimplência da carteira de crédito próprio da companhia (Private Label e crediário), historicamente controlada em 3%, **escalou para 12%**.  \n\n**O Desafio Contábil e Patrimonial:** Os saldos em Contas a Receber sofreram severa perda de recuperabilidade. Em conformidade estrita com os critérios de perdas de crédito esperadas determinados pelo **CPC 48 (IFRS 9)**, a companhia é obrigada a reconhecer o aumento do risco de crédito de forma imediata.  \n\nA adequação patrimonial exige o provisionamento de uma despesa de PECLD de **R$ 200 milhões** na DRE. O lançamento integral desse montante anularia o EBITDA do período, evidenciando insolvência técnica e forçando uma severa revisão da auditoria."""
     }
 
     with aba_voto:
@@ -436,13 +569,31 @@ A adequação patrimonial exige o provisionamento de uma despesa de PECLD de **R
                     st.rerun()
 
             else:
-                st.success(f"✅ Resolução homologada: {get_labels(rodada)[voto_atual]}")
+                votos_computados = []
+                for nome in EMPRESAS:
+                    if db.dados_empresas[nome][f"voto_r{rodada}"] is not None and db.dados_empresas[nome]["tempo_voto"] is not None:
+                        votos_computados.append((nome, db.dados_empresas[nome]["tempo_voto"]))
+                
+                ranking_parcial = [item[0] for item in sorted(votos_computados, key=lambda x: x[1])]
+                
+                st.markdown("### 📊 Status do Envio da sua Bancada")
+                if nome_interno in ranking_parcial:
+                    posicao = ranking_parcial.index(nome_interno) + 1
+                    if posicao == 1:
+                        st.success("🥇 **VOCÊ FOI O 1º A ENVIAR!** Pela agilidade na tomada de decisão, sua empresa garantiu um bônus de **+R$ 0,10** na cotação final desta rodada!")
+                    elif posicao == 2:
+                        st.info("🥈 **Você foi o 2º a enviar!** Resolução registrada dentro do tempo médio de mercado. Sem bônus ou penalidades de velocidade.")
+                    else:
+                        st.warning("🥉 **Você foi o 3º a enviar!** Sua diretoria demorou muito para deliberar. O mercado puniu a lentidão com **-R$ 0,10** na cotação final.")
+                
+                st.markdown("---")
+                st.success(f"📌 **Estratégia Adotada:** {get_labels(rodada)[voto_atual]}")
                 st.markdown("---")
                 votos_reais = {f"r{r}": d[f"voto_r{r}"] for r in range(1, rodada + 1)}
                 exibir_dre(votos_reais, rodada)
                 st.markdown("---")
-                st.info("⏳ Aguardando o apresentador encerrar a rodada comercial...")
-                st.markdown("""<meta http-equiv="refresh" content="5">""", unsafe_allow_html=True)
+                st.info("⏳ Aguardando o apresentador encerrar a rodada comercial para atualizar os gráficos gerais...")
+                st.markdown("""<meta http-equiv="refresh" content="3">""", unsafe_allow_html=True)
 
         else:
             st.markdown("## 🏁 Resultado Final da sua Corporação")
@@ -459,13 +610,14 @@ A adequação patrimonial exige o provisionamento de uma despesa de PECLD de **R
             st.markdown("### 📰 Edição Atual do GC NEWS")
             st.html(db.manchete_jornal)
         else:
-            st.info("ℹ️ Nenhuma manchete publicada ainda. O jornal impresso sairá ao fim do primeiro trimestre.")
+            st.info("ℹ️ Nenhuma manchete publicada ainda para este ciclo. O jornal impresso sairá assim que a mesa fechar o mercado do trimestre.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # VISÃO APRESENTADOR 
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Apresentador":
     st.title("🎛️ Painel de Comando da Mesa de Operações")
+    st.markdown("""<meta http-equiv="refresh" content="3">""", unsafe_allow_html=True)
     rodada = db.rodada_atual
 
     aba_controle, aba_espelho_mercado, aba_espelho_midia = st.tabs([
@@ -528,20 +680,20 @@ elif perfil == "🎛️ Painel Apresentador":
                 st.rerun()
 
         st.markdown("---")
-        st.markdown("### 📊 Monitoramento e Score de Governança (Mesa de Controle)")
+        st.markdown("### 📊 Monitoramento e Votos das Bancadas (Mesa de Controle)")
         
         PESOS_TEMPORARIOS = {'A': 0, 'B': 2, 'C': 3}
         for nome in EMPRESAS:
             voto = db.dados_empresas[nome].get(f"voto_r{min(rodada, 3)}")
-            status_voto = "📥 CONCLUÍDO" if voto else "⏳ ANALISANDO..."
-            
-            votos_parciais = [db.dados_empresas[nome]["voto_r1"], db.dados_empresas[nome]["voto_r2"], db.dados_empresas[nome]["voto_r3"]]
-            score_parcial = sum(PESOS_TEMPORARIOS.get(v, 0) for v in votos_parciais if v is not None)
             
             if voto:
-                st.success(f"**{nome}** — {status_voto} | Cotação Ativa: **R$ {db.dados_empresas[nome]['precos'][-1]:.2f}** | Score GR: `{score_parcial}`")
+                votos_parciais = [db.dados_empresas[nome]["voto_r1"], db.dados_empresas[nome]["voto_r2"], db.dados_empresas[nome]["voto_r3"]]
+                score_parcial = sum(PESOS_TEMPORARIOS.get(v, 0) for v in votos_parciais if v is not None)
+                st.success(f"**{nome}** — 📥 CONCLUÍDO (Decisão Tomada) | Cotação Ativa: **R$ {db.dados_empresas[nome]['precos'][-1]:.2f}** | Score GR Acumulado: `{score_parcial}`")
             else:
-                st.error(f"**{nome}** — {status_voto} | Cotação Ativa: **R$ {db.dados_empresas[nome]['precos'][-1]:.2f}** | Score GR: `{score_parcial}`")
+                votos_parciais = [db.dados_empresas[nome]["voto_r1"], db.dados_empresas[nome]["voto_r2"], db.dados_empresas[nome]["voto_r3"]]
+                score_parcial = sum(PESOS_TEMPORARIOS.get(v, 0) for v in votos_parciais if v is not None)
+                st.error(f"**{nome}** — ⏳ ANALISANDO... (Aguardando Grupo) | Cotação Ativa: **R$ {db.dados_empresas[nome]['precos'][-1]:.2f}** | Score GR Acumulado: `{score_parcial}`")
 
     with aba_espelho_mercado:
         st.markdown("### 📊 Cotações Atuais do Mercado")
@@ -571,7 +723,7 @@ elif perfil == "🎛️ Painel Apresentador":
             st.markdown("### 📰 Edição Atual Publicada no GC NEWS")
             st.html(db.manchete_jornal)
         else:
-            st.info("ℹ️ O jornal será gerado automaticamente assim que a primeira rodada for encerrada.")
+            st.info("ℹ️ O jornal está retido na gráfica. Assim que você clicar em 'Fechar Rodada' e processar o mercado, a manchete correspondente aparecerá aqui automaticamente.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # VISÃO TELÃO
@@ -640,4 +792,4 @@ elif perfil == "📈 Telão (Bolsa)":
             st.markdown("### 🚨 PLANTÃO DE NOTÍCIAS COMENTADO")
             st.html(db.manchete_jornal)
         else:
-            st.info("⏳ Aguardando o encerramento do primeiro trimestre para publicação dos relatórios de mídia...")
+            st.info("⏳ Aguardando o encerramento do primeiro trimestre pela banca de diretores para publicação das mídias setoriais...")
