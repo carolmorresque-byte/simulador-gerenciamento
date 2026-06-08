@@ -735,23 +735,94 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
                 # Voto já registrado — mostra feedback
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
 
-                # Feedback de agilidade
+                # ── Feedback de agilidade ─────────────────────────────────────
+                # Coleta tempos apenas das empresas que já votaram nesta rodada
                 tempos = [
                     (n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
                     for n in EMPRESAS
                     if estado["dados_empresas"][n].get(f"voto_r{rodada}") is not None
                        and estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}") is not None
                 ]
-                if len(tempos) == 3:
+                qtd_votaram = len(tempos)
+
+                if qtd_votaram >= 1:
                     ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
-                    if ranking[0] == nome_interno:
-                        st.markdown("""<div style='background-color:#c8e6c9;border:1px solid #81c784;color:#1b5e20;padding:10px;border-radius:4px;margin-bottom:15px;font-size:13px;'>
-                        ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar a decisão! O mercado valorizou a rapidez com +R$ 0,10 na ação.</div>""",
-                        unsafe_allow_html=True)
-                    elif ranking[-1] == nome_interno:
-                        st.markdown("""<div style='background-color:#ffcdd2;border:1px solid #ef5350;color:#b71c1c;padding:10px;border-radius:4px;margin-bottom:15px;font-size:13px;'>
-                        ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última a responder. A lentidão gerou incerteza e custou -R$ 0,10 de desconto na ação.</div>""",
-                        unsafe_allow_html=True)
+
+                    # Sou o 1º a ter votado (menor timestamp entre quem votou)?
+                    sou_primeiro = (ranking[0] == nome_interno)
+
+                    # Penalidade só é definitiva quando TODAS as 3 votaram e eu fui o último
+                    sou_ultimo_definitivo = (qtd_votaram == 3 and ranking[-1] == nome_interno)
+
+                    # Enquanto nem todas votaram, a 2ª empresa não pode ser classificada como "última"
+                    aguardando_mais = (qtd_votaram < 3 and not sou_primeiro)
+
+                    if sou_primeiro:
+                        st.markdown(
+                            """<div style='background-color:#c8e6c9;border:1px solid #81c784;color:#1b5e20;
+                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
+                            ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar!
+                            O mercado valorizou a rapidez com <b>+R$ 0,10</b> na ação.</div>""",
+                            unsafe_allow_html=True,
+                        )
+                    elif sou_ultimo_definitivo:
+                        st.markdown(
+                            """<div style='background-color:#ffcdd2;border:1px solid #ef5350;color:#b71c1c;
+                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
+                            ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última a responder.
+                            A lentidão gerou incerteza no mercado: <b>-R$ 0,10</b> na ação.</div>""",
+                            unsafe_allow_html=True,
+                        )
+                    elif aguardando_mais:
+                        st.markdown(
+                            f"""<div style='background-color:#fff8e1;border:1px solid #ffd54f;color:#6d4c00;
+                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
+                            ⏳ <b>Aguardando as demais bancadas...</b>
+                            Você foi a <b>{qtd_votaram}ª</b> a votar.
+                            O resultado do bônus/penalidade será definido quando todas responderem.</div>""",
+                            unsafe_allow_html=True,
+                        )
+
+                    # ── Preview de cotação estimada ───────────────────────────
+                    # Calcula preço estimado com base na opção + posição de tempo
+                    preco_atual = d["precos"][-1]
+                    impacto_opcao = IMPACTOS.get(rodada, {}).get(voto_atual, 1.0)
+                    preco_estimado = round(preco_atual * impacto_opcao, 2)
+
+                    # Ajuste de tempo: +0,10 se primeiro, -0,10 se último definitivo
+                    ajuste_tempo = 0.0
+                    label_ajuste = ""
+                    if sou_primeiro:
+                        ajuste_tempo = +0.10
+                        label_ajuste = " + R$ 0,10 (bônus agilidade)"
+                    elif sou_ultimo_definitivo:
+                        ajuste_tempo = -0.10
+                        label_ajuste = " − R$ 0,10 (penalidade atraso)"
+
+                    preco_final_estimado = round(preco_estimado + ajuste_tempo, 2)
+                    variacao = round(preco_final_estimado - preco_atual, 2)
+                    sinal = "▲" if variacao >= 0 else "▼"
+                    cor_var = "#1b5e20" if variacao >= 0 else "#b71c1c"
+                    bg_var  = "#e8f5e9" if variacao >= 0 else "#ffebee"
+                    borda_var = "#81c784" if variacao >= 0 else "#ef5350"
+
+                    aguardando_label = ""
+                    if aguardando_mais:
+                        aguardando_label = "<br><span style='font-size:11px;color:#888;'>⚠️ Pode variar ±R$ 0,10 dependendo de quem votar por último.</span>"
+
+                    st.markdown(
+                        f"""<div style='background-color:{bg_var};border:1px solid {borda_var};color:{cor_var};
+                        padding:12px 16px;border-radius:4px;margin-bottom:15px;font-size:13px;'>
+                        📊 <b>Prévia da Cotação desta Rodada</b><br>
+                        <span style='font-size:12px;color:#555;'>Preço atual: <b>R$ {preco_atual:.2f}</b>
+                        &nbsp;→&nbsp; Impacto da opção {voto_atual}: <b>R$ {preco_estimado:.2f}</b>{label_ajuste}</span><br>
+                        <span style='font-size:16px;font-weight:bold;'>{sinal} Estimativa: R$ {preco_final_estimado:.2f}
+                        &nbsp;<span style='font-size:13px;'>({variacao:+.2f})</span></span>
+                        {aguardando_label}
+                        <br><span style='font-size:11px;color:#888;'>💡 Valor confirmado pelo Apresentador ao encerrar a rodada.</span>
+                        </div>""",
+                        unsafe_allow_html=True,
+                    )
 
                 votos_reais = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}
                 exibir_dre(votos_reais, rodada)
