@@ -575,8 +575,9 @@ elif perfil == "🎛️ Painel Apresentador":
             html_noticia = gerar_manchete_dinamica(estado, rodada)
             estado["historico_noticias"].append(html_noticia)
 
-            # Avança rodada
+            # Avança rodada — grava timestamp para o timer dos alunos
             estado["rodada_atual"] = rodada + 1
+            estado[f"timer_inicio_r{rodada + 1}"] = time.time()
 
             salvar_estado(estado)
             st.success(f"Rodada {rodada} encerrada! Cotações atualizadas.")
@@ -700,6 +701,74 @@ elif perfil in EMPRESA_MAP:
     pecld_m         = dre_parcial["pecld_dinamica"] / 1_000_000.0
 
     st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
+
+    # ── Timer de 5 minutos ────────────────────────────────────────────────────
+    chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+    ts_inicio   = estado.get(chave_timer) if chave_timer else None
+
+    if ts_inicio and rodada <= 3:
+        agora      = time.time()
+        duracao    = 5 * 60          # 5 minutos em segundos
+        decorrido  = agora - ts_inicio
+        restante   = max(0, duracao - decorrido)
+        restante_i = int(restante)
+
+        # Cor muda conforme urgência
+        if restante_i > 120:
+            cor_timer = "#1b5e20"; bg_timer = "#e8f5e9"; borda_timer = "#66bb6a"
+        elif restante_i > 30:
+            cor_timer = "#6d4c00"; bg_timer = "#fff8e1"; borda_timer = "#ffa000"
+        else:
+            cor_timer = "#7f0000"; bg_timer = "#ffebee"; borda_timer = "#c62828"
+
+        mins_ini = restante_i // 60
+        secs_ini = restante_i % 60
+
+        st.markdown(f"""
+        <div id="timer-box" style="border:2px solid {borda_timer};background:{bg_timer};
+            color:{cor_timer};border-radius:8px;padding:10px 20px;
+            display:inline-flex;align-items:center;gap:12px;margin-bottom:12px;font-family:monospace;">
+            <span style="font-size:22px;">⏱️</span>
+            <div>
+                <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">
+                    Tempo restante — Rodada {rodada}</div>
+                <div id="timer-display" style="font-size:28px;font-weight:900;letter-spacing:2px;">
+                    {mins_ini:02d}:{secs_ini:02d}</div>
+            </div>
+        </div>
+        <script>
+        (function() {{
+            var total = {restante_i};
+            var el = document.getElementById("timer-display");
+            var box = document.getElementById("timer-box");
+            if (!el) return;
+            var iv = setInterval(function() {{
+                if (total <= 0) {{
+                    el.textContent = "00:00";
+                    box.style.borderColor = "#c62828";
+                    box.style.background  = "#ffebee";
+                    box.style.color       = "#7f0000";
+                    clearInterval(iv);
+                    return;
+                }}
+                total--;
+                var m = Math.floor(total / 60);
+                var s = total % 60;
+                el.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+                if (total <= 30) {{
+                    box.style.borderColor = "#c62828";
+                    box.style.background  = "#ffebee";
+                    box.style.color       = "#7f0000";
+                }} else if (total <= 120) {{
+                    box.style.borderColor = "#ffa000";
+                    box.style.background  = "#fff8e1";
+                    box.style.color       = "#6d4c00";
+                }}
+            }}, 1000);
+        }})();
+        </script>
+        """, unsafe_allow_html=True)
+
     btn_a1, btn_a2, btn_a3, _ = st.columns([1, 1, 1, 3])
     with btn_a1:
         if st.button("⬅️ Home", use_container_width=True):
@@ -856,18 +925,86 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
             exibir_dre(votos_finais, 3)
 
         else:
-            # Jogo encerrado (rodada == 5)
-            st.markdown(f"**Veredito da Auditoria:** {d['status']}")
-            if d.get("noticia_r4"):
-                st.warning(d["noticia_r4"])
-            votos_finais = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
-            exibir_dre(votos_finais, 3)
+            # ── Jogo encerrado (rodada == 5): Relatório completo da auditoria ──
+            preco_abertura = d["precos"][0]
+            preco_final    = d["precos"][-1]
+            variacao_total = preco_final - preco_abertura
+            pct_total      = (variacao_total / preco_abertura) * 100
+            sinal_total    = "▲" if variacao_total >= 0 else "▼"
+            cor_total      = "#1b5e20" if variacao_total >= 0 else "#7f0000"
+            bg_total       = "#e8f5e9" if variacao_total >= 0 else "#ffebee"
+            borda_total    = "#81c784" if variacao_total >= 0 else "#ef5350"
 
-        # Relatório final pós-auditoria
-        if rodada >= 5:
-            st.divider()
-            st.markdown(f"## 🏁 Relatório de Auditoria CVM: {nome_interno}")
-            st.metric("Valor Final da Ação", f"R$ {d['precos'][-1]:.2f}")
+            # Combinação de votos e nível de risco
+            votos_finais = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
+            combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
+            qtd_c = combo.count("C")
+            qtd_b = combo.count("B")
+            qtd_a = combo.count("A")
+
+            if qtd_c == 3:
+                nivel_risco = "🔴 CRÍTICO — Manipulação Sistemática"
+                desc_risco  = "Todas as decisões priorizaram aparência contábil em detrimento da transparência. Autuação máxima aplicada."
+                cor_risco   = "#7f0000"; bg_risco = "#ffebee"; borda_risco = "#c62828"
+            elif qtd_c == 2:
+                nivel_risco = "🟠 ALTO — Irregularidades Graves"
+                desc_risco  = "Padrão recorrente de escolhas que distorcem os demonstrativos. Penalidade severa aplicada."
+                cor_risco   = "#6d4c00"; bg_risco = "#fff8e1"; borda_risco = "#ffa000"
+            elif qtd_c == 1:
+                nivel_risco = "🟡 MODERADO — Decisão Oportunista Identificada"
+                desc_risco  = "Uma escolha contábil questionável foi detectada. Advertência formal registrada."
+                cor_risco   = "#4a3000"; bg_risco = "#fffde7"; borda_risco = "#fdd835"
+            elif qtd_b >= 2:
+                nivel_risco = "🟢 BAIXO — Boa Governança"
+                desc_risco  = "Decisões dentro dos padrões de conformidade. Empresa mantém reputação íntegra."
+                cor_risco   = "#1b5e20"; bg_risco = "#e8f5e9"; borda_risco = "#66bb6a"
+            else:
+                nivel_risco = "🔵 NEUTRO — Governança Conservadora"
+                desc_risco  = "Reconhecimento pleno das perdas com transparência total perante auditores."
+                cor_risco   = "#0d47a1"; bg_risco = "#e3f2fd"; borda_risco = "#42a5f5"
+
+            st.markdown("## 🏁 Relatório de Auditoria CVM")
+
+            # Card principal de resultado
+            st.markdown(f"""
+            <div style='border:2px solid {borda_total};background:{bg_total};border-radius:8px;padding:20px;margin-bottom:16px;'>
+                <div style='font-size:13px;color:#555;margin-bottom:4px;'>Valor da Ação</div>
+                <div style='display:flex;align-items:baseline;gap:12px;'>
+                    <span style='font-size:32px;font-weight:900;color:{cor_total};'>R$ {preco_final:.2f}</span>
+                    <span style='font-size:18px;color:{cor_total};font-weight:bold;'>{sinal_total} R$ {abs(variacao_total):.2f} ({pct_total:+.1f}%) desde a abertura</span>
+                </div>
+                <div style='font-size:12px;color:#777;margin-top:4px;'>Preço de abertura: R$ {preco_abertura:.2f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Card de nível de risco
+            st.markdown(f"""
+            <div style='border:1px solid {borda_risco};background:{bg_risco};color:{cor_risco};
+                border-radius:6px;padding:14px 18px;margin-bottom:16px;font-size:13px;'>
+                <b style='font-size:15px;'>{nivel_risco}</b><br>{desc_risco}
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Histórico de votos
+            labels_nomes = {"A": "Opção A", "B": "Opção B", "C": "Opção C"}
+            cores_voto   = {"A": ("#0d47a1","#e3f2fd","#90caf9"),
+                            "B": ("#1b5e20","#e8f5e9","#a5d6a7"),
+                            "C": ("#7f0000","#ffebee","#ef9a9a")}
+            st.markdown("**📋 Histórico de Decisões:**")
+            cols_votos = st.columns(3)
+            for i, r in enumerate([1, 2, 3]):
+                v = d.get(f"voto_r{r}") or "—"
+                cor_t, bg_v, brd = cores_voto.get(v, ("#333","#f5f5f5","#ccc"))
+                with cols_votos[i]:
+                    st.markdown(f"""
+                    <div style='border:1px solid {brd};background:{bg_v};color:{cor_t};
+                        border-radius:6px;padding:10px;text-align:center;font-size:13px;'>
+                        <div style='font-size:11px;color:#777;'>Rodada {r}</div>
+                        <div style='font-size:22px;font-weight:900;'>{v}</div>
+                    </div>""", unsafe_allow_html=True)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            exibir_dre(votos_finais, 3)
             plotar_grafico_empresa(estado, nome_interno)
 
     # ── Aba Jornal ────────────────────────────────────────────────────────────
