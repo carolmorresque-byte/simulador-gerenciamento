@@ -117,15 +117,17 @@ def gerar_manchete_dinamica(rodada_encerrada: int):
         variacao = atual - anterior
         dados_fechamento[nome] = {"atual": atual, "anterior": anterior, "var": variacao}
 
+    # CORREÇÃO AQUI: Criado como lista_ordenada
     lista_ordenada = sorted(dados_fechamento.items(), key=lambda x: x[1]["atual"], reverse=True)
     
-    lider_nome, lider_dados = lista_ordered[0]
-    lanterna_nome, lanterna_dados = lista_ordered[-1]
+    # CORREÇÃO AQUI: Acessando corretamente como lista_ordenada
+    lider_nome, lider_dados = lista_ordenada[0]
+    lanterna_nome, lanterna_dados = lista_ordenada[-1]
     
     todos_empatados = (lider_dados["atual"] == lanterna_dados["atual"])
     
     topo_manchete, topo_texto = "", ""
-    baixo_manchete, baixo_texto = "", ""
+    baixo_manchete, bottom_texto = "", ""
 
     # Helper para formatar a variação de preço
     def fmt_var(valor):
@@ -159,7 +161,7 @@ def gerar_manchete_dinamica(rodada_encerrada: int):
     else:
         if todos_empatados:
             topo_manchete = "GONGADO: ÚLTIMO ROUND TERMINA EM EMPATE OPERACIONAL"
-            topo_texto = f"SÃO PAULO — O combate contra a crise macroeconômica terminou sem um vencedor claro na bolsa. Todas as bancadas resistiram nas cordas e fecharam cotadas em R$ {lider_dados['atual']:.2f}."
+            topo_texto = f"SÃO PAULO — O combate contra a crisis macroeconômica terminou sem um vencedor claro na bolsa. Todas as bancadas resistiram nas cordas e fecharam cotadas em R$ {lider_dados['atual']:.2f}."
         else:
             topo_manchete = f"NOCAUTE NA BOLSA: {lider_nome} SEGURA O CINTURÃO COM DISPARADA DE {fmt_var(lider_dados['var'])}!"
             topo_texto = f"SÃO PAULO — Em um fechamento histórico, a {lider_nome} esquivou-se dos riscos de mercado e viu suas ações saltarem do patamar anterior de R$ {lider_dados['anterior']:.2f} para incríveis R$ {lider_dados['atual']:.2f}."
@@ -398,7 +400,7 @@ elif perfil == "📰 Mídia (Notícias)":
         for n_html in db.historico_noticias:
             st.html(n_html)
     else: 
-        st.info("⏳ Nenhuma notícia extraordinária publicada neste ciclo operacional.")
+        st.info("⏳ Nenhuma notícia  publicada neste ciclo .")
 
 ## ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR (Mestre) - Processamento com Bônus/Ônus de Tempo
@@ -474,7 +476,7 @@ elif perfil == "🎛️ Painel Apresentador":
             st.rerun()
 
     st.markdown("---")
-    st.markdown("### 📊 Monitoramento de Votos das Bancadas (Tempo Real)")
+    st.markdown("### 📊 Monitoramento de Votos das Empresas (Tempo Real)")
     for nome in EMPRESAS:
         voto = db.dados_empresas[nome].get(f"voto_r{min(rodada, 3)}")
         if voto: st.success(f"✅ **{nome}** — 📥 SUBMETEU A DECISÃO!")
@@ -537,11 +539,11 @@ A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a
                 
                 if ranking_temp and ranking_temp[0] == nome_interno:
                     st.markdown("""<div style='background-color: #c8e6c9; border: 1px solid #81c784; color: #1b5e20; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;'>
-                    ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar a decisão! O mercado valorizou a rapidez de governança com +R$ 0,10 na ação.
+                    ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar a decisão! O mercado valorizou a rapidez com +R$ 0,10 na ação.
                     </div>""", unsafe_allow_html=True)
                 elif len(ranking_temp) == 3 and ranking_temp[-1] == nome_interno:
                     st.markdown("""<div style='background-color: #ffcdd2; border: 1px solid #ef5350; color: #b71c1c; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px;'>
-                    ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última a responder. A lentidão perante a crise gerou incerteza e custou -R$ 0,10 de desconto operacional.
+                    ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última a responder. A lentidão gerou incerteza e custou -R$ 0,10 de desconto na ação.
                     </div>""", unsafe_allow_html=True)
                 
                 votos_reais = {f"r{r}": d[f"voto_r{r}"] for r in range(1, rodada + 1)}
