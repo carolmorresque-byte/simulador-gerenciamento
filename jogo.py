@@ -472,13 +472,20 @@ elif perfil == "🎛️ Painel Gerenciador":
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     st.title("📈 Painel Geral do Mercado de Capitais")
-    btn_col1, btn_col2, _ = st.columns([1, 1, 4])
+    btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
+    with btn_col0:
+        origem = st.session_state.get("telao_origem_empresa")
+        label_volta = f"📋 {origem.split(' - ')[0]}" if origem else "🏠 Home"
+        destino_volta = origem if origem else "🏠 Início"
+        if st.button(label_volta, use_container_width=True):
+            st.session_state["pagina_atual"] = destino_volta
+            st.rerun()
     with btn_col1:
-        if st.button("⬅️ Voltar para a Home", use_container_width=True):
+        if st.button("⬅️ Home", use_container_width=True):
             st.session_state["pagina_atual"] = "🏠 Início"
             st.rerun()
     with btn_col2:
-        if st.button("📰 Ver Mídia / Notícias", use_container_width=True, type="primary"):
+        if st.button("📰 Mídia", use_container_width=True, type="primary"):
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
     plotar_grafico_geral(estado)
@@ -499,13 +506,21 @@ elif perfil == "📈 Telão (Bolsa)":
 elif perfil == "📰 Mídia (Notícias)":
     estado = carregar_estado()
     st.title("📰 GC News — Central de Notícias")
-    btn_col1, btn_col2, _ = st.columns([1, 1, 4])
+    btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
+    with btn_col0:
+        origem = st.session_state.get("telao_origem_empresa")
+        label_volta = f"📋 {origem.split(' - ')[0]}" if origem else "🏠 Home"
+        destino_volta = origem if origem else "🏠 Início"
+        if st.button(label_volta, use_container_width=True):
+            st.session_state["pagina_atual"] = destino_volta
+            st.rerun()
     with btn_col1:
-        if st.button("⬅️ Voltar para a Home", use_container_width=True):
+        if st.button("⬅️ Home", use_container_width=True):
             st.session_state["pagina_atual"] = "🏠 Início"
             st.rerun()
     with btn_col2:
-        if st.button("📈 Ver Telão / Bolsa", use_container_width=True, type="primary"):
+        if st.button("📈 Telão", use_container_width=True, type="primary"):
+            st.session_state["telao_origem_empresa"] = perfil
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     if estado["historico_noticias"]:
@@ -559,14 +574,19 @@ elif perfil in EMPRESA_MAP:
         }},1000);}})();
         </script>""", unsafe_allow_html=True)
 
-    # Botões de navegação — SEM botão Home
-    btn_a1, btn_a2, _ = st.columns([1, 1, 4])
+    # Botões de navegação: Rodada + Telão + Mídia
+    btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
+    with btn_a0:
+        if st.button("📋 Rodada", use_container_width=True):
+            st.session_state["pagina_atual"] = perfil
+            st.rerun()
     with btn_a1:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     with btn_a2:
         if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["telao_origem_empresa"] = perfil
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
