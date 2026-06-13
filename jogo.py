@@ -418,15 +418,17 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.title("🎛️ Painel do Gerenciador")
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("🏠 Home", use_container_width=True):
-            st.session_state["pagina_atual"] = "🏠 Início"
+        if st.button("📋 Rodada", use_container_width=True):
+            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
             st.rerun()
     with nav2:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
+            st.session_state["telao_origem_empresa"] = "🎛️ Painel Gerenciador"
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     with nav3:
         if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["telao_origem_empresa"] = "🎛️ Painel Gerenciador"
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
@@ -507,17 +509,19 @@ elif perfil == "📈 Telão (Bolsa)":
     btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
     with btn_col0:
         origem = st.session_state.get("telao_origem_empresa")
-        label_volta = f"📋 {origem.split(' - ')[0]}" if origem else "🏠 Home"
-        destino_volta = origem if origem else "🏠 Início"
-        if st.button(label_volta, use_container_width=True):
-            st.session_state["pagina_atual"] = destino_volta
+        if origem and origem != "📈 Telão (Bolsa)":
+            simbolo = origem.split(" - ")[0] if " - " in origem else "📋"
+            label_r = f"📋 {simbolo}" if " - " in origem else "📋 Rodada"
+        else:
+            label_r = "📋 Rodada"
+            origem  = "🏠 Início"
+        if st.button(label_r, use_container_width=True):
+            st.session_state["pagina_atual"] = origem
             st.rerun()
     with btn_col1:
-        if st.button("🎛️ Gerenciador", use_container_width=True):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-            st.rerun()
+        st.button("📈 Telão", use_container_width=True, type="primary", disabled=True)
     with btn_col2:
-        if st.button("📰 Mídia", use_container_width=True, type="primary"):
+        if st.button("📰 Mídia", use_container_width=True):
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
     plotar_grafico_geral(estado)
