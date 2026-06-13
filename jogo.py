@@ -23,6 +23,7 @@ def _estado_inicial() -> dict:
         "rodada_atual": 1,
         "historico_noticias": [],
         "sessoes_ativas": [],
+        "senhas_empresas": {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"},
         "dados_empresas": {
             nome: {
                 "precos": [20.0],
@@ -47,6 +48,8 @@ def carregar_estado() -> dict:
         estado = json.loads(conteudo)
         if "sessoes_ativas" not in estado:
             estado["sessoes_ativas"] = []
+        if "senhas_empresas" not in estado:
+            estado["senhas_empresas"] = {}
         return estado
     except (json.JSONDecodeError, OSError):
         estado = _estado_inicial()
@@ -356,29 +359,48 @@ if perfil == "🏠 Início":
             st.markdown("### 🏢 Empresas / Alunos")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
 
-            # Monta opções com "— Vaga preenchida" para empresas já ocupadas
-            opcoes = []
+            senhas_emp = estado.get("senhas_empresas", {})
+
+            # Monta opções — vaga livre ou ocupada (com 🔒)
+            opcoes_livres = []
+            opcoes_ocupadas = []
             for chave, nome_interno in EMPRESA_MAP.items():
                 if nome_interno in sessoes:
-                    opcoes.append(f"{chave} — Vaga preenchida")
+                    opcoes_ocupadas.append((chave, nome_interno))
                 else:
-                    opcoes.append(chave)
+                    opcoes_livres.append((chave, nome_interno))
 
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-            vaga_ocupada = "— Vaga preenchida" in empresa_escolhida
+            todas_opcoes = (
+                [chave for chave, _ in opcoes_livres] +
+                [f"🔒 {chave}" for chave, _ in opcoes_ocupadas]
+            )
+
+            empresa_escolhida_raw = st.selectbox("Escolha sua empresa:", todas_opcoes)
+            vaga_ocupada = empresa_escolhida_raw.startswith("🔒 ")
+            chave_real = empresa_escolhida_raw.replace("🔒 ", "")
+            nome_int = EMPRESA_MAP.get(chave_real, "")
 
             if vaga_ocupada:
-                st.error("🚫 Esta vaga já está preenchida! Escolha outra empresa.")
+                st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
+                senha_input = st.text_input("Senha da sua empresa:", type="password", key="senha_reentrada")
+                if st.button("Entrar com Senha", use_container_width=True):
+                    if senha_input and senha_input == senhas_emp.get(nome_int):
+                        st.session_state["pagina_atual"] = chave_real
+                        st.rerun()
+                    else:
+                        st.error("❌ Senha incorreta.")
             else:
+                senha_input_entrada = st.text_input("Senha da empresa:", type="password", key="senha_entrada")
                 if st.button("Entrar como Aluno", use_container_width=True):
-                    # Registra sessão ativa
-                    nome_int = EMPRESA_MAP[empresa_escolhida]
-                    if nome_int not in sessoes:
-                        sessoes.append(nome_int)
-                        estado["sessoes_ativas"] = sessoes
-                        salvar_estado(estado)
-                    st.session_state["pagina_atual"] = empresa_escolhida
-                    st.rerun()
+                    if senha_input_entrada == senhas_emp.get(nome_int, ""):
+                        if nome_int not in sessoes:
+                            sessoes.append(nome_int)
+                            estado["sessoes_ativas"] = sessoes
+                            salvar_estado(estado)
+                        st.session_state["pagina_atual"] = chave_real
+                        st.rerun()
+                    else:
+                        st.error("❌ Senha incorreta.")
 
     with c3:
         with st.container(border=True):
@@ -491,8 +513,8 @@ elif perfil == "📈 Telão (Bolsa)":
             st.session_state["pagina_atual"] = destino_volta
             st.rerun()
     with btn_col1:
-        if st.button("⬅️ Home", use_container_width=True):
-            st.session_state["pagina_atual"] = "🏠 Início"
+        if st.button("🎛️ Gerenciador", use_container_width=True):
+            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
             st.rerun()
     with btn_col2:
         if st.button("📰 Mídia", use_container_width=True, type="primary"):
