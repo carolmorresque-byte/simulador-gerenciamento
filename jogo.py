@@ -394,9 +394,19 @@ if perfil == "🏠 Início":
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
     st.title("🎛️ Painel do Gerenciador")
-    if st.button("⬅️ Voltar para a Home"):
-        st.session_state["pagina_atual"] = "🏠 Início"
-        st.rerun()
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state["pagina_atual"] = "🏠 Início"
+            st.rerun()
+    with nav2:
+        if st.button("📈 Telão", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
+    with nav3:
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
