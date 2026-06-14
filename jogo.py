@@ -366,14 +366,14 @@ def plotar_grafico_geral(estado: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. Garante que o estado da página atual existe
-if "pagina_atual" not in st.session_state:
-    st.session_state["pagina_atual"] = "Home"  # Substitua pelo nome da sua página inicial
-
-# 2. CRIAÇÃO DA VARIÁVEL (Substitua os nomes abaixo pelas páginas do seu jogo)
+# 1. Lista de páginas disponíveis (certifique-se de que os nomes estão idênticos aos usados no app)
 perfis_navegacao = ["Home", "Painel", "Configurações", "Relatórios"]
 
-# 3. O selectbox corrigido que usa a variável acima
+# 2. Proteção: Garante que a página atual existe na lista. Se não existir, redefine para a primeira página.
+if "pagina_atual" not in st.session_state or st.session_state["pagina_atual"] not in perfis_navegacao:
+    st.session_state["pagina_atual"] = perfis_navegacao[0]
+
+# 3. Selectbox seguro (o index nunca mais falhará)
 perfil_sidebar = st.sidebar.selectbox(
     "Navegação Lateral:", 
     perfis_navegacao,
