@@ -13,16 +13,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Botão para reabrir a sidebar
+import streamlit as st
+from streamlit.components.v1 import html
+
 if st.button("☰ Mostrar menu"):
-    html("""
-    <script>
-        const button = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-        if (button) {
-            button.click();
-        }
-    </script>
-    """)
+    html(
+        """
+        <script>
+        parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]')?.click();
+        </script>
+        """,
+        height=0,
+    )
 st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
 st.markdown("""
     <style>
