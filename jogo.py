@@ -5,7 +5,13 @@ import time
 import json
 import os
 import fcntl
-
+# --- FUNÇÕES DE APOIO ---
+def plotar_grafico_especifico(estado, nome_empresa):
+    import pandas as pd
+    # Busca os preços da empresa específica no dicionário de estados
+    precos = estado["dados_empresas"][nome_empresa]["precos"]
+    # Cria o gráfico
+    st.line_chart(pd.DataFrame({"Preço": precos}))
 st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
 st.markdown("""
     <style>
