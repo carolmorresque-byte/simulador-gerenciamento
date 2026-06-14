@@ -505,95 +505,105 @@ elif perfil == "🎛️ Painel Gerenciador":
     ) if rodada <= 3 else True
 
     st.divider()
+if rodada <= 3:
+    if not todos_votaram:
+        st.info("⏳ Aguardando todas as bancadas votarem para avançar.")
 
-    if rodada <= 3:
-        if not todos_votaram:
-            st.info("⏳ Aguardando todas as bancadas votarem para avançar.")
-        # Etapa 1: Apurar resultados e liberar Mídia
-        apurado = estado.get(f"apurado_r{rodada}", False)
-        if not apurado:
-            if st.button(f"📊 Apurar Resultados e Mídia — Rodada {rodada}",
-                         disabled=not todos_votaram, use_container_width=True, type="primary"):
-                for emp in EMPRESAS:
-                    d = estado["dados_empresas"][emp]
-                    if len(d["precos"]) == rodada:
-                        novo = calcular_novo_preco(estado, emp, rodada)
-                        d["precos"].append(novo)
-                html_noticia = gerar_manchete_dinamica(estado, rodada)
-                estado["historico_noticias"].append(html_noticia)
-                estado[f"apurado_r{rodada}"] = True
-                salvar_estado(estado)
-                st.success(f"✅ Resultados apurados! Mídia {rodada} liberada.")
-                st.rerun()
-else:
-    st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
+    apurado = estado.get(f"apurado_r{rodada}", False)
 
-    premiacao_feita = estado.get(f"premiacao_r{rodada}", False)
-
-    if not premiacao_feita:
-
-        st.markdown("### 🏆 Premiação dos Acionistas")
-
-        primeiro = st.selectbox(
-            "🥇 Empresa vencedora (+R$ 2,00)",
-            EMPRESAS,
-            key=f"primeiro_r{rodada}"
-        )
-
-        segundo = st.selectbox(
-            "🥈 Segunda colocada (+R$ 1,00)",
-            [e for e in EMPRESAS if e != primeiro],
-            key=f"segundo_r{rodada}"
-        )
-
+    if not apurado:
         if st.button(
-            "🏆 Aplicar Premiação",
-            key=f"premio_r{rodada}",
-            use_container_width=True
+            f"📊 Apurar Resultados e Mídia — Rodada {rodada}",
+            disabled=not todos_votaram,
+            use_container_width=True,
+            type="primary"
         ):
+            for emp in EMPRESAS:
+                d = estado["dados_empresas"][emp]
+                if len(d["precos"]) == rodada:
+                    novo = calcular_novo_preco(estado, emp, rodada)
+                    d["precos"].append(novo)
 
-            estado["dados_empresas"][primeiro]["precos"][-1] += 2
-            estado["dados_empresas"][segundo]["precos"][-1] += 1
-
-            estado[f"premiacao_r{rodada}"] = True
+            html_noticia = gerar_manchete_dinamica(estado, rodada)
+            estado["historico_noticias"].append(html_noticia)
+            estado[f"apurado_r{rodada}"] = True
 
             salvar_estado(estado)
 
-            st.success("✅ Premiação aplicada!")
+            st.success(f"✅ Resultados apurados! Mídia {rodada} liberada.")
             st.rerun()
 
     else:
-        st.success("🏆 Premiação dos acionistas já aplicada.")
 
- # Etapa 2: Avançar para próxima rodada
-if rodada < 3:
+        st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
 
-    if st.button(
-        f"▶️ Avançar para Rodada {rodada + 1}",
-        use_container_width=True
-    ):
-        estado["rodada_atual"] = rodada + 1
-        estado[f"timer_inicio_r{rodada + 1}"] = time.time()
+        premiacao_feita = estado.get(f"premiacao_r{rodada}", False)
 
-        salvar_estado(estado)
-        st.rerun()
+        if not premiacao_feita:
 
-elif rodada == 3:
+            st.markdown("### 🏆 Premiação dos Acionistas")
 
-    if st.button(
-        "🎬 Ver Resultado Final das Ações",
-        use_container_width=True,
-        type="primary"
-    ):
-        estado["fase_final"] = "suspense"
-        estado["ts_suspense"] = time.time()
-        estado["rodada_atual"] = 4
+            primeiro = st.selectbox(
+                "🥇 Empresa vencedora (+R$ 2,00)",
+                EMPRESAS,
+                key=f"primeiro_r{rodada}"
+            )
 
-        salvar_estado(estado)
+            segundo = st.selectbox(
+                "🥈 Segunda colocada (+R$ 1,00)",
+                [e for e in EMPRESAS if e != primeiro],
+                key=f"segundo_r{rodada}"
+            )
 
-        st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-        st.rerun()
+            if st.button(
+                "🏆 Aplicar Premiação",
+                key=f"premio_r{rodada}",
+                use_container_width=True
+            ):
 
+                estado["dados_empresas"][primeiro]["precos"][-1] += 2
+                estado["dados_empresas"][segundo]["precos"][-1] += 1
+
+                estado[f"premiacao_r{rodada}"] = True
+
+                salvar_estado(estado)
+
+                st.success("✅ Premiação aplicada!")
+                st.rerun()
+
+        else:
+            st.success("🏆 Premiação dos acionistas já aplicada.")
+
+        # Avançar rodada
+        if rodada < 3:
+
+            if st.button(
+                f"▶️ Avançar para Rodada {rodada + 1}",
+                use_container_width=True
+            ):
+
+                estado["rodada_atual"] = rodada + 1
+                estado[f"timer_inicio_r{rodada + 1}"] = time.time()
+
+                salvar_estado(estado)
+                st.rerun()
+
+        elif rodada == 3:
+
+            if st.button(
+                "🎬 Ver Resultado Final das Ações",
+                use_container_width=True,
+                type="primary"
+            ):
+
+                estado["fase_final"] = "suspense"
+                estado["ts_suspense"] = time.time()
+                estado["rodada_atual"] = 4
+
+                salvar_estado(estado)
+
+                st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+                st.rerun()
 elif rodada == 4:
 
     st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
