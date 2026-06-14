@@ -17,14 +17,11 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 if st.button("☰ Mostrar menu"):
-    html(
-        """
-        <script>
-        parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]')?.click();
-        </script>
-        """,
-        height=0,
-    )
+    html("""
+    <script>
+        ...
+    </script>
+    """)
 st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
 st.markdown("""
     <style>
