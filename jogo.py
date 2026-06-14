@@ -569,9 +569,12 @@ elif perfil == "📈 Telão (Bolsa)":
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📰 Mídia (Notícias)":
+    # Trava de Segurança
+    if "Empresa" in st.session_state.get("perfil_atual", ""): # Ajuste conforme o seu nome de perfil
+        st.error("Acesso restrito ao Gerenciador.")
+        st.stop()
+        
     estado = carregar_estado()
-    st.title("📈 TELÃO - Bolsa de R$")
-    
     # Navegação padronizada e limpa (sem duplicação)
     btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
     with btn_col0:
