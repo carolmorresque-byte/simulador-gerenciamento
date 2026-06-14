@@ -21,7 +21,12 @@ def carregar_estado():
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return resetar_estado() # Agora isso vai funcionar!
-
+# No topo do seu arquivo, após as funções de estado:
+EMPRESA_MAP = {
+    "Empresa Alfa": "alfa_interno",
+    "Empresa Beta": "beta_interno",
+    "Empresa Gama": "gama_interno"
+}
 # ... resto do código
 # 1. CONFIGURAÇÕES E CONSTANTES
 GERENCIADOR = "🎛️ Painel Gerenciador"
