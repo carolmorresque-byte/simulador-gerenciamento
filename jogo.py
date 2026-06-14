@@ -418,8 +418,8 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.title("🎛️ Painel do Gerenciador")
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state["pagina_atual"] = "🏠 Início"
             st.rerun()
     with nav2:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
@@ -508,14 +508,10 @@ elif perfil == "📈 Telão (Bolsa)":
     st.title("📈 Painel Geral do Mercado de Capitais")
     btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
     with btn_col0:
-        origem = st.session_state.get("telao_origem_empresa")
-        if origem and origem != "📈 Telão (Bolsa)":
-            simbolo = origem.split(" - ")[0] if " - " in origem else "📋"
-            label_r = f"📋 {simbolo}" if " - " in origem else "📋 Rodada"
-        else:
-            label_r = "📋 Rodada"
-            origem  = "🏠 Início"
-        if st.button(label_r, use_container_width=True):
+        origem = st.session_state.get("telao_origem_empresa", "🎛️ Painel Gerenciador")
+        if not origem or origem == "📈 Telão (Bolsa)":
+            origem = "🎛️ Painel Gerenciador"
+        if st.button("📋 Rodada", use_container_width=True):
             st.session_state["pagina_atual"] = origem
             st.rerun()
     with btn_col1:
