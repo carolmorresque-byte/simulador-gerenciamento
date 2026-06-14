@@ -56,7 +56,12 @@ perfil = st.session_state.get("perfil_atual", "🏠 Início")
 if not verificar_acesso(perfil, perfil):
     st.error("Acesso restrito. Você não possui permissão para ver esta tela.")
     st.stop()
+# 4. INICIALIZAÇÃO DO ESTADO NA SESSÃO
+if "estado" not in st.session_state:
+    st.session_state["estado"] = carregar_estado()
 
+# 5. AGORA PODE CHAMAR O SELECTBOX SEM ERRO
+chave_selecionada = st.selectbox("Escolha sua empresa:", list(EMPRESA_MAP.keys()))
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
