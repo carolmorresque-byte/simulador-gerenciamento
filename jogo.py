@@ -663,8 +663,30 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             st.rerun()
         time.sleep(1)
         st.rerun()
-
+        
     elif fase == "plantao":
+        st.markdown("""
+        <div style="
+            background-color:#c00000;
+            color:white;
+            border-radius:15px;
+            padding:50px;
+            text-align:center;
+            margin-top:120px;
+            box-shadow:0px 0px 20px rgba(0,0,0,0.5);
+        ">
+            <h1 style="font-size:60px;">
+                🚨 PLANTÃO URGENTE 🚨
+            </h1>
+    
+            <h2 style="font-size:40px;">
+                FISCALIZAÇÃO CVM NAS EMPRESAS
+            </h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+        time.sleep(5)
+        st.rerun()
         # Aplica punição CVM agora
         for emp in EMPRESAS:
             processar_rodada_4_consolidada(estado, emp)
