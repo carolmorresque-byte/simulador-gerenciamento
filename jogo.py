@@ -12,12 +12,14 @@ import json
 import os
 import fcntl
 import streamlit as st
-
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# 🔴 ADICIONA ISSO LOGO AQUI
+if "rodada" not in st.session_state:
+    st.session_state["rodada"] = 1
 # Oculta o botão de recolher a sidebar
 st.markdown("""
 <style>
