@@ -2,8 +2,7 @@ import streamlit as st
 import json
 import os
 import time
-# ... outros imports
-
+from streamlit_autorefresh import st_autorefresh
 # 1. DEFINA PRIMEIRO A FUNÇÃO QUE CRIA O ESTADO INICIAL
 def resetar_estado():
     # Defina aqui como o seu estado inicial deve ser
