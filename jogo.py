@@ -603,7 +603,7 @@ elif perfil == "🎛️ Painel Gerenciador":
             
                     st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                     st.rerun()
-elif rodada == 4:
+elif  st.session_state["rodada"] == 4:
 
     st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
 
