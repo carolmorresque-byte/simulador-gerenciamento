@@ -21,6 +21,10 @@ def carregar_estado():
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return resetar_estado() # Agora isso vai funcionar!
+
+def salvar_estado(estado):
+    with open("estado_simulador.json", "w") as f:
+        json.dump(estado, f)
 # No topo do seu arquivo, após as funções de estado:
 EMPRESA_MAP = {
     "Empresa Alfa": "alfa_interno",
