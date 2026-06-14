@@ -566,35 +566,34 @@ else:
         st.success("🏆 Premiação dos acionistas já aplicada.")
 
     # Etapa 2: Avançar para próxima rodada
-    if rodada < 3:
+if rodada < 3:
 
-        if st.button(
-            f"▶️ Avançar para Rodada {rodada + 1}",
-            use_container_width=True
-        ):
-            estado["rodada_atual"] = rodada + 1
-            estado[f"timer_inicio_r{rodada + 1}"] = time.time()
+    if st.button(
+        f"▶️ Avançar para Rodada {rodada + 1}",
+        use_container_width=True
+    ):
+        estado["rodada_atual"] = rodada + 1
+        estado[f"timer_inicio_r{rodada + 1}"] = time.time()
 
-            salvar_estado(estado)
-            st.rerun()
+        salvar_estado(estado)
+        st.rerun()
 
-    else:
+elif rodada == 3:
 
-        # Rodada 3 encerrada — botão especial para o Plot Twist
-        if st.button(
-            "🎬 Ver Resultado Final das Ações",
-            use_container_width=True,
-            type="primary"
-        ):
+    if st.button(
+        "🎬 Ver Resultado Final das Ações",
+        use_container_width=True,
+        type="primary"
+    ):
 
-            estado["fase_final"] = "suspense"
-            estado["ts_suspense"] = time.time()
-            estado["rodada_atual"] = 4
+        estado["fase_final"] = "suspense"
+        estado["ts_suspense"] = time.time()
+        estado["rodada_atual"] = 4
 
-            salvar_estado(estado)
+        salvar_estado(estado)
 
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+        st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+        st.rerun()
     elif rodada == 4:
         st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
         auditoria_ja_feita = all(len(estado["dados_empresas"][emp]["precos"]) >= 5 for emp in EMPRESAS)
