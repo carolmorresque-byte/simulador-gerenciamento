@@ -852,9 +852,7 @@ elif perfil == "📰 Mídia (Notícias)":
     if now - st.session_state["ultima_atualizacao_midia"] > 8:
         st.session_state["ultima_atualizacao_midia"] = now
         st.rerun()
-# ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS
-# ─────────────────────────────────────────────────────────────────────────────
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -886,11 +884,12 @@ elif perfil in EMPRESA_MAP:
         </div>
         """, unsafe_allow_html=True)
 
+        st.stop()
 
     # ─────────────────────────────
-    # 🏁 RODADA 5 = FIM DE JOGO (IMPORTANTE)
+    # 🏁 RODADA 5 = FIM DE JOGO
     # ─────────────────────────────
-    elif rodada == 5:
+    if rodada == 5:
 
         st.markdown("""
         <div style="
@@ -908,215 +907,167 @@ elif perfil in EMPRESA_MAP:
 
         st.stop()
 
-
     # ─────────────────────────────
     # 🔁 FLUXO NORMAL (RODADAS 1–4)
     # ─────────────────────────────
-    else:
+    votos_ate_agora = {
+        "r1": d.get("voto_r1"),
+        "r2": d.get("voto_r2"),
+        "r3": d.get("voto_r3"),
+    }
 
-        # 👇 AQUI entra TODO o seu código atual de:
-        # - votação
-        # - timer
-        # - DRE
-        # - tabs
-        # - narrativa
-        # - etc...
-    votos_ate_agora = {"r1": d["voto_r1"], "r2": d["voto_r2"]}
-    dre_parcial     = calcular_dre_dinamico(votos_ate_agora)
-    pecld_m         = dre_parcial["pecld_dinamica"] / 1_000_000.0
+    dre_parcial = calcular_dre_dinamico(votos_ate_agora)
+    pecld_m = dre_parcial["pecld_dinamica"] / 1_000_000.0
 
-    st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
-
-    # Timer
+    # ───────────── TIMER ─────────────
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
-    ts_inicio   = estado.get(chave_timer) if chave_timer else None
+    ts_inicio = estado.get(chave_timer) if chave_timer else None
+
     if ts_inicio and rodada <= 3:
         restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-        if restante_i > 240:   cor_t="#1b5e20"; bg_t="#e8f5e9"; brd_t="#66bb6a"
-        elif restante_i > 60:  cor_t="#6d4c00"; bg_t="#fff8e1"; brd_t="#ffa000"
-        else:                  cor_t="#7f0000"; bg_t="#ffebee"; brd_t="#c62828"
+
+        if restante_i > 240:
+            cor_t, bg_t, brd_t = "#1b5e20", "#e8f5e9", "#66bb6a"
+        elif restante_i > 60:
+            cor_t, bg_t, brd_t = "#6d4c00", "#fff8e1", "#ffa000"
+        else:
+            cor_t, bg_t, brd_t = "#7f0000", "#ffebee", "#c62828"
+
         st.markdown(f"""
-        <div id="timer-box" style="border:2px solid {brd_t};background:{bg_t};color:{cor_t};border-radius:8px;
-            padding:10px 20px;display:inline-flex;align-items:center;gap:12px;margin-bottom:12px;font-family:monospace;">
+        <div id="timer-box" style="border:2px solid {brd_t};background:{bg_t};color:{cor_t};
+            border-radius:8px;padding:10px 20px;display:inline-flex;align-items:center;gap:12px;">
             <span style="font-size:22px;">⏱️</span>
             <div>
-                <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Tempo restante — Rodada {rodada}</div>
-                <div id="timer-display" style="font-size:28px;font-weight:900;letter-spacing:2px;">{restante_i//60:02d}:{restante_i%60:02d}</div>
+                <div style="font-size:11px;text-transform:uppercase;">
+                    Tempo restante — Rodada {rodada}
+                </div>
+                <div style="font-size:28px;font-weight:900;">
+                    {restante_i//60:02d}:{restante_i%60:02d}
+                </div>
             </div>
         </div>
-        <script>
-        (function(){{var total={restante_i};var el=document.getElementById("timer-display");
-        var box=document.getElementById("timer-box");if(!el)return;
-        var iv=setInterval(function(){{if(total<=0){{el.textContent="00:00";clearInterval(iv);return;}}
-        total--;var m=Math.floor(total/60);var s=total%60;
-        el.textContent=(m<10?"0":"")+m+":"+(s<10?"0":"")+s;
-        if(total<=30){{box.style.borderColor="#c62828";box.style.background="#ffebee";box.style.color="#7f0000";}}
-        else if(total<=120){{box.style.borderColor="#ffa000";box.style.background="#fff8e1";box.style.color="#6d4c00";}}
-        }},1000);}})();
-        </script>""", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    # Botões de navegação: Rodada + Telão + Mídia
+    # ───────────── BOTÕES ─────────────
     btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
+
     with btn_a0:
         if st.button("📋 Rodada", use_container_width=True):
             st.session_state["pagina_atual"] = perfil
             st.rerun()
+
     with btn_a1:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
+
     with btn_a2:
         if st.button("📰 Mídia", use_container_width=True):
             st.session_state["telao_origem_empresa"] = perfil
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
+    # ───────────── TABS ─────────────
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
 
     with aba_voto:
+
+        # ─────────────────────────────
+        # RODADAS 1–3
+        # ─────────────────────────────
         if rodada <= 3:
+
             voto_atual = d.get(f"voto_r{rodada}")
+
             if voto_atual is None:
+
                 st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
+
                 col_prob, col_dre = st.columns([1.1, 0.9], gap="large")
+
                 with col_prob:
                     if rodada == 3:
-                        st.markdown(f"""### 🚨 RODADA 3: O DESAFIO DA INSOLVÊNCIA E DA PECLD
-A recessão econômica e o desemprego corroeram a renda das famílias, fazendo a inadimplência no crediário próprio saltar de 3% para 12%. Pelas regras do CPC 48 (IFRS 9), a perda de recebíveis obriga a empresa a registrar uma provisão (PECLD) de **R$ {pecld_m:,.0f} milhões** na DRE. O impacto desse lançamento anula o EBITDA do período, escancara uma situação de insolvência técnica e aciona a revisão dos auditores independentes.""")
+                        st.markdown(f"""### 🚨 RODADA 3 — PECLD""")
                     elif rodada in NARRATIVAS:
                         st.markdown(NARRATIVAS[rodada])
+
                 with col_dre:
                     votos_sim = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada)}
                     votos_sim[f"r{rodada}"] = "B"
                     exibir_dre(votos_sim, rodada)
+
                 st.markdown("---")
-                escolha = st.radio("Selecione o tratamento contábil adotado:", ["A", "B", "C"],
-                                   format_func=lambda x: get_labels(rodada, pecld_m)[x])
+
+                escolha = st.radio(
+                    "Selecione o tratamento contábil adotado:",
+                    ["A", "B", "C"],
+                    format_func=lambda x: get_labels(rodada, pecld_m)[x]
+                )
+
                 if st.button("✅ Homologar Resolução", use_container_width=True):
-                    d[f"voto_r{rodada}"]      = escolha
+                    d[f"voto_r{rodada}"] = escolha
                     d[f"tempo_voto_r{rodada}"] = time.time()
                     salvar_estado(estado)
-                    st.success("Resolução homologada!")
                     st.rerun()
+
             else:
+
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
-                tempos = [(n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
-                          for n in EMPRESAS
-                          if estado["dados_empresas"][n].get(f"voto_r{rodada}") is not None
-                          and estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}") is not None]
-                qtd_votaram = len(tempos)
-                if qtd_votaram >= 1:
-                    ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
-                    sou_primeiro         = (ranking[0] == nome_interno)
-                    sou_ultimo_definitivo= (qtd_votaram == 3 and ranking[-1] == nome_interno)
-                    aguardando_mais      = (qtd_votaram < 3 and not sou_primeiro)
-                    if sou_primeiro:
-                        st.markdown("""<div style='background-color:#c8e6c9;border:1px solid #81c784;color:#1b5e20;
-                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
-                            ⏱️ <b>Bônus de Agilidade:</b> Sua bancada foi a primeira a homologar! <b>+R$ 0,10</b> na ação.</div>""",
-                            unsafe_allow_html=True)
-                    elif sou_ultimo_definitivo:
-                        st.markdown("""<div style='background-color:#ffcdd2;border:1px solid #ef5350;color:#b71c1c;
-                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
-                            ⏱️ <b>Penalidade por Atraso:</b> Sua bancada foi a última. <b>-R$ 0,10</b> na ação.</div>""",
-                            unsafe_allow_html=True)
-                    elif aguardando_mais:
-                        st.markdown(f"""<div style='background-color:#fff8e1;border:1px solid #ffd54f;color:#6d4c00;
-                            padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px;'>
-                            ⏳ <b>Aguardando as demais bancadas...</b> Você foi a <b>{qtd_votaram}ª</b> a votar.</div>""",
-                            unsafe_allow_html=True)
-                    preco_atual = d["precos"][-1]
-                    preco_estimado = round(preco_atual * IMPACTOS.get(rodada, {}).get(voto_atual, 1.0), 2)
-                    ajuste_tempo = +0.10 if sou_primeiro else (-0.10 if sou_ultimo_definitivo else 0.0)
-                    label_ajuste = (" + R$ 0,10 (bônus)" if sou_primeiro else
-                                    " − R$ 0,10 (penalidade)" if sou_ultimo_definitivo else "")
-                    preco_fe = round(preco_estimado + ajuste_tempo, 2)
-                    variacao = round(preco_fe - preco_atual, 2)
-                    sinal    = "▲" if variacao >= 0 else "▼"
-                    cor_v    = "#1b5e20" if variacao >= 0 else "#b71c1c"
-                    bg_v     = "#e8f5e9" if variacao >= 0 else "#ffebee"
-                    brd_v    = "#81c784" if variacao >= 0 else "#ef5350"
-                    st.caption(f"Preço atual: R$ {preco_atual:.2f} → Impacto da opção {voto_atual}: R$ {preco_estimado:.2f}{label_ajuste}")
-                    st.markdown(f"**{sinal} Estimativa: R$ {preco_fe:.2f} ({variacao:+.2f})**")
-                    st.caption("💡 Valor confirmado pelo Gerenciador ao encerrar a rodada.")
-                votos_reais = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}
-                exibir_dre(votos_reais, rodada)
 
+                exibir_dre(
+                    {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)},
+                    rodada
+                )
+
+        # ─────────────────────────────
+        # RODADA 4 = AUDITORIA CVM
+        # ─────────────────────────────
         elif rodada == 4:
-            st.info("⏳ Aguardando o Apresentador aplicar a auditoria CVM.")
-            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
 
+            st.info("⏳ Aguardando auditoria CVM ser aplicada.")
+
+            exibir_dre(
+                {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)},
+                3
+            )
+
+        # ─────────────────────────────
+        # RODADA 5 = RESULTADO FINAL
+        # ─────────────────────────────
         else:
-            preco_abertura = d["precos"][0]; preco_final = d["precos"][-1]
+
+            preco_abertura = d["precos"][0]
+            preco_final = d["precos"][-1]
+
             variacao_total = preco_final - preco_abertura
-            pct_total      = (variacao_total / preco_abertura) * 100
-            sinal_total    = "▲" if variacao_total >= 0 else "▼"
-            cor_total      = "#1b5e20" if variacao_total >= 0 else "#7f0000"
-            bg_total       = "#e8f5e9" if variacao_total >= 0 else "#ffebee"
-            borda_total    = "#81c784" if variacao_total >= 0 else "#ef5350"
+            pct_total = (variacao_total / preco_abertura) * 100
+
+            sinal_total = "▲" if variacao_total >= 0 else "▼"
+
             combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
-            qtd_c = combo.count("C"); qtd_b = combo.count("B")
-            if qtd_c == 3:
-                nivel_risco = "🔴 CRÍTICO — Fraude Contábil Sistemática"
-                desc_risco  = "Intervenção da CVM e Prisão em Regime Fechado (soma de penas > 8 anos pelo Código Penal)."
-                cor_r = "#7f0000"; bg_r = "#ffebee"; brd_r = "#c62828"
-            elif qtd_c == 2:
-                nivel_risco = "💥 LOUCURA — Irregularidades Graves Contínuas"
-                desc_risco  = "Demissão por Justa Causa do CFO, inquérito na Polícia Federal e bloqueio de bens pessoais."
-                cor_r = "#6d4c00"; bg_r = "#fff8e1"; brd_r = "#ffa000"
-            elif qtd_c == 1:
-                nivel_risco = "🟡 MODERADO — Desvio Regulamentar Isolado"
-                desc_risco  = "Processo Administrativo Sancionador na CVM com aplicação de multa pessoal milionária ao CFO."
-                cor_r = "#4a3000"; bg_r = "#fffde7"; brd_r = "#fdd835"
-            elif qtd_b == 3:
-                nivel_risco = "🟠 ALTO — Abuso de Discricionariedade Legal"
-                desc_risco  = "Demissão do CFO pelo Conselho devido à perda de credibilidade (Earnings Quality) e queda das ações."
-                cor_r = "#e65100"; bg_r = "#fff3e0"; brd_r = "#ffb74d"
-            elif qtd_b >= 1:
-                nivel_risco = "🟢 BAIXO — Gerenciamento Discricionário Eficiente"
-                desc_risco  = "Uso estratégico e sofisticado de engenharia financeira (CPCs) para mitigar covenants dentro da lei. Aprovado!"
-                cor_r = "#1b5e20"; bg_r = "#e8f5e9"; brd_r = "#66bb6a"
-            else:
-                nivel_risco = "⚠️ ALERTA — Inércia Operacional e Falta de Resultado"
-                desc_risco  = "Demissão do CFO pelo Conselho. Embora 100% ético, aceitou passivamente o estouro de covenants e a insolvência sem propor soluções."
-                cor_r = "#37474f"; bg_r = "#eceff1"; brd_r = "#b0bec5"
-            st.markdown("## 🏁 Relatório de Auditoria CVM")
-            st.markdown(f"""<div style='border:2px solid {borda_total};background:{bg_total};border-radius:8px;padding:20px;margin-bottom:16px;'>
-                <div style='font-size:13px;color:#555;margin-bottom:4px;'>Valor da Ação</div>
-                <div style='display:flex;align-items:baseline;gap:12px;'>
-                    <span style='font-size:32px;font-weight:900;color:{cor_total};'>R$ {preco_final:.2f}</span>
-                    <span style='font-size:18px;color:{cor_total};font-weight:bold;'>{sinal_total} R$ {abs(variacao_total):.2f} ({pct_total:+.1f}%) desde a abertura</span>
-                </div>
-                <div style='font-size:12px;color:#777;margin-top:4px;'>Preço de abertura: R$ {preco_abertura:.2f}</div>
-            </div>""", unsafe_allow_html=True)
-            st.markdown(f"""<div style='border:1px solid {brd_r};background:{bg_r};color:{cor_r};
-                border-radius:6px;padding:14px 18px;margin-bottom:16px;font-size:13px;'>
-                <b style='font-size:15px;'>{nivel_risco}</b><br>{desc_risco}</div>""", unsafe_allow_html=True)
-            cores_voto = {"A":("#0d47a1","#e3f2fd","#90caf9"),"B":("#1b5e20","#e8f5e9","#a5d6a7"),"C":("#7f0000","#ffebee","#ef9a9a")}
-            st.markdown("**📋 Histórico de Decisões:**")
-            cols_votos = st.columns(3)
-            for i, r in enumerate([1, 2, 3]):
-                v = d.get(f"voto_r{r}") or "—"
-                cor_t, bg_v, brd = cores_voto.get(v, ("#333","#f5f5f5","#ccc"))
-                with cols_votos[i]:
-                    st.markdown(f"""<div style='border:1px solid {brd};background:{bg_v};color:{cor_t};
-                        border-radius:6px;padding:10px;text-align:center;font-size:13px;'>
-                        <div style='font-size:11px;color:#777;'>Rodada {r}</div>
-                        <div style='font-size:22px;font-weight:900;'>{v}</div></div>""", unsafe_allow_html=True)
-            st.markdown("<br>", unsafe_allow_html=True)
-            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+            qtd_c = combo.count("C")
+            qtd_b = combo.count("B")
+
+            st.markdown("## 🏁 RELATÓRIO FINAL")
+
+            exibir_dre(
+                {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)},
+                3
+            )
+
             plotar_grafico_empresa(estado, nome_interno)
 
     with aba_jornal_aluno:
+
         if estado["historico_noticias"]:
             for n_html in estado["historico_noticias"]:
                 st.html(n_html)
         else:
             st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    # Auto-redirect para Mídia quando Plot Twist ativado
+    # auto redirect mídia
     _fase = estado.get("fase_final")
-    if _fase in ("plantao", "veredicto") and st.session_state.get("pagina_atual") not in ("📰 Mídia (Notícias)",):
+    if _fase in ("plantao", "veredicto") and st.session_state.get("pagina_atual") != "📰 Mídia (Notícias)":
         st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
         st.rerun()
 
