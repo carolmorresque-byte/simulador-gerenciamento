@@ -48,8 +48,8 @@ def carregar_estado() -> dict:
         estado = json.loads(conteudo)
         if "sessoes_ativas" not in estado:
             estado["sessoes_ativas"] = []
-        if "senhas_empresas" not in estado:
-            estado["senhas_empresas"] = {}
+        # Sempre garante senhas corretas (sobrescreve estado antigo)
+        estado["senhas_empresas"] = {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"}
         return estado
     except (json.JSONDecodeError, OSError):
         estado = _estado_inicial()
@@ -80,14 +80,42 @@ IMPACTOS = {
 }
 
 LABELS_R1 = {
-    "A": "OPÇÃO A: Lançar em Passivo Financeiro — Encargos no resultado (-R$ 310M). EBITDA: R$ 1.000M | Lucro Líquido cai para R$ 690M.",
-    "B": "OPÇÃO B: Lançar em Ativo Circulante (Estoques) — Juros ativados no estoque. EBITDA: R$ 1.000M | Lucro Líquido estável em R$ 700M.",
-    "C": "OPÇÃO C: Lançar em Passivo Operacional e Reduzir PDD — Reduz PDD para -R$ 100M. EBITDA sobe para R$ 1.050M | Lucro Líquido vai para R$ 750M.",
+    "A": """Opção A — Lançar em Passivo Financeiro
+
+Reclassifica a operação para dívida bancária assim que o banco assume o pagamento do fornecedor.
+
+Resultado: O EBITDA fica estável em R$ 1.000M, o Resultado Financeiro absorve os juros (-R$ 310M) e o Lucro Líquido cai para R$ 690M, aceitando o estouro técnico do covenant.""",
+
+    "B": """Opção B — Lançar em Passivo Operacional
+
+Mantém o registro da operação na conta de fornecedores comerciais.
+
+Resultado: O EBITDA fica estável em R$ 1.000M, o Resultado Financeiro absorve os juros (-R$ 310M) e o Lucro Líquido cai para R$ 690M, salvando o covenant de dívida financeira por manter o saldo fora do passivo financeiro.""",
+
+    "C": """Opção C — Lançar em Passivo Financeiro com Ajuste de Provisão
+
+Registra o risco sacado no Passivo Financeiro, mas a diretoria revisa e reduz a Provisão para Calotes (PDD) de -R$ 150M para -R$ 100M.
+
+Resultado: O EBITDA sobe para R$ 1.050M por conta do ganho operacional na PDD, amortecendo os juros no Resultado Financeiro (-R$ 310M). O Lucro Líquido sobe para R$ 740M e o covenant de alavancagem é mitigado pelo aumento do denominador (EBITDA maior).""",
 }
 LABELS_R2 = {
-    "A": "OPÇÃO A: Assumir Perda Cambial Imediata — Reconhece o impacto cambial direto na DRE e a desvalorização via provisão de estoque.",
-    "B": "OPÇÃO B: Dilatar Ativos e Depreciação (CPC 16/23) — Ativa custos extras no estoque e alonga a vida útil dos ativos de 5 para 10 anos.",
-    "C": "OPÇÃO C: Crédito de Incentivo Comercial (Rebate Fake) — Registra descontos verbais futuros de 24 meses como receita imediata.",
+    "A": """Opção A — Assumir a Perda Cambial Imediata
+
+Reconhece o impacto cambial direto na DRE e a desvalorização via provisão de estoque.
+
+Resultado: O EBITDA é fortemente penalizado pelo ajuste de obsolescência, o Resultado Financeiro absorve a perda cambial, o Lucro Líquido despenca e os covenants contratuais correm alto risco de quebra imediata.""",
+
+    "B": """Opção B — Dilatar Ativos e Depreciação (CPC 16/23)
+
+Ativa custos extras (como multas de demurrage) no valor do estoque e alonga o prazo de vida útil dos ativos logísticos de 5 para 10 anos.
+
+Resultado: O EBITDA é poupado do impacto imediato, pois os custos adicionais ficam retidos no Ativo Circulante e a linha de depreciação encolhe, blindando temporariamente os indicadores e os covenants.""",
+
+    "C": """Opção C — Crédito de Incentivo Comercial / Rebate
+
+Registra descontos e incentivos verbais futuros de 24 meses acordados com os fabricantes internacionais como receita imediata no exercício corrente.
+
+Resultado: A linha de receita recebe uma injeção artificial de R$ 80M, inflando diretamente o Lucro Bruto e fazendo o EBITDA saltar, camuflando a crise do dólar perante auditorias e bancos credores.""",
 }
 
 def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
@@ -111,11 +139,12 @@ O principal problema é o impacto nos covenants financeiros:
 
 **Sua missão:** Definir a classificação contábil dessa operação, ponderando a realidade técnica contra o risco de quebra de contrato e o conflito de interesses na remuneração.""",
     2: """### 📰 RODADA 2: A CRISE DO DÓLAR E OS CONTRATOS DE IMPORTAÇÃO
-**Cenário:** A empresa enfrenta uma crise severa devido à falta de proteção cambial (*hedge*) e ao repasse excessivo de custos ao consumidor.
 
-*   **Estouro no Orçamento:** A alta do dólar (de R$ 5,00 para R$ 6,50) causada por um conflito militar elevou o custo de importação de 200 mil smartphones de R$ 100 milhões para R$ 130 milhões.
-*   **Gargalo Logístico:** Uma lentidão na alfândega reteve os produtos por 45 dias extras, gerando multas de armazenagem (*demurrage*) e atrasando as vendas.
-*   **Vendas Travadas:** A tentativa de repassar o prejuízo aumentando os preços em 30% paralisou as vendas, encalhou os aparelhos e gerou custos de obsolescência.
+**Cenário:** A companhia enfrenta uma severa crise de margem operacional. A ausência de proteção cambial (*hedge*) expôs a operação diretamente à volatilidade internacional, agravada por gargalos logísticos.
+
+*   **Estouro no Custo de Aquisição (CMV):** A alta do dólar (de R$ 5,00 para R$ 6,50) elevou o custo de importação de 200 mil smartphones de R$ 100MM para R$ 130MM — impacto de **-R$ 30MM no CMV**.
+*   **Problema Logístico:** A retenção fiscal na alfândega por 45 dias extras gerou pesadas multas de armazenagem (*demurrage*), inflando as despesas operacionais.
+*   **Vendas Travadas:** A tentativa de repassar os custos paralisou as vendas e encalhou o estoque, disparando o risco de obsolescência tecnológica.
 
 A diretoria se reúne em caráter de urgência para definir a manobra orçamentária.""",
 }
@@ -145,8 +174,10 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     elif v3 == "C": receita += 80_000_000.0
 
     lucro_bruto = receita + cmv
-    ebitda      = lucro_bruto + pdd + depreciacao + outras_desp
-    lucro_liq   = ebitda + juros
+    # EBITDA não inclui depreciação (ela é deduzida depois)
+    ebitda      = lucro_bruto + pdd + outras_desp
+    # Lucro Líquido = EBITDA - Depreciação + Resultado Financeiro
+    lucro_liq   = ebitda + depreciacao + juros
 
     return {
         "receita": receita, "cmv": abs(cmv), "lucro_bruto": lucro_bruto,
