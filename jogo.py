@@ -524,7 +524,8 @@ elif perfil == "🎛️ Painel Gerenciador":
                 estado[f"apurado_r{rodada}"] = True
                 salvar_estado(estado)
                 st.success(f"✅ Resultados apurados! Mídia {rodada} liberada.")
-                st.rerun()else:
+                st.rerun()
+else:
     st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
 
     premiacao_feita = estado.get(f"premiacao_r{rodada}", False)
