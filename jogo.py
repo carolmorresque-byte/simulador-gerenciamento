@@ -533,35 +533,42 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELA: TELÃO
+# TELA: TELÃO (Ajustada para Layout de 3 colunas)
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     st.title("📈 TELÃO - Bolsa de R$")
     
-    btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
-    with btn_col0:
+    # Navegação Padronizada: Home | Rodada | Telão
+    btn_col1, btn_col2, btn_col3 = st.columns(3)
+    
+    with btn_col1:
+        if st.button("🏠 Home", use_container_width=True):
+            st.session_state["pagina_atual"] = "🏠 Início"
+            st.rerun()
+            
+    with btn_col2:
+        # Retorna para a tela de onde o usuário veio (origem)
         origem = st.session_state.get("telao_origem_empresa", "🏠 Início")
         if st.button("📋 Rodada", use_container_width=True):
             st.session_state["pagina_atual"] = origem
             st.rerun()
-    with btn_col1:
-        st.button("📈 Telão", use_container_width=True, type="primary", disabled=True)
-    with btn_col2:
-        if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
             
+    with btn_col3:
+        # Botão desabilitado pois já estamos no Telão
+        st.button("📈 Telão", use_container_width=True, type="primary", disabled=True)
+
     plotar_grafico_geral(estado)
     
     st.markdown("### Cotações Atuais")
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
-        precos   = estado["dados_empresas"][emp]["precos"]
-        preco_at = precos[-1]
-        preco_ant= precos[-2] if len(precos) > 1 else preco_at
+        precos    = estado["dados_empresas"][emp]["precos"]
+        preco_at  = precos[-1]
+        preco_ant = precos[-2] if len(precos) > 1 else preco_at
         with cols[i]:
             st.metric(emp, f"R$ {preco_at:.2f}", f"{preco_at - preco_ant:+.2f}")
+            
     time.sleep(8)
     st.rerun()
 
