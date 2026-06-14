@@ -887,26 +887,38 @@ elif perfil in EMPRESA_MAP:
         st.stop()
 
     # ─────────────────────────────
-    # 🏁 RODADA 5 = FIM DE JOGO
+# 🏁 FIM DE JOGO (controle por estado, não por rodada
     # ─────────────────────────────
-    if rodada == 5:
+if estado.get("jogo_finalizado"):
 
-        st.markdown("""
-        <div style="
-            background-color:#1e1e1e;
-            color:white;
-            padding:60px;
-            border-radius:15px;
-            text-align:center;
-            margin-top:80px;
-        ">
-            <h1>🏁 FIM DE JOGO</h1>
-            <h2>RESULTADO FINAL SENDO CONSOLIDADO</h2>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("""
+    <div style="
+        background-color:#1e1e1e;
+        color:white;
+        padding:60px;
+        border-radius:15px;
+        text-align:center;
+        margin-top:80px;
+    ">
+        <h1>🏁 FIM DE JOGO</h1>
+        <h2>RESULTADO FINAL CONSOLIDADO</h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-        st.stop()
+    if st.button("🔄 Reiniciar jogo"):
+        estado["rodada_atual"] = 1
+        estado["jogo_finalizado"] = False
+        estado["resultado_liberado_todos"] = False
 
+        for emp in estado["dados_empresas"]:
+            for r in [1, 2, 3, 4]:
+                estado["dados_empresas"][emp].pop(f"voto_r{r}", None)
+                estado["dados_empresas"][emp].pop(f"tempo_voto_r{r}", None)
+
+        salvar_estado(estado)
+        st.rerun()
+
+    st.stop()
     # ─────────────────────────────
     # 🔁 FLUXO NORMAL (RODADAS 1–4)
     # ─────────────────────────────
