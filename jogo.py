@@ -366,19 +366,22 @@ def plotar_grafico_geral(estado: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. Lista de páginas disponíveis (certifique-se de que os nomes estão idênticos aos usados no app)
-perfis_navegacao = ["Home", "Painel", "Configurações", "Relatórios"]
+if "pagina_atual" not in st.session_state:
+    st.session_state["pagina_atual"] = "🏠 Início"
 
-# 2. Proteção: Garante que a página atual existe na lista. Se não existir, redefine para a primeira página.
-if "pagina_atual" not in st.session_state or st.session_state["pagina_atual"] not in perfis_navegacao:
-    st.session_state["pagina_atual"] = perfis_navegacao[0]
-
-# 3. Selectbox seguro (o index nunca mais falhará)
+perfis_navegacao = [
+    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
+    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
+]
 perfil_sidebar = st.sidebar.selectbox(
-    "Navegação Lateral:", 
-    perfis_navegacao,
+    "Navegação Lateral:", perfis_navegacao,
     index=perfis_navegacao.index(st.session_state["pagina_atual"]),
 )
+if perfil_sidebar != st.session_state["pagina_atual"]:
+    st.session_state["pagina_atual"] = perfil_sidebar
+    st.rerun()
+
+perfil = st.session_state["pagina_atual"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
