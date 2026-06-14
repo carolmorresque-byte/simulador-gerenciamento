@@ -5,7 +5,24 @@ import time
 import json
 import os
 import fcntl
+import streamlit as st
+from streamlit.components.v1 import html
 
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Botão para reabrir a sidebar
+if st.button("☰ Mostrar menu"):
+    html("""
+    <script>
+        const button = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        if (button) {
+            button.click();
+        }
+    </script>
+    """)
 st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
 st.markdown("""
     <style>
