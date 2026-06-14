@@ -585,9 +585,9 @@ elif perfil == "📰 Mídia (Notícias)":
         st.button("📰 Mídia", use_container_width=True, type="primary", disabled=True)
         
     # ... (Restante do código original)
-            st.session_state["telao_origem_empresa"] = perfil
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+        st.session_state["telao_origem_empresa"] = perfil
+        st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+        st.rerun()
     if estado["historico_noticias"]:
         for n_html in reversed(estado["historico_noticias"]):
             st.html(n_html)
