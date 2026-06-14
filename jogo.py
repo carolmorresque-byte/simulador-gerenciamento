@@ -663,7 +663,7 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             st.rerun()
         time.sleep(1)
         st.rerun()
-        
+    # ── PLOT TWIST: Suspense (30s) → Plantão → Veredito ──────────────────────
     elif fase == "plantao":
 
         # Guarda o momento em que começou o plantão
@@ -715,26 +715,6 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
     
         time.sleep(1)
         st.rerun()
-    
-            st.markdown("""
-    <style>
-    @keyframes pisca {
-      0%,100%{background:#cc0000;} 50%{background:#000;}
-    }
-    .plantao-box {
-      animation: pisca 0.6s ease-in-out 3;
-      background:#cc0000; color:#fff; border-radius:12px;
-      padding:40px; text-align:center;
-    }
-    </style>
-    <div class='plantao-box'>
-    <p style='font-size:36px;font-weight:900;margin:0;'>
-    🚨 PLANTÃO URGENTE</p>
-    <p style='font-size:22px;margin-top:12px;'>
-    AUDITORIA FORENSE DA CVM REABRE LIVROS CONTÁBEIS!</p>
-    </div>""", unsafe_allow_html=True)
-            time.sleep(3)
-            st.rerun()
 
     elif fase == "veredicto":
         # Redireciona o gerenciador para Mídia — empresas são redirecionadas pelo auto-refresh
@@ -773,34 +753,98 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# TELA: MÍDIA
+# ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📰 Mídia (Notícias)":
+
+    import time
+
     estado = carregar_estado()
+
     st.title("📰 GC News — Central de Notícias")
+
+    # ─────────────────────────────
+    # BOTÕES SUPERIORES
+    # ─────────────────────────────
     _m0, _m1, _m2, _ = st.columns([1, 1, 1, 3])
+
     with _m0:
         _orig = st.session_state.get("telao_origem_empresa", "🎛️ Painel Gerenciador")
         if not _orig or _orig == "📰 Mídia (Notícias)":
             _orig = "🎛️ Painel Gerenciador"
+
         if st.button("📋 Rodada", use_container_width=True, key="m_rodada"):
             st.session_state["pagina_atual"] = _orig
             st.rerun()
+
     with _m1:
         if st.button("📈 Telão", use_container_width=True, type="primary", key="m_telao"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
+
     with _m2:
         st.button("📰 Mídia", use_container_width=True, disabled=True, key="m_midia")
+
+    # ─────────────────────────────
+    # LÓGICA DE FASE
+    # ─────────────────────────────
     fase = estado.get("fase_final")
 
-    if estado["historico_noticias"]:
+    # ─────────────────────────────
+    # 🚨 PLANTÃO (PRIORIDADE MÁXIMA)
+    # ─────────────────────────────
+    if fase == "plantao":
+
+        st.markdown("""
+        <div style="
+            background-color:#c00000;
+            color:white;
+            padding:30px;
+            border-radius:15px;
+            margin-bottom:20px;
+        ">
+            <h1>🚨 PLANTÃO URGENTE</h1>
+
+            <h2>
+            CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA NAS EMPRESAS LISTADAS
+            </h2>
+
+            <p>
+            Equipes da autarquia iniciaram uma revisão emergencial das demonstrações financeiras.
+            O mercado aguarda os resultados da auditoria.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # sai do plantão (evita rerun interferindo)
+        st.session_state["fase_final"] = "rodada"
+        st.session_state["ultima_atualizacao_midia"] = time.time()
+
+        st.stop()
+
+    # ─────────────────────────────
+    # 📰 NOTÍCIAS
+    # ─────────────────────────────
+    elif estado.get("historico_noticias"):
+
         for n_html in reversed(estado["historico_noticias"]):
             st.html(n_html)
+
     else:
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    time.sleep(8)
-    st.rerun()
+    # ─────────────────────────────
+    # 🔁 AUTO-REFRESH (SÓ FORA DO PLANTÃO)
+    # ─────────────────────────────
+    now = time.time()
 
+    if "ultima_atualizacao_midia" not in st.session_state:
+        st.session_state["ultima_atualizacao_midia"] = now
+
+    if now - st.session_state["ultima_atualizacao_midia"] > 8:
+        st.session_state["ultima_atualizacao_midia"] = now
+        st.rerun()
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -844,9 +888,9 @@ elif perfil in EMPRESA_MAP:
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio   = estado.get(chave_timer) if chave_timer else None
     if ts_inicio and rodada <= 3:
-        restante_i = max(0, int(5 * 60 - (time.time() - ts_inicio)))
-        if restante_i > 120:   cor_t="#1b5e20"; bg_t="#e8f5e9"; brd_t="#66bb6a"
-        elif restante_i > 30:  cor_t="#6d4c00"; bg_t="#fff8e1"; brd_t="#ffa000"
+        restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+        if restante_i > 240:   cor_t="#1b5e20"; bg_t="#e8f5e9"; brd_t="#66bb6a"
+        elif restante_i > 60:  cor_t="#6d4c00"; bg_t="#fff8e1"; brd_t="#ffa000"
         else:                  cor_t="#7f0000"; bg_t="#ffebee"; brd_t="#c62828"
         st.markdown(f"""
         <div id="timer-box" style="border:2px solid {brd_t};background:{bg_t};color:{cor_t};border-radius:8px;
