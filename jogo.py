@@ -5,192 +5,109 @@ import matplotlib
 import time
 import json
 import os
-import fcntl
-# --- FUNÇÕES DE APOIO ---
-def plotar_grafico_especifico(estado, nome_empresa):
-    # Busca os preços da empresa específica no dicionário de estados
-    precos = estado["dados_empresas"][nome_empresa]["precos"]
-    # Cria o gráfico
-    st.line_chart(pd.DataFrame({"Preço": precos}))
-st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
-st.markdown("""
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
 
+# Tente importar fcntl, tratando erros caso esteja no Windows
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+# --- CONFIGURAÇÕES E ESTADO ---
 STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
+st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- FUNÇÕES DE APOIO ---
 def _estado_inicial() -> dict:
-    return {
-        "rodada_atual": 1,
-        "historico_noticias": [],
-        "sessoes_ativas": [],
-        "senhas_empresas": {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"},
-        "dados_empresas": {
-            nome: {
-                "precos": [20.0],
-                "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
-                "tempo_voto_r1": None, "tempo_voto_r2": None, "tempo_voto_r3": None,
-                "status": "Operando", "noticia_r4": "", "score_gr": 0,
-            }
-            for nome in EMPRESAS
-        },
-    }
+    return {
+        "rodada_atual": 1,
+        "historico_noticias": [],
+        "sessoes_ativas": [],
+        "senhas_empresas": {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"},
+        "dados_empresas": {
+            nome: {
+                "precos": [20.0],
+                "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
+                "tempo_voto_r1": None, "tempo_voto_r2": None, "tempo_voto_r3": None,
+                "status": "Operando", "noticia_r4": "", "score_gr": 0,
+            }
+            for nome in EMPRESAS
+        },
+    }
 
 def carregar_estado() -> dict:
-    if not os.path.exists(STATE_FILE):
-        estado = _estado_inicial()
-        salvar_estado(estado)
-        return estado
-    try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            fcntl.flock(f, fcntl.LOCK_SH)
-            conteudo = f.read()
-            fcntl.flock(f, fcntl.LOCK_UN)
-        estado = json.loads(conteudo)
-        if "sessoes_ativas" not in estado:
-            estado["sessoes_ativas"] = []
-        # Sempre garante senhas corretas (sobrescreve estado antigo)
-        estado["senhas_empresas"] = {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"}
-        return estado
-    except (json.JSONDecodeError, OSError):
-        estado = _estado_inicial()
-        salvar_estado(estado)
-        return estado
+    if not os.path.exists(STATE_FILE):
+        estado = _estado_inicial()
+        salvar_estado(estado)
+        return estado
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            if fcntl: fcntl.flock(f, fcntl.LOCK_SH)
+            conteudo = f.read()
+            if fcntl: fcntl.flock(f, fcntl.LOCK_UN)
+        estado = json.loads(conteudo)
+        if "sessoes_ativas" not in estado:
+            estado["sessoes_ativas"] = []
+        estado["senhas_empresas"] = {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"}
+        return estado
+    except (json.JSONDecodeError, OSError):
+        estado = _estado_inicial()
+        salvar_estado(estado)
+        return estado
 
 def salvar_estado(estado: dict) -> None:
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        json.dump(estado, f, ensure_ascii=False, indent=2)
-        fcntl.flock(f, fcntl.LOCK_UN)
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        if fcntl: fcntl.flock(f, fcntl.LOCK_EX)
+        json.dump(estado, f, ensure_ascii=False, indent=2)
+        if fcntl: fcntl.flock(f, fcntl.LOCK_UN)
 
-def resetar_estado() -> None:
-    if os.path.exists(STATE_FILE):
-        os.remove(STATE_FILE)
-    carregar_estado()
+def plotar_grafico_especifico(estado, nome_empresa):
+    precos = estado["dados_empresas"][nome_empresa]["precos"]
+    st.line_chart(pd.DataFrame({"Preço": precos}))
 
-EMPRESA_MAP = {
-    "α - Empresa Alfa": "Empresa Alfa",
-    "β - Empresa Beta": "Empresa Beta",
-    "γ - Empresa Gama": "Empresa Gama",
-}
-
-IMPACTOS = {
-    1: {"A": 0.75, "B": 0.95, "C": 1.05},
-    2: {"A": 0.40, "B": 0.82, "C": 1.143},
-    3: {"A": 0.30, "B": 0.60, "C": 1.10},
-}
-
-LABELS_R1 = {
-    "A": """Opção A — Lançar em Passivo Financeiro
-
-Reclassifica a operação para dívida bancária assim que o banco assume o pagamento do fornecedor.
-
-Resultado: O EBITDA fica estável em R$ 1.000M, o Resultado Financeiro absorve os juros (-R$ 310M) e o Lucro Líquido cai para R$ 690M, aceitando o estouro técnico do covenant.""",
-
-    "B": """Opção B — Lançar em Passivo Operacional
-
-Mantém o registro da operação na conta de fornecedores comerciais.
-
-Resultado: O EBITDA fica estável em R$ 1.000M, o Resultado Financeiro absorve os juros (-R$ 310M) e o Lucro Líquido cai para R$ 690M, salvando o covenant de dívida financeira por manter o saldo fora do passivo financeiro.""",
-
-    "C": """Opção C — Lançar em Passivo Financeiro com Ajuste de Provisão
-
-Registra o risco sacado no Passivo Financeiro, mas a diretoria revisa e reduz a Provisão para Calotes (PDD) de -R$ 150M para -R$ 100M.
-
-Resultado: O EBITDA sobe para R$ 1.050M por conta do ganho operacional na PDD, amortecendo os juros no Resultado Financeiro (-R$ 310M). O Lucro Líquido sobe para R$ 740M e o covenant de alavancagem é mitigado pelo aumento do denominador (EBITDA maior).""",
-}
-LABELS_R2 = {
-    "A": """Opção A — Assumir a Perda Cambial Imediata
-
-Reconhece o impacto cambial direto na DRE e a desvalorização via provisão de estoque.
-
-Resultado: O EBITDA é fortemente penalizado pelo ajuste de obsolescência, o Resultado Financeiro absorve a perda cambial, o Lucro Líquido despenca e os covenants contratuais correm alto risco de quebra imediata.""",
-
-    "B": """Opção B — Dilatar Ativos e Depreciação (CPC 16/23)
-
-Ativa custos extras (como multas de demurrage) no valor do estoque e alonga o prazo de vida útil dos ativos logísticos de 5 para 10 anos.
-
-Resultado: O EBITDA é poupado do impacto imediato, pois os custos adicionais ficam retidos no Ativo Circulante e a linha de depreciação encolhe, blindando temporariamente os indicadores e os covenants.""",
-
-    "C": """Opção C — Crédito de Incentivo Comercial / Rebate
-
-Registra descontos e incentivos verbais futuros de 24 meses acordados com os fabricantes internacionais como receita imediata no exercício corrente.
-
-Resultado: A linha de receita recebe uma injeção artificial de R$ 80M, inflando diretamente o Lucro Bruto e fazendo o EBITDA saltar, camuflando a crise do dólar perante auditorias e bancos credores.""",
-}
-
-def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
-    if rodada == 1: return LABELS_R1
-    if rodada == 2: return LABELS_R2
-    if rodada == 3:
-        return {
-            "A": f"OPÇÃO A: Lançar PECLD — Registra o calote real de R$ {pecld_m:,.0f}M na DRE conforme o CPC 48 (IFRS 9).".replace(",", "."),
-            "B": "OPÇÃO B: Securitização via FIDC com Deságio — Transfere a carteira para um fundo. Aloca R$ 50M de prejuízo no Financeiro, blindando o EBITDA.",
-            "C": "OPÇÃO C: Congelar Provisões e Antecipar Garantias — Omite as perdas e antecipa R$ 80M de receitas futuras (Brecha CPC 47).",
-        }
-    return LABELS_R1
-
-NARRATIVAS = {
-    1: """### 🏭 RODADA 1: RISCO SACADO E COVENANTS FINANCEIROS
-**Cenário:** A empresa enfrenta pressões de liquidez e, para manter suas operações, utilizou uma estrutura de risco sacado com o Banco Épsilon. Essa operação antecipa o recebimento para fornecedores estratégicos e estende o prazo de pagamento da companhia (com juros de R$ 10MM), evitando o desabastecimento.
-
-O principal problema é o impacto nos covenants financeiros:
-*   **Situação Atual:** O índice Dívida Líquida/EBITDA está em 2,9x (o limite contratual é 3,0x).
-*   **O Risco:** Se o risco sacado for reclassificado de passivo comercial para dívida financeira, o índice salta para 4,2x. Isso causará o vencimento antecipado das dívidas e travará novos créditos.
-
-**Sua missão:** Definir a classificação contábil dessa operação, ponderando a realidade técnica contra o risco de quebra de contrato e o conflito de interesses na remuneração.""",
-    2: """### 📰 RODADA 2: A CRISE DO DÓLAR E OS CONTRATOS DE IMPORTAÇÃO
-
-**Cenário:** A companhia enfrenta uma severa crise de margem operacional. A ausência de proteção cambial (*hedge*) expôs a operação diretamente à volatilidade internacional, agravada por gargalos logísticos.
-
-*   **Estouro no Custo de Aquisição (CMV):** A alta do dólar (de R$ 5,00 para R$ 6,50) elevou o custo de importação de 200 mil smartphones de R$ 100MM para R$ 130MM — impacto de **-R$ 30MM no CMV**.
-*   **Problema Logístico:** A retenção fiscal na alfândega por 45 dias extras gerou pesadas multas de armazenagem (*demurrage*), inflando as despesas operacionais.
-*   **Vendas Travadas:** A tentativa de repassar os custos paralisou as vendas e encalhou o estoque, disparando o risco de obsolescência tecnológica.
-
-A diretoria se reúne em caráter de urgência para definir a manobra orçamentária.""",
-}
-
+# --- LÓGICA DO JOGO ---
 def calcular_dre_dinamico(votos: dict) -> dict:
-    receita     = 20_000_000_000.0
-    cmv         = -16_500_000_000.0
-    pdd         = -150_000_000.0
-    depreciacao = -150_000_000.0
-    outras_desp = -2_200_000_000.0
-    juros       = -300_000_000.0
+    receita = 20_000_000_000.0
+    cmv = -16_500_000_000.0
+    pdd = -150_000_000.0
+    depreciacao = -150_000_000.0
+    outras_desp = -2_200_000_000.0
+    juros = -300_000_000.0
 
-    v1 = votos.get("r1")
-    if v1 == "A": juros = -310_000_000.0
-    elif v1 == "C": pdd = -100_000_000.0
+    v1 = votos.get("r1")
+    if v1 == "A": juros = -310_000_000.0
+    elif v1 == "C": pdd = -100_000_000.0
 
-    v2 = votos.get("r2")
-    if v2 == "A": cmv -= 30_000_000.0
-    elif v2 == "B": depreciacao += 20_000_000.0
+    v2 = votos.get("r2")
+    if v2 == "A": cmv -= 30_000_000.0
+    elif v2 == "B": depreciacao += 20_000_000.0
 
-    carteira_recebiveis = receita * 0.30
-    pecld_dinamica = carteira_recebiveis * 0.12
+    carteira_recebiveis = receita * 0.30
+    pecld_dinamica = carteira_recebiveis * 0.12
 
-    v3 = votos.get("r3")
-    if v3 == "A": pdd -= pecld_dinamica
-    elif v3 == "B": juros -= 50_000_000.0
-    elif v3 == "C": receita += 80_000_000.0
+    v3 = votos.get("r3")
+    if v3 == "A": pdd -= pecld_dinamica
+    elif v3 == "B": juros -= 50_000_000.0
+    elif v3 == "C": receita += 80_000_000.0
 
-    lucro_bruto = receita + cmv
-    # EBITDA não inclui depreciação (ela é deduzida depois)
-    ebitda      = lucro_bruto + pdd + outras_desp
-    # Lucro Líquido = EBITDA - Depreciação + Resultado Financeiro
-    lucro_liq   = ebitda + depreciacao + juros
+    lucro_bruto = receita + cmv
+    ebitda = lucro_bruto + pdd + outras_desp
+    lucro_liq = ebitda + depreciacao + juros
 
-    return {
-        "receita": receita, "cmv": abs(cmv), "lucro_bruto": lucro_bruto,
-        "pdd": abs(pdd), "depreciacao": abs(depreciacao), "outras_desp": abs(outras_desp),
-        "ebitda": ebitda, "juros": abs(juros), "lucro_liq": lucro_liq,
-        "pecld_dinamica": pecld_dinamica,
-    }
+    return {
+        "receita": receita, "cmv": abs(cmv), "lucro_bruto": lucro_bruto,
+        "pdd": abs(pdd), "depreciacao": abs(depreciacao), "outras_desp": abs(outras_desp),
+        "ebitda": ebitda, "juros": abs(juros), "lucro_liq": lucro_liq,
+        "pecld_dinamica": pecld_dinamica,
+    }
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int):
     dre = calcular_dre_dinamico(votos_empresa)
