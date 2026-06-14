@@ -437,14 +437,11 @@ if perfil == "🏠 Início":
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR
-# ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
     st.title("📈 TELÃO - Bolsa de R$")
     
-    # Navegação: Home | Rodada | Telão | Mídia
+    # 1. Navegação: Home | Rodada | Telão | Mídia
     btn_col_h, btn_col0, btn_col1, btn_col2 = st.columns([1, 1, 1, 1])
     with btn_col_h:
         if st.button("🏠 Home", use_container_width=True):
@@ -466,6 +463,7 @@ elif perfil == "🎛️ Painel Gerenciador":
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
 
+    # 2. Status de Votos
     st.markdown("### Status de Votos")
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
@@ -475,18 +473,12 @@ elif perfil == "🎛️ Painel Gerenciador":
             if voto: st.success(f"**{emp}**: ✅ {voto}")
             else:    st.warning(f"**{emp}**: ⏳ Aguardando")
 
-    todos_votaram = all(
-        estado["dados_empresas"][emp].get(f"voto_r{rodada}") is not None
-        for emp in EMPRESAS
-    ) if rodada <= 3 else True
-
     st.divider()
 
+    # 3. Lógica de Apuração e Liberação
     if rodada <= 3:
-        if not todos_votaram:
-            st.info("⏳ Aguardando todas as bancadas votarem para avançar.")
-        if st.button(f"▶️ Encerrar Rodada {rodada} e Calcular Cotações",
-                     disabled=not todos_votaram, use_container_width=True, type="primary"):
+        # Botão 1: Processar resultados
+        if st.button(f"📊 Processar Resultados da Rodada {rodada}", use_container_width=True):
             for emp in EMPRESAS:
                 d = estado["dados_empresas"][emp]
                 if len(d["precos"]) == rodada:
@@ -494,29 +486,38 @@ elif perfil == "🎛️ Painel Gerenciador":
                     d["precos"].append(novo)
             html_noticia = gerar_manchete_dinamica(estado, rodada)
             estado["historico_noticias"].append(html_noticia)
-            estado["rodada_atual"] = rodada + 1
-            estado[f"timer_inicio_r{rodada + 1}"] = time.time()
             salvar_estado(estado)
-            st.success(f"Rodada {rodada} encerrada!")
+            st.success(f"Resultados da rodada {rodada} processados!")
             st.rerun()
+
+        # Botão 2: Liberar próxima rodada (Start do Timer)
+        # Só libera se os preços já foram atualizados (tamanho da lista precos > rodada)
+        rodada_processada = all(len(estado["dados_empresas"][emp]["precos"]) > rodada for emp in EMPRESAS)
+        
+        if rodada_processada:
+            if st.button(f"🚀 Liberar Rodada {rodada + 1} para as Bancadas", type="primary", use_container_width=True):
+                estado["rodada_atual"] = rodada + 1
+                estado[f"timer_inicio_r{rodada + 1}"] = time.time()
+                salvar_estado(estado)
+                st.success(f"Rodada {rodada + 1} liberada!")
+                st.rerun()
+        else:
+            st.info(f"Processamento necessário antes de liberar a Rodada {rodada + 1}.")
 
     elif rodada == 4:
         st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
-        auditoria_ja_feita = all(len(estado["dados_empresas"][emp]["precos"]) >= 5 for emp in EMPRESAS)
-        if auditoria_ja_feita:
-            st.success("Auditoria já processada.")
-        else:
-            if st.button("🔨 Aplicar Penalidade CVM e Encerrar Jogo", use_container_width=True, type="primary"):
-                for emp in EMPRESAS:
-                    processar_rodada_4_consolidada(estado, emp)
-                    estado["dados_empresas"][emp]["status"] = "Auditada"
-                html_noticia = gerar_manchete_dinamica(estado, 4)
-                estado["historico_noticias"].append(html_noticia)
-                estado["rodada_atual"] = 5
-                salvar_estado(estado)
-                st.success("Auditoria concluída!")
-                st.rerun()
+        if st.button("🔨 Aplicar Penalidade CVM e Encerrar Jogo", use_container_width=True, type="primary"):
+            for emp in EMPRESAS:
+                processar_rodada_4_consolidada(estado, emp)
+                estado["dados_empresas"][emp]["status"] = "Auditada"
+            html_noticia = gerar_manchete_dinamica(estado, 4)
+            estado["historico_noticias"].append(html_noticia)
+            estado["rodada_atual"] = 5
+            salvar_estado(estado)
+            st.success("Auditoria concluída!")
+            st.rerun()
 
+    # 4. Zona de Perigo
     st.divider()
     st.markdown("### ⚠️ Zona de Perigo")
     if st.button("🔄 Resetar Jogo do Zero", use_container_width=True):
@@ -571,6 +572,7 @@ elif perfil == "📰 Mídia (Notícias)":
     estado = carregar_estado()
     st.title("📈 TELÃO - Bolsa de R$")
     
+    # Navegação padronizada e limpa (sem duplicação)
     btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
     with btn_col0:
         origem = st.session_state.get("telao_origem_empresa", "🏠 Início")
@@ -583,19 +585,16 @@ elif perfil == "📰 Mídia (Notícias)":
             st.rerun()
     with btn_col2:
         st.button("📰 Mídia", use_container_width=True, type="primary", disabled=True)
-        
-    # ... (Restante do código original)
-        st.session_state["telao_origem_empresa"] = perfil
-        st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-        st.rerun()
+
+    # Exibição
     if estado["historico_noticias"]:
         for n_html in reversed(estado["historico_noticias"]):
             st.html(n_html)
     else:
-        st.info("⏳ Nenhuma notícia publicada neste ciclo.")
+        st.info("⏳ Nenhuma notícia publicada.")
+    
     time.sleep(8)
     st.rerun()
-
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -640,7 +639,7 @@ elif perfil in EMPRESA_MAP:
         }},1000);}})();
         </script>""", unsafe_allow_html=True)
         
-# Navegação: Apenas visualização
+# Apenas a navegação sem botões de administração:
     btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
     with btn_a0:
         st.button("📋 Rodada", use_container_width=True, type="primary", disabled=True)
