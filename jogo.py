@@ -566,7 +566,7 @@ else:
         st.success("🏆 Premiação dos acionistas já aplicada.")
 
     # Etapa 2: Avançar para próxima rodada
-if rodada < 3:
+    if rodada < 3:
 
     if st.button(
         f"▶️ Avançar para Rodada {rodada + 1}",
