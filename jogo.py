@@ -326,8 +326,13 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
         topo_manchete   = "🚨 URGENTE: CVM INICIOU INVESTIGAÇÃO NO SETOR!"
         topo_texto      = "SÃO PAULO — A CVM instaurou auditoria geral para apurar indícios de manipulação contábil e omissão de passivos."
         todos_empatados = True
-    cor_header   = "#cc0000" if rodada_encerrada != 4 else "#1a1a1a"
-    label_header = f"EXERCÍCIO {rodada_encerrada}" if rodada_encerrada < 4 else "AUDITORIA CVM"
+    cor_header = "#cc0000" if rodada_encerrada < 4 else "#1a1a1a"
+
+    label_header = (
+        f"EXERCÍCIO {rodada_encerrada}"
+        if rodada_encerrada < 4
+        else "🏁 FIM DE JOGO"
+    )
     secao_baixo  = "" if todos_empatados else f"""
         <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
         <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
@@ -605,7 +610,7 @@ elif perfil == "🎛️ Painel Gerenciador":
             
                     st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                     st.rerun()
-elif  st.session_state["rodada"] == 4:
+if  st.session_state.get("evento_cvm"):
 
     st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
 
@@ -850,15 +855,22 @@ elif perfil == "📰 Mídia (Notícias)":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# TELAS DAS EMPRESAS
+# ─────────────────────────────────────────────────────────────────────────────
 elif perfil in EMPRESA_MAP:
-    estado       = carregar_estado()
-    nome_interno = EMPRESA_MAP[perfil]
-    d            = estado["dados_empresas"][nome_interno]
-    rodada       = estado["rodada_atual"]
 
-    # ── Rodada 4: aguardando auditoria ─────────────────────
-    # ── Rodada 4: aguardando auditoria ─────────────────────
-    if rodada == 4:
+    estado = carregar_estado()
+    nome_interno = EMPRESA_MAP[perfil]
+    d = estado["dados_empresas"][nome_interno]
+    rodada = estado.get("rodada_atual", 1)
+
+    st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
+
+    # ─────────────────────────────
+    # 🚨 CVM (EVENTO GLOBAL - NÃO É RODADA)
+    # ─────────────────────────────
+    if st.session_state.get("evento_cvm"):
 
         st.markdown("""
         <div style="
@@ -869,17 +881,46 @@ elif perfil in EMPRESA_MAP:
             text-align:center;
             margin-top:80px;
         ">
-            <h1>🚨 RODADA 4</h1>
+            <h1>🚨 AUDITORIA CVM EM ANDAMENTO</h1>
+            <h3>Fiscalização extraordinária em análise...</h3>
+        </div>
+        """, unsafe_allow_html=True)
 
-            <h2>AGUARDANDO RESULTADO DA FISCALIZAÇÃO</h2>
 
-            <br>
+    # ─────────────────────────────
+    # 🏁 RODADA 5 = FIM DE JOGO (IMPORTANTE)
+    # ─────────────────────────────
+    elif rodada == 5:
 
-            <h3>Auditoria da CVM em andamento...</h3>
+        st.markdown("""
+        <div style="
+            background-color:#1e1e1e;
+            color:white;
+            padding:60px;
+            border-radius:15px;
+            text-align:center;
+            margin-top:80px;
+        ">
+            <h1>🏁 FIM DE JOGO</h1>
+            <h2>RESULTADO FINAL SENDO CONSOLIDADO</h2>
         </div>
         """, unsafe_allow_html=True)
 
         st.stop()
+
+
+    # ─────────────────────────────
+    # 🔁 FLUXO NORMAL (RODADAS 1–4)
+    # ─────────────────────────────
+    else:
+
+        # 👇 AQUI entra TODO o seu código atual de:
+        # - votação
+        # - timer
+        # - DRE
+        # - tabs
+        # - narrativa
+        # - etc...
     votos_ate_agora = {"r1": d["voto_r1"], "r2": d["voto_r2"]}
     dre_parcial     = calcular_dre_dinamico(votos_ate_agora)
     pecld_m         = dre_parcial["pecld_dinamica"] / 1_000_000.0
