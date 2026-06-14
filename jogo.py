@@ -366,22 +366,35 @@ def plotar_grafico_geral(estado: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
-if "pagina_atual" not in st.session_state:
-    st.session_state["pagina_atual"] = "🏠 Início"
+import streamlit as st
 
-perfis_navegacao = [
-    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
-    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
-]
+# 1. Configurações da página (DEVE SER O PRIMEIRO COMANDO)
+st.set_page_config(
+    page_title="Seu Sistema",
+    layout="wide",  # Pode ser "centered" ou "wide"
+    initial_sidebar_state="expanded"  # Garante que inicia aberta
+)
+
+# 2. CSS para travar a barra lateral (impede o usuário de ocultá-la)
+st.markdown(
+    """
+    <style>
+        /* Esconde o botão '>' e 'X' que fecha a barra lateral */
+        [data-testid="sidebar-collapse-button"] {
+            display: none !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# 3. Seu código de navegação lateral corrigido
 perfil_sidebar = st.sidebar.selectbox(
-    "Navegação Lateral:", perfis_navegacao,
+    "Navegação Lateral:", 
+    perfis_navegacao,
     index=perfis_navegacao.index(st.session_state["pagina_atual"]),
 )
-if perfil_sidebar != st.session_state["pagina_atual"]:
-    st.session_state["pagina_atual"] = perfil_sidebar
-    st.rerun()
 
-perfil = st.session_state["pagina_atual"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
