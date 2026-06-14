@@ -1,12 +1,16 @@
 import streamlit as st
+import json  # <--- Este import é obrigatório!
+import os
 import time
 from streamlit_autorefresh import st_autorefresh
+
+# Agora as funções podem usar o 'json' sem dar erro
 def carregar_estado():
     try:
         with open("estado_simulador.json", "r") as f:
             return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return resetar_estado() # Recria o estado se der erro
+    except (FileNotFoundError, json.JSONDecodeError): # Agora o Python reconhece 'json' aqui
+        return resetar_estado()
 # 1. CONFIGURAÇÕES E CONSTANTES
 GERENCIADOR = "🎛️ Painel Gerenciador"
 LISTA_EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"] # Ajuste conforme seus nomes reais
