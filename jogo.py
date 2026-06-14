@@ -533,13 +533,18 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELA: TELÃO (Ajustada para Layout de 3 colunas)
+# TELA: TELÃO (Inteligente: Gerenciador vê tudo, Empresas veem só o seu gráfico)
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     st.title("📈 TELÃO - Bolsa de R$")
     
-    # Navegação Padronizada: Home | Rodada | Telão
+    # Identifica quem está logado
+    perfil_logado = st.session_state.get("perfil_atual", "Desconhecido")
+    is_gerenciador = (perfil_logado == "🎛️ Painel Gerenciador")
+    
+    # 1. Navegação Contextual
+    # Gerenciador tem 3 botões, Empresas têm 3 botões (sem Mídia)
     btn_col1, btn_col2, btn_col3 = st.columns(3)
     
     with btn_col1:
@@ -548,19 +553,25 @@ elif perfil == "📈 Telão (Bolsa)":
             st.rerun()
             
     with btn_col2:
-        # Retorna para a tela de onde o usuário veio (origem)
-        origem = st.session_state.get("telao_origem_empresa", "🏠 Início")
+        # Se for Gerenciador volta pro painel, se for empresa volta pra sua aba
+        destino = "🎛️ Painel Gerenciador" if is_gerenciador else perfil_logado
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = origem
+            st.session_state["pagina_atual"] = destino
             st.rerun()
             
     with btn_col3:
-        # Botão desabilitado pois já estamos no Telão
         st.button("📈 Telão", use_container_width=True, type="primary", disabled=True)
 
-    plotar_grafico_geral(estado)
-    
-    st.markdown("### Cotações Atuais")
+    # 2. Exibição Dinâmica do Gráfico
+    if is_gerenciador:
+        plotar_grafico_geral(estado)
+    else:
+        # Aqui ele chama a função específica da empresa logada
+        # Certifique-se de que a função plotar_grafico_especifico exista no seu script
+        plotar_grafico_especifico(estado, perfil_logado)
+
+    # 3. Cotações
+    st.markdown("### 📊 Cotações Atuais")
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
         precos    = estado["dados_empresas"][emp]["precos"]
