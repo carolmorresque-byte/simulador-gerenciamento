@@ -366,35 +366,19 @@ def plotar_grafico_geral(estado: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
-import streamlit as st
+# 1. Garante que o estado da página atual existe
+if "pagina_atual" not in st.session_state:
+    st.session_state["pagina_atual"] = "Home"  # Substitua pelo nome da sua página inicial
 
-# 1. Configurações da página (DEVE SER O PRIMEIRO COMANDO)
-st.set_page_config(
-    page_title="Seu Sistema",
-    layout="wide",  # Pode ser "centered" ou "wide"
-    initial_sidebar_state="expanded"  # Garante que inicia aberta
-)
+# 2. CRIAÇÃO DA VARIÁVEL (Substitua os nomes abaixo pelas páginas do seu jogo)
+perfis_navegacao = ["Home", "Painel", "Configurações", "Relatórios"]
 
-# 2. CSS para travar a barra lateral (impede o usuário de ocultá-la)
-st.markdown(
-    """
-    <style>
-        /* Esconde o botão '>' e 'X' que fecha a barra lateral */
-        [data-testid="sidebar-collapse-button"] {
-            display: none !important;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# 3. Seu código de navegação lateral corrigido
+# 3. O selectbox corrigido que usa a variável acima
 perfil_sidebar = st.sidebar.selectbox(
     "Navegação Lateral:", 
     perfis_navegacao,
     index=perfis_navegacao.index(st.session_state["pagina_atual"]),
 )
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
