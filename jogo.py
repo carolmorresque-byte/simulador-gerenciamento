@@ -8,32 +8,27 @@ import fcntl
 import streamlit as st
 from streamlit.components.v1 import html
 
+import json
+import os
+import fcntl
+import streamlit as st
+
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-import streamlit as st
-from streamlit.components.v1 import html
-
-if st.button("☰ Mostrar menu"):
-    html("""
-    <script>
-        ...
-    </script>
-    """)
-st.set_page_config(page_title="Simulador de Varejo - Governança Avançada", layout="wide")
+# Oculta o botão de recolher a sidebar
 st.markdown("""
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+[data-testid="collapsedControl"] {
+    display: none;
+}
+</style>
+""", unsafe_allow_html=True)
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
-
 def _estado_inicial() -> dict:
     return {
         "rodada_atual": 1,
