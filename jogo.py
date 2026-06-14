@@ -665,6 +665,14 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
         st.rerun()
         
     elif fase == "plantao":
+
+        # Guarda o momento em que começou o plantão
+        if "ts_plantao" not in estado:
+            estado["ts_plantao"] = time.time()
+            salvar_estado(estado)
+    
+        decorrido = time.time() - estado["ts_plantao"]
+    
         st.markdown("""
         <div style="
             background-color:#c00000;
@@ -682,40 +690,51 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             <h2 style="font-size:40px;">
                 FISCALIZAÇÃO CVM NAS EMPRESAS
             </h2>
+    
         </div>
         """, unsafe_allow_html=True)
     
-        time.sleep(5)
+        # Após 15 segundos divulga a auditoria
+        if decorrido >= 15:
+    
+            for emp in EMPRESAS:
+                processar_rodada_4_consolidada(estado, emp)
+                estado["dados_empresas"][emp]["status"] = "Auditada"
+    
+            html_noticia = gerar_manchete_dinamica(estado, 4)
+    
+            if len(estado["historico_noticias"]) < 4:
+                estado["historico_noticias"].append(html_noticia)
+    
+            estado["fase_final"] = "veredicto"
+            estado["rodada_atual"] = 5
+    
+            salvar_estado(estado)
+    
+            st.rerun()
+    
+        time.sleep(1)
         st.rerun()
-        # Aplica punição CVM agora
-        for emp in EMPRESAS:
-            processar_rodada_4_consolidada(estado, emp)
-            estado["dados_empresas"][emp]["status"] = "Auditada"
-        html_noticia = gerar_manchete_dinamica(estado, 4)
-        if len(estado["historico_noticias"]) < 4:
-            estado["historico_noticias"].append(html_noticia)
-        estado["fase_final"] = "veredicto"
-        salvar_estado(estado)
-
-        st.markdown("""
-<style>
-@keyframes pisca {
-  0%,100%{background:#cc0000;} 50%{background:#000;}
-}
-.plantao-box {
-  animation: pisca 0.6s ease-in-out 3;
-  background:#cc0000; color:#fff; border-radius:12px;
-  padding:40px; text-align:center;
-}
-</style>
-<div class='plantao-box'>
-<p style='font-size:36px;font-weight:900;margin:0;'>
-🚨 PLANTÃO URGENTE</p>
-<p style='font-size:22px;margin-top:12px;'>
-AUDITORIA FORENSE DA CVM REABRE LIVROS CONTÁBEIS!</p>
-</div>""", unsafe_allow_html=True)
-        time.sleep(3)
-        st.rerun()
+    
+            st.markdown("""
+    <style>
+    @keyframes pisca {
+      0%,100%{background:#cc0000;} 50%{background:#000;}
+    }
+    .plantao-box {
+      animation: pisca 0.6s ease-in-out 3;
+      background:#cc0000; color:#fff; border-radius:12px;
+      padding:40px; text-align:center;
+    }
+    </style>
+    <div class='plantao-box'>
+    <p style='font-size:36px;font-weight:900;margin:0;'>
+    🚨 PLANTÃO URGENTE</p>
+    <p style='font-size:22px;margin-top:12px;'>
+    AUDITORIA FORENSE DA CVM REABRE LIVROS CONTÁBEIS!</p>
+    </div>""", unsafe_allow_html=True)
+            time.sleep(3)
+            st.rerun()
 
     elif fase == "veredicto":
         # Redireciona o gerenciador para Mídia — empresas são redirecionadas pelo auto-refresh
