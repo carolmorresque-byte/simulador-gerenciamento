@@ -791,6 +791,30 @@ elif perfil in EMPRESA_MAP:
     d            = estado["dados_empresas"][nome_interno]
     rodada       = estado["rodada_atual"]
 
+    # ── Rodada 4: aguardando auditoria ─────────────────────
+    # ── Rodada 4: aguardando auditoria ─────────────────────
+    if rodada == 4:
+
+        st.markdown("""
+        <div style="
+            background-color:#1e1e1e;
+            color:white;
+            padding:60px;
+            border-radius:15px;
+            text-align:center;
+            margin-top:80px;
+        ">
+            <h1>🚨 RODADA 4</h1>
+
+            <h2>AGUARDANDO RESULTADO DA FISCALIZAÇÃO</h2>
+
+            <br>
+
+            <h3>Auditoria da CVM em andamento...</h3>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.stop()
     votos_ate_agora = {"r1": d["voto_r1"], "r2": d["voto_r2"]}
     dre_parcial     = calcular_dre_dinamico(votos_ate_agora)
     pecld_m         = dre_parcial["pecld_dinamica"] / 1_000_000.0
