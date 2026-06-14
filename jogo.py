@@ -565,68 +565,67 @@ else:
     else:
         st.success("🏆 Premiação dos acionistas já aplicada.")
 
-    # Etapa 2: Avançar para próxima rodada
-else:
-    st.success("🏆 Premiação dos acionistas já aplicada.")
+ # Etapa 2: Avançar para próxima rodada
+if rodada < 3:
 
-    # Etapa 2: Avançar para próxima rodada
-    if rodada < 3:
+    if st.button(
+        f"▶️ Avançar para Rodada {rodada + 1}",
+        use_container_width=True
+    ):
+        estado["rodada_atual"] = rodada + 1
+        estado[f"timer_inicio_r{rodada + 1}"] = time.time()
 
+        salvar_estado(estado)
+        st.rerun()
+
+elif rodada == 3:
+
+    if st.button(
+        "🎬 Ver Resultado Final das Ações",
+        use_container_width=True,
+        type="primary"
+    ):
+        estado["fase_final"] = "suspense"
+        estado["ts_suspense"] = time.time()
+        estado["rodada_atual"] = 4
+
+        salvar_estado(estado)
+
+        st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+        st.rerun()
+
+elif rodada == 4:
+
+    st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
+
+    auditoria_ja_feita = all(
+        len(estado["dados_empresas"][emp]["precos"]) >= 5
+        for emp in EMPRESAS
+    )
+
+    if auditoria_ja_feita:
+        st.success("Auditoria já processada.")
+
+    else:
         if st.button(
-            f"▶️ Avançar para Rodada {rodada + 1}",
-            use_container_width=True
-        ):
-            estado["rodada_atual"] = rodada + 1
-            estado[f"timer_inicio_r{rodada + 1}"] = time.time()
-
-            salvar_estado(estado)
-            st.rerun()
-
-    elif rodada == 3:
-
-        if st.button(
-            "🎬 Ver Resultado Final das Ações",
+            "🔨 Aplicar Penalidade CVM e Encerrar Jogo",
             use_container_width=True,
             type="primary"
         ):
-            estado["fase_final"] = "suspense"
-            estado["ts_suspense"] = time.time()
-            estado["rodada_atual"] = 4
+
+            for emp in EMPRESAS:
+                processar_rodada_4_consolidada(estado, emp)
+                estado["dados_empresas"][emp]["status"] = "Auditada"
+
+            html_noticia = gerar_manchete_dinamica(estado, 4)
+            estado["historico_noticias"].append(html_noticia)
+
+            estado["rodada_atual"] = 5
 
             salvar_estado(estado)
 
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.success("Auditoria concluída!")
             st.rerun()
-    elif rodada == 4:
-        st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
-        auditoria_ja_feita = all(len(estado["dados_empresas"][emp]["precos"]) >= 5 for emp in EMPRESAS)
-        if auditoria_ja_feita:
-            st.success("Auditoria já processada.")
-        else:
-            if st.button("🔨 Aplicar Penalidade CVM e Encerrar Jogo", use_container_width=True, type="primary"):
-                for emp in EMPRESAS:
-                    processar_rodada_4_consolidada(estado, emp)
-                    estado["dados_empresas"][emp]["status"] = "Auditada"
-                html_noticia = gerar_manchete_dinamica(estado, 4)
-                estado["historico_noticias"].append(html_noticia)
-                estado["rodada_atual"] = 5
-                salvar_estado(estado)
-                st.success("Auditoria concluída!")
-                st.rerun()
-
-    st.divider()
-    st.markdown("### ⚠️ Zona de Perigo")
-    if st.button("🔄 Resetar Jogo do Zero", use_container_width=True):
-        resetar_estado()
-        st.success("Estado resetado!")
-        st.rerun()
-
-    st.divider()
-    st.markdown("### 📊 Cotações em Tempo Real")
-    plotar_grafico_geral(estado)
-    st.markdown("*Página atualiza automaticamente a cada 10 s.*")
-    time.sleep(10)
-    st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
