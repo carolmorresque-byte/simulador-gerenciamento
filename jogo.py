@@ -524,28 +524,76 @@ elif perfil == "🎛️ Painel Gerenciador":
                 estado[f"apurado_r{rodada}"] = True
                 salvar_estado(estado)
                 st.success(f"✅ Resultados apurados! Mídia {rodada} liberada.")
-                st.rerun()
-        else:
-            st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
-            # Etapa 2: Avançar para próxima rodada
-            if rodada < 3:
-                if st.button(f"▶️ Avançar para Rodada {rodada + 1}",
-                             use_container_width=True):
-                    estado["rodada_atual"] = rodada + 1
-                    estado[f"timer_inicio_r{rodada + 1}"] = time.time()
-                    salvar_estado(estado)
-                    st.rerun()
-            else:
-                # Rodada 3 encerrada — botão especial para o Plot Twist
-                if st.button("🎬 Ver Resultado Final das Ações",
-                             use_container_width=True, type="primary"):
-                    estado["fase_final"] = "suspense"
-                    estado["ts_suspense"] = time.time()
-                    estado["rodada_atual"] = 4
-                    salvar_estado(estado)
-                    st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                    st.rerun()
+                st.rerun()else:
+    st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
 
+    premiacao_feita = estado.get(f"premiacao_r{rodada}", False)
+
+    if not premiacao_feita:
+
+        st.markdown("### 🏆 Premiação dos Acionistas")
+
+        primeiro = st.selectbox(
+            "🥇 Empresa vencedora (+R$ 2,00)",
+            EMPRESAS,
+            key=f"primeiro_r{rodada}"
+        )
+
+        segundo = st.selectbox(
+            "🥈 Segunda colocada (+R$ 1,00)",
+            [e for e in EMPRESAS if e != primeiro],
+            key=f"segundo_r{rodada}"
+        )
+
+        if st.button(
+            "🏆 Aplicar Premiação",
+            key=f"premio_r{rodada}",
+            use_container_width=True
+        ):
+
+            estado["dados_empresas"][primeiro]["precos"][-1] += 2
+            estado["dados_empresas"][segundo]["precos"][-1] += 1
+
+            estado[f"premiacao_r{rodada}"] = True
+
+            salvar_estado(estado)
+
+            st.success("✅ Premiação aplicada!")
+            st.rerun()
+
+    else:
+        st.success("🏆 Premiação dos acionistas já aplicada.")
+
+    # Etapa 2: Avançar para próxima rodada
+    if rodada < 3:
+
+        if st.button(
+            f"▶️ Avançar para Rodada {rodada + 1}",
+            use_container_width=True
+        ):
+            estado["rodada_atual"] = rodada + 1
+            estado[f"timer_inicio_r{rodada + 1}"] = time.time()
+
+            salvar_estado(estado)
+            st.rerun()
+
+    else:
+
+        # Rodada 3 encerrada — botão especial para o Plot Twist
+        if st.button(
+            "🎬 Ver Resultado Final das Ações",
+            use_container_width=True,
+            type="primary"
+        ):
+
+            estado["fase_final"] = "suspense"
+            estado["ts_suspense"] = time.time()
+            estado["rodada_atual"] = 4
+
+            salvar_estado(estado)
+
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
     elif rodada == 4:
         st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
         auditoria_ja_feita = all(len(estado["dados_empresas"][emp]["precos"]) >= 5 for emp in EMPRESAS)
