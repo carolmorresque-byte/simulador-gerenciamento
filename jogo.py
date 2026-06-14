@@ -390,17 +390,13 @@ if perfil == "🏠 Início":
                     else:
                         st.error("❌ Senha incorreta.")
             else:
-                senha_input_entrada = st.text_input("Senha da empresa:", type="password", key="senha_entrada")
                 if st.button("Entrar como Aluno", use_container_width=True):
-                    if senha_input_entrada == senhas_emp.get(nome_int, ""):
-                        if nome_int not in sessoes:
-                            sessoes.append(nome_int)
-                            estado["sessoes_ativas"] = sessoes
-                            salvar_estado(estado)
-                        st.session_state["pagina_atual"] = chave_real
-                        st.rerun()
-                    else:
-                        st.error("❌ Senha incorreta.")
+                    if nome_int not in sessoes:
+                        sessoes.append(nome_int)
+                        estado["sessoes_ativas"] = sessoes
+                        salvar_estado(estado)
+                    st.session_state["pagina_atual"] = chave_real
+                    st.rerun()
 
     with c3:
         with st.container(border=True):
