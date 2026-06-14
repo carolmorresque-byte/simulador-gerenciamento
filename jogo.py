@@ -589,19 +589,18 @@ elif perfil == "🎛️ Painel Gerenciador":
                     st.rerun()
     
             elif rodada == 3:
-    
                 if st.button(
                     "🎬 Ver Resultado Final das Ações",
                     use_container_width=True,
                     type="primary"
                 ):
-    
-                    estado["fase_final"] = "suspense"
-                    estado["ts_suspense"] = time.time()
+            
+                    estado["fase_final"] = "plantao"
+                    estado["ts_plantao"] = time.time()
                     estado["rodada_atual"] = 4
-    
+            
                     salvar_estado(estado)
-    
+            
                     st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                     st.rerun()
 elif rodada == 4:
