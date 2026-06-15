@@ -610,38 +610,24 @@ elif perfil == "🎛️ Painel Gerenciador":
             
                     st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                     st.rerun()
-if  st.session_state.get("evento_cvm"):
-
-    st.markdown("### 🚨 Auditoria CVM — Aplicar Penalidades Finais")
-
-    auditoria_ja_feita = all(
-        len(estado["dados_empresas"][emp]["precos"]) >= 5
-        for emp in EMPRESAS
-    )
-
-    if auditoria_ja_feita:
-        st.success("Auditoria já processada.")
-
-    else:
-        if st.button(
-            "🔨 Aplicar Penalidade CVM e Encerrar Jogo",
-            use_container_width=True,
-            type="primary"
-        ):
-
-            for emp in EMPRESAS:
-                processar_rodada_4_consolidada(estado, emp)
-                estado["dados_empresas"][emp]["status"] = "Auditada"
-
-            html_noticia = gerar_manchete_dinamica(estado, 4)
-            estado["historico_noticias"].append(html_noticia)
-
-            estado["rodada_atual"] = 5
-
-            salvar_estado(estado)
-
-            st.success("Auditoria concluída!")
-            st.rerun()
+            if st.session_state.get("evento_cvm") and not estado.get("jogo_finalizado"):
+                if st.button("🔨 Aplicar Penalidade CVM e Encerrar Jogo", use_container_width=True, type="primary"):
+                    for emp in EMPRESAS:
+                        processar_rodada_4_consolidada(estado, emp)
+                        estado["dados_empresas"][emp]["status"] = "Auditada"
+                    html_noticia = gerar_manchete_dinamica(estado, 4)
+                    estado["historico_noticias"].append(html_noticia)
+                    estado["jogo_finalizado"] = True
+                    salvar_estado(estado)
+                    st.success("Auditoria concluída!")
+                    st.rerun()
+            
+            if estado.get("jogo_finalizado"):
+                st.markdown("### 🏁 Fim de Jogo")
+                if st.button("🔄 Reiniciar jogo", use_container_width=True):
+                    resetar_estado()
+                    st.session_state["pagina_atual"] = "🏠 Início"
+                    st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
