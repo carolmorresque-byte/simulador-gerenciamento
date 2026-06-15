@@ -721,9 +721,10 @@ elif perfil == "📈 Telão (Bolsa)":
     st.title("📈 Telão Comercial")
 
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    _origem_telao = st.session_state.get("empresa_origem", "🎛️ Painel Gerenciador")
     with nav1:
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+            st.session_state["pagina_atual"] = _origem_telao
             st.rerun()
     with nav2:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
@@ -797,9 +798,10 @@ elif perfil == "📰 Mídia (Notícias)":
     st.title("📰 GC News — Central de Notícias")
 
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    _origem_midia = st.session_state.get("empresa_origem", "🎛️ Painel Gerenciador")
     with nav1:
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+            st.session_state["pagina_atual"] = _origem_midia
             st.rerun()
     with nav2:
         if st.button("📈 Telão", use_container_width=True):
@@ -858,6 +860,9 @@ elif perfil in EMPRESA_MAP:
     nome_interno = EMPRESA_MAP[perfil]
     d = estado["dados_empresas"][nome_interno]
     rodada = estado.get("rodada_atual", 1)
+
+    # Salva a empresa atual para navegação de retorno
+    st.session_state["empresa_origem"] = perfil
 
     st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
