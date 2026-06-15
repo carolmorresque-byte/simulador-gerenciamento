@@ -31,57 +31,9 @@ STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 # Empresas participantes
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
-if perfil == "🏠 Início":
-    estado = carregar_estado()
-    sessoes = estado.get("sessoes_ativas", [])
-
-    st.title("🔒 Simulador de Governança")
-    st.markdown("### Selecione o seu ambiente de acesso abaixo:")
-
-    c1, c2, c3 = st.columns(3)
-
-    # GERENCIADOR (único com senha)
-    with c1:
-        with st.container(border=True):
-            st.markdown("### 🎛️ Gerenciador")
-            st.write("Acesso restrito para o Apresentador controlar as rodadas.")
-            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador")
-            if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
-                    st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
-                    st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-                    st.rerun()
-                else:
-                    st.error("❌ Senha incorreta.")
-
-    # EMPRESAS (acesso livre)
-    with c2:
-        with st.container(border=True):
-            st.markdown("### 🏢 Empresas ")
-            st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-
-            todas_opcoes = list(EMPRESA_MAP.keys())
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", todas_opcoes)
-            nome_int = EMPRESA_MAP.get(empresa_escolhida, "")
-
-            if st.button("Entrar na empresa", use_container_width=True):
-                if nome_int not in sessoes:
-                    sessoes.append(nome_int)
-                    estado["sessoes_ativas"] = sessoes
-                    salvar_estado(estado)
-                st.success(f"✅ Login realizado com sucesso na {empresa_escolhida}!")
-                st.session_state["pagina_atual"] = empresa_escolhida
-                st.rerun()
-
-    # TELÃO (acesso livre)
-    with c3:
-        with st.container(border=True):
-            st.markdown("### 📈 Projeção / Telão")
-            st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True):
-                st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                st.rerun()
-
+if perfil == "🏠SENHAS_EMPRESAS = {
+    "🎛️ Painel Gerenciador": "G10"
+}
 
 # Estado inicial do jogo
 def _estado_inicial() -> dict:
