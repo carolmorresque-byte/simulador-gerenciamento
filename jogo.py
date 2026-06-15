@@ -41,6 +41,7 @@ SENHAS_EMPRESAS = {
     "🎛️ Painel Gerenciador": "G10"
 }
 
+
 # Estado inicial do jogo
 def _estado_inicial() -> dict:
     return {
