@@ -567,9 +567,9 @@ SENHAS_EMPRESAS = {
 #TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
 
-elif perfil == "🎛️ Painel Gerenciador":
-    estado = carregar_estado()
-    st.title("🎛️ Painel Gerenciador")
+    elif perfil == "🎛️ Painel Gerenciador":
+        estado = carregar_estado()
+        st.title("🎛️ Painel Gerenciador")
 
     # Campo de senha + botão Entrar
     senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
