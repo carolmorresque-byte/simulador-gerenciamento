@@ -733,6 +733,9 @@ elif perfil == "🎛️ Painel Gerenciador":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# TELA: TELÃO
+# ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     fase = estado.get("fase_final")
@@ -751,14 +754,10 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
 <p style='color:#888;font-size:22px;'>Aguarde o sistema processar os dados de auditoria.</p>
 </div>""", unsafe_allow_html=True)
 
-    if restante <= 0:
-        estado["fase_final"] = "plantao"
-        salvar_estado(estado)
-        st.rerun()
-    else:
-        time.sleep(1)
-        st.rerun()
-
+        if restante <= 0:
+            estado["fase_final"] = "plantao"
+            salvar_estado(estado)
+            st.rerun()
 
     elif fase == "plantao":
         # Guarda o momento em que começou o plantão
@@ -786,12 +785,10 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
         """, unsafe_allow_html=True)
 
         # Apenas mostra o plantão, sem aplicar auditoria automática
-        html_noticia = gerar_manchete_dinamica(estado, 4)
+        html_noticia = gerar_manchete_dinamica(estado, 4, fase="plantao")
         if html_noticia not in estado["historico_noticias"]:
             estado["historico_noticias"].append(html_noticia)
             salvar_estado(estado)
-
-        # O avanço para resultado final (Rodada 4) será feito pelo Gerenciador
 
     elif fase == "veredicto":
         # Redireciona o gerenciador para Mídia — empresas são redirecionadas pelo auto-refresh
@@ -799,35 +796,10 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
         st.rerun()
 
     else:
-        # ── Telão normal ──────────────────────────────────────────────────────
-        st.title("📈 Painel Geral do Mercado de Capitais")
-        btn_col0, btn_col1, btn_col2, _ = st.columns([1, 1, 1, 3])
-        with btn_col0:
-            origem = st.session_state.get("telao_origem_empresa", "🎛️ Painel Gerenciador")
-            if not origem or origem == "📈 Telão (Bolsa)":
-                origem = "🎛️ Painel Gerenciador"
-            if st.button("📋 Rodada", use_container_width=True):
-                st.session_state["pagina_atual"] = origem
-                st.rerun()
-        with btn_col1:
-            st.button("📈 Telão", use_container_width=True, type="primary", disabled=True)
-        with btn_col2:
-            if st.button("📰 Mídia", use_container_width=True):
-                st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-                st.rerun()
-
-        plotar_grafico_geral(estado)
-        st.markdown("### Cotações Atuais")
-        cols = st.columns(3)
-        for i, emp in enumerate(EMPRESAS):
-            precos   = estado["dados_empresas"][emp]["precos"]
-            preco_at = precos[-1]
-            preco_ant= precos[-2] if len(precos) > 1 else preco_at
-            with cols[i]:
-                st.metric(emp, f"R$ {preco_at:.2f}", f"{preco_at - preco_ant:+.2f}")
-
-        time.sleep(8)
+        # fluxo normal (timer rodando)
+        time.sleep(1)
         st.rerun()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
