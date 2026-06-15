@@ -362,7 +362,15 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     topo_manchete = baixo_manchete = topo_texto = baixo_texto = ""
     secao_baixo = ""
 
-def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
+def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = None) -> str:
+    """
+    Gera manchete dinâmica para cada rodada.
+    - Rodadas 1–3: uma manchete normal.
+    - Rodada 4: duas fases distintas:
+        fase="plantao"   → manchete de plantão CVM
+        fase="veredicto" → manchete final com consequências
+    """
+
     dados_fechamento = {}
     for nome in EMPRESAS:
         historico = estado["dados_empresas"][nome]["precos"]
@@ -382,52 +390,22 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     topo_manchete = baixo_manchete = topo_texto = baixo_texto = ""
     secao_baixo = ""
 
-    # Rodada 1
-    if rodada_encerrada == 1:
+    # Rodadas 1–3 → uma manchete
+    if rodada_encerrada in (1, 2, 3):
         if todos_empatados:
-            topo_manchete = "MAR CALMO: EMPRESAS REGISTRAM EQUILÍBRIO ABSOLUTO"
+            topo_manchete = f"EMPATE GERAL NA RODADA {rodada_encerrada}"
             topo_texto    = f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}."
         else:
-            topo_manchete  = f"MAR EM FÚRIA: {lider_nome} SURFA ONDA DE VALORIZAÇÃO E SOBE {fmt_var(lider_dados['var'])}!"
-            topo_texto     = f"SÃO PAULO — A agilidade da {lider_nome} impulsionou o papel de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
-            baixo_manchete = f"NAUFRÁGIO: {lanterna_nome} ENTRA EM REDEMOINHO E PERDE {fmt_var(lanterna_dados['var'])}"
-            baixo_texto    = f"SÃO PAULO — Investidores puniram a lentidão da {lanterna_nome}. Papel colapsou para R$ {lanterna_dados['atual']:.2f}."
+            topo_manchete  = f"{lider_nome} dispara {fmt_var(lider_dados['var'])}!"
+            topo_texto     = f"SÃO PAULO — A {lider_nome} subiu de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
+            baixo_manchete = f"{lanterna_nome} despenca {fmt_var(lanterna_dados['var'])}"
+            baixo_texto    = f"SÃO PAULO — A {lanterna_nome} caiu para R$ {lanterna_dados['atual']:.2f}."
             secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
+            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;">
+                {baixo_manchete}
+            </div>
             <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
-            </div>"""
-
-    # Rodada 2
-    elif rodada_encerrada == 2:
-        if todos_empatados:
-            topo_manchete = "SAFETY CAR NA PISTA: GRID REPETE FECHAMENTO"
-            topo_texto    = f"SÃO PAULO — Sem ultrapassagens, os ativos congelaram em R$ {lider_dados['atual']:.2f}."
-        else:
-            topo_manchete  = f"GP DA TESOURARIA: {lider_nome} ACELERA E SALTA PARA R$ {lider_dados['atual']:.2f}!"
-            topo_texto     = f"SÃO PAULO — Com arrancada agressiva, a {lider_nome} registrou alta de {fmt_var(lider_dados['var'])}."
-            baixo_manchete = f"RODOU NA CURVA: {lanterna_nome} PERDE TRAÇÃO"
-            baixo_texto    = f"SÃO PAULO — A {lanterna_nome} viu seus papéis perderem {fmt_var(lanterna_dados['var'])}, fechando a R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
-            </div>"""
-
-    # Rodada 3
-    elif rodada_encerrada == 3:
-        if todos_empatados:
-            topo_manchete = "GONGADO: ÚLTIMO ROUND TERMINA EM EMPATE"
-            topo_texto    = f"SÃO PAULO — O combate contra a crise terminou sem vencedor em R$ {lider_dados['atual']:.2f}."
-        else:
-            topo_manchete  = f"NOCAUTE NA BOLSA: {lider_nome} SEGURA O CINTURÃO COM DISPARADA DE {fmt_var(lider_dados['var'])}!"
-            topo_texto     = f"SÃO PAULO — A {lider_nome} viu suas ações saltarem de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
-            baixo_manchete = f"DIRETO NO QUEIXO: {lanterna_nome} CAI À LONA"
-            baixo_texto    = f"SÃO PAULO — A {lanterna_nome} sofreu fuga de capitais. Papéis despencaram para R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;">{baixo_texto}</p>
             </div>"""
 
     # Rodada 4 — Plantão CVM + 3 manchetes
@@ -1048,7 +1026,6 @@ elif perfil in EMPRESA_MAP:
             voto_atual = d.get(f"voto_r{rodada}")
             if voto_atual is None:
                 st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
-                # narrativa + DRE parcial
                 escolha = st.radio(
                     "Selecione o tratamento contábil adotado:",
                     ["A", "B", "C"],
@@ -1104,8 +1081,7 @@ elif perfil in EMPRESA_MAP:
                     </div>
                     """, unsafe_allow_html=True)
 
-
-       with aba_jornal_aluno:
+    with aba_jornal_aluno:
         if estado["historico_noticias"]:
             for n_html in estado["historico_noticias"]:
                 st.markdown(n_html, unsafe_allow_html=True)
@@ -1121,3 +1097,4 @@ elif perfil in EMPRESA_MAP:
     # 🔁 Auto-refresh da tela das empresas
     time.sleep(6)
     st.rerun()
+
