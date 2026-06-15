@@ -868,8 +868,8 @@ elif perfil == "📰 Mídia (Notícias)":
 
     # 📰 NOTÍCIAS
     elif estado.get("historico_noticias"):
-    for n_html in reversed(estado["historico_noticias"]):
-        st.markdown(n_html, unsafe_allow_html=True)
+        for n_html in reversed(estado["historico_noticias"]):
+            st.markdown(n_html, unsafe_allow_html=True)
 
     else:
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
