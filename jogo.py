@@ -584,11 +584,12 @@ if perfil == "🏠 Início":
                     st.error("❌ Senha incorreta.")
 
     # EMPRESAS
+# EMPRESAS
     with c2:
         with st.container(border=True):
             st.markdown("### 🏢 Empresas ")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-
+    
             # Monta opções — vaga livre ou ocupada (com 🔒)
             opcoes_livres = []
             opcoes_ocupadas = []
@@ -597,49 +598,40 @@ if perfil == "🏠 Início":
                     opcoes_ocupadas.append((chave, nome_interno))
                 else:
                     opcoes_livres.append((chave, nome_interno))
-
+    
             todas_opcoes = (
                 [chave for chave, _ in opcoes_livres] +
                 [f"🔒 {chave}" for chave, _ in opcoes_ocupadas]
             )
-
+    
             empresa_escolhida_raw = st.selectbox("Escolha sua empresa:", todas_opcoes)
             vaga_ocupada = empresa_escolhida_raw.startswith("🔒 ")
             chave_real = empresa_escolhida_raw.replace("🔒 ", "")
             nome_int = EMPRESA_MAP.get(chave_real, "")
-
-if vaga_ocupada:
-    st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
-    senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
-
-    # senha_correta já definida acima
-    if st.button("Entrar com Senha", use_container_width=True):
-        if senha_input and senha_input == senha_correta:
-            st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-            st.session_state["pagina_atual"] = chave_real
-            st.rerun()
-        else:
-            st.error("❌ Senha incorreta.")
-else:
-    if st.button("Entrar como representante da empresa", use_container_width=True):
-        if nome_int not in sessoes:
-            sessoes.append(nome_int)
-            estado["sessoes_ativas"] = sessoes
-            salvar_estado(estado)
-        st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-        st.session_state["pagina_atual"] = chave_real
-        st.rerun()
-
-
-    # TELÃO
-    with c3:
-        with st.container(border=True):
-            st.markdown("### 📈 Projeção / Telão")
-            st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True):
-                st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                st.rerun()
-
+    
+            # 🔴 senha correta definida aqui, dentro do mesmo escopo
+            senha_correta = SENHAS_EMPRESAS[chave_real]
+    
+            if vaga_ocupada:
+                st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
+                senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
+    
+                if st.button("Entrar com Senha", use_container_width=True):
+                    if senha_input and senha_input == senha_correta:
+                        st.success(f"✅ Login realizado com sucesso na {chave_real}!")
+                        st.session_state["pagina_atual"] = chave_real
+                        st.rerun()
+                    else:
+                        st.error("❌ Senha incorreta.")
+            else:
+                if st.button("Entrar como representante da empresa", use_container_width=True):
+                    if nome_int not in sessoes:
+                        sessoes.append(nome_int)
+                        estado["sessoes_ativas"] = sessoes
+                        salvar_estado(estado)
+                    st.success(f"✅ Login realizado com sucesso na {chave_real}!")
+                    st.session_state["pagina_atual"] = chave_real
+                    st.rerun()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
