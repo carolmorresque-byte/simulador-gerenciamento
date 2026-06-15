@@ -535,6 +535,7 @@ def plotar_grafico_geral(estado: dict):
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
+# 8. Navegação
 if "pagina_atual" not in st.session_state:
     st.session_state["pagina_atual"] = "🏠 Início"
 
@@ -542,15 +543,17 @@ perfis_navegacao = [
     "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
     "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
+
 perfil_sidebar = st.sidebar.selectbox(
     "Navegação Lateral:", perfis_navegacao,
     index=perfis_navegacao.index(st.session_state["pagina_atual"]),
 )
+
 if perfil_sidebar != st.session_state["pagina_atual"]:
     st.session_state["pagina_atual"] = perfil_sidebar
     st.rerun()
-    
-# 🔴 aqui você precisa definir perfil
+
+# 🔴 aqui você define a variável antes de usar
 perfil = st.session_state["pagina_atual"]
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
