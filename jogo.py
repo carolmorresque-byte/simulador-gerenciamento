@@ -578,7 +578,7 @@ if perfil == "🏠 Início":
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
             senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
+                if senha_g == SENHAS["🎛️ Painel Gerenciador"]:
                     st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
                     st.rerun()
@@ -614,7 +614,6 @@ if perfil == "🏠 Início":
                 st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
                 senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
                 if st.button("Entrar com Senha", use_container_width=True):
-                    senha_correta = SENHAS_EMPRESAS.get(chave_real)
                     if senha_input and senha_input == senha_correta:
                         st.success(f"✅ Login realizado com sucesso na {chave_real}!")
                         st.session_state["pagina_atual"] = chave_real
