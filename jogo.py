@@ -31,7 +31,10 @@ STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 # Empresas participantes
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
-if perfil == "🏠SENHAS_EMPRESAS = {
+# ─────────────────────────────────────────────────────────────────────────────
+# SENHAS FIXAS
+# ─────────────────────────────────────────────────────────────────────────────
+SENHAS_EMPRESAS = {
     "🎛️ Painel Gerenciador": "G10"
 }
 
