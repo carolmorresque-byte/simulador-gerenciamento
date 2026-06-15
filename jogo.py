@@ -35,9 +35,9 @@ EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 # SENHAS FIXAS
 # ─────────────────────────────────────────────────────────────────────────────
 SENHAS_EMPRESAS = {
-    "α - Empresa Alfa": "Alfa1",
-    "β - Empresa Beta": "Beta2",
-    "γ - Empresa Gama": "Gama3",
+    "Empresa Alfa": "Alfa1",
+    "Empresa Beta": "Beta2",
+    "Empresa Gama": "Gama3",
     "🎛️ Painel Gerenciador": "G10"
 }
 
