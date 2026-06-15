@@ -73,9 +73,9 @@ def carregar_estado() -> dict:
             estado["sessoes_ativas"] = []
         # Sempre garante senhas corretas
         estado["senhas_empresas"] = {
-            "Empresa Alfa": "alfa",
-            "Empresa Beta": "beta",
-            "Empresa Gama": "gama"
+            "Empresa Alfa": "Alfa1",
+            "Empresa Beta": "Beta2",
+            "Empresa Gama": "Gama3"
         }
         return estado
     except (json.JSONDecodeError, OSError):
