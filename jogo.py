@@ -40,9 +40,9 @@ def _estado_inicial() -> dict:
         "fase_final": None,          # None | "suspense" | "plantao" | "veredicto"
         "ts_suspense": None,         # timestamp quando suspense começou
         "senhas_empresas": {
-            "Empresa Alfa": "alfa",
-            "Empresa Beta": "beta",
-            "Empresa Gama": "gama"
+            "Empresa Alfa": "Alfa1",
+            "Empresa Beta": "Beta2",
+            "Empresa Gama": "Gama3"
         },
         "dados_empresas": {
             nome: {
@@ -578,7 +578,7 @@ if perfil == "🏠 Início":
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
             senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                if senha_g == SENHAS["🎛️ Painel Gerenciador"]:
+                if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
                     st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
                     st.rerun()
