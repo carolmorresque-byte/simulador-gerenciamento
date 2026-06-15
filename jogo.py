@@ -5,14 +5,13 @@ import time
 import json
 import os
 import fcntl
-from streamlit.components.v1 import html
 
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 🔴 Controle da rodada no session_state
+# Controle da rodada no session_state
 if "rodada" not in st.session_state:
     st.session_state["rodada"] = 1
 
@@ -32,35 +31,42 @@ STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SENHAS FIXAS
+# SENHA: apenas o Gerenciador tem senha. Empresas são acesso livre.
 # ─────────────────────────────────────────────────────────────────────────────
-SENHAS_EMPRESAS = {
-    "🎛️ Painel Gerenciador": "G10"
+SENHA_GERENCIADOR = "G10"
+
+EMPRESA_MAP = {
+    "α - Empresa Alfa": "Empresa Alfa",
+    "β - Empresa Beta": "Empresa Beta",
+    "γ - Empresa Gama": "Empresa Gama",
 }
 
-# Estado inicial do jogo
+# ─────────────────────────────────────────────────────────────────────────────
+# ESTADO INICIAL
+# ─────────────────────────────────────────────────────────────────────────────
 def _estado_inicial() -> dict:
     return {
         "rodada_atual": 1,
         "historico_noticias": [],
         "sessoes_ativas": [],
-        "fase_final": None,          # None | "suspense" | "plantao" | "veredicto"
-        "ts_suspense": None,         # timestamp quando suspense começou
-        "senhas_empresas": SENHAS_EMPRESAS.copy(),
+        "fase_final": None,
+        "ts_suspense": None,
         "dados_empresas": {
             nome: {
                 "precos": [20.0],
                 "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
                 "tempo_voto_r1": None, "tempo_voto_r2": None, "tempo_voto_r3": None,
                 "status": "Operando",
-                "noticia_r4": "",   # 🔴 já incluído para manchete final
+                "noticia_r4": "",
                 "score_gr": 0,
             }
             for nome in EMPRESAS
         },
     }
 
-# Funções de estado
+# ─────────────────────────────────────────────────────────────────────────────
+# FUNÇÕES DE ESTADO
+# ─────────────────────────────────────────────────────────────────────────────
 def carregar_estado() -> dict:
     if not os.path.exists(STATE_FILE):
         estado = _estado_inicial()
@@ -74,8 +80,6 @@ def carregar_estado() -> dict:
         estado = json.loads(conteudo)
         if "sessoes_ativas" not in estado:
             estado["sessoes_ativas"] = []
-        # Sempre garante senhas corretas
-        estado["senhas_empresas"] = SENHAS_EMPRESAS.copy()
         return estado
     except (json.JSONDecodeError, OSError):
         estado = _estado_inicial()
@@ -92,20 +96,19 @@ def resetar_estado() -> None:
     if os.path.exists(STATE_FILE):
         os.remove(STATE_FILE)
     carregar_estado()
-EMPRESA_MAP = {
-    "α - Empresa Alfa": "Empresa Alfa",
-    "β - Empresa Beta": "Empresa Beta",
-    "γ - Empresa Gama": "Empresa Gama",
-}
 
-# Impactos de preço por rodada
+# ─────────────────────────────────────────────────────────────────────────────
+# IMPACTOS DE PREÇO
+# ─────────────────────────────────────────────────────────────────────────────
 IMPACTOS = {
     1: {"A": 0.75, "B": 0.95, "C": 1.05},
     2: {"A": 0.40, "B": 0.82, "C": 1.143},
     3: {"A": 0.30, "B": 0.60, "C": 1.10},
 }
 
-# Labels da Rodada 1
+# ─────────────────────────────────────────────────────────────────────────────
+# LABELS DAS OPÇÕES
+# ─────────────────────────────────────────────────────────────────────────────
 LABELS_R1 = {
     "A": """Opção A — Lançar em Passivo Financeiro
 
@@ -126,7 +129,6 @@ Registra o risco sacado no Passivo Financeiro, mas a diretoria revisa e reduz a 
 Resultado: O EBITDA sobe para R$ 1.050M por conta do ganho operacional na PDD, amortecendo os juros no Resultado Financeiro (-R$ 310M). O Lucro Líquido sobe para R$ 740M e o covenant de alavancagem é mitigado pelo aumento do denominador (EBITDA maior).""",
 }
 
-# Labels da Rodada 2
 LABELS_R2 = {
     "A": """Opção A — Assumir a Perda Cambial Imediata
 
@@ -146,7 +148,7 @@ Registra descontos e incentivos verbais futuros de 24 meses acordados com os fab
 
 Resultado: A linha de receita recebe uma injeção artificial de R$ 80M, inflando diretamente o Lucro Bruto e fazendo o EBITDA saltar, camuflando a crise do dólar perante auditorias e bancos credores.""",
 }
-# Labels da Rodada 3
+
 LABELS_R3 = {
     "A": """Opção A — Registrar Provisão (PECLD)
 
@@ -167,18 +169,15 @@ Adia o reconhecimento da inadimplência, registrando apenas uma parcela mínima 
 Resultado: A linha de receita é inflada artificialmente (+% sobre recebíveis), o EBITDA sobe e os covenants são preservados. Contudo, configura maquiagem contábil e eleva o risco de fraude.""",
 }
 
-
-# Labels da Rodada 3 (dinâmico)
-def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
+def get_labels(rodada: int) -> dict:
     if rodada == 1: return LABELS_R1
     if rodada == 2: return LABELS_R2
     if rodada == 3: return LABELS_R3
-   
     return LABELS_R1
 
-# Narrativas iniciais
-# Narrativas iniciais
-
+# ─────────────────────────────────────────────────────────────────────────────
+# NARRATIVAS
+# ─────────────────────────────────────────────────────────────────────────────
 def narrativa_rodada_1() -> str:
     return """### 📰 RODADA 1: O RISCO SACADO
 
@@ -220,19 +219,17 @@ O mercado aguarda o veredito final sobre a conduta das empresas.
 **Sua missão:** Aguardar a apuração e verificar o impacto das escolhas anteriores na reputação e nos preços finais.
 """
 
-# ---------------------------------------------#
-
-# ---------------------------------------------#
+# ─────────────────────────────────────────────────────────────────────────────
+# DRE
+# ─────────────────────────────────────────────────────────────────────────────
 def calcular_dre_dinamico(votos: dict) -> dict:
-    # Valores iniciais da DRE
     receita     = 20_000_000_000.0
     cmv         = -16_500_000_000.0
     pdd         = -150_000_000.0
     depreciacao = -150_000_000.0
     outras_desp = -2_200_000_000.0
     juros       = -300_000_000.0
-
-    score_gr = 0  # agora usamos score_gr para alinhar com o estado inicial
+    score_gr    = 0
 
     # Rodada 1
     v1 = votos.get("r1")
@@ -240,10 +237,10 @@ def calcular_dre_dinamico(votos: dict) -> dict:
         juros = -310_000_000.0
         score_gr += 0
     elif v1 == "B":
-        outras_desp -= 200_000_000.0   # accruals discricionários
+        outras_desp -= 200_000_000.0
         score_gr += 2
     elif v1 == "C":
-        pdd = -100_000_000.0           # fraude
+        pdd = -100_000_000.0
         score_gr += 3
 
     # Rodada 2
@@ -264,22 +261,18 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     pecld_dinamica = carteira_recebiveis * 0.12
 
     if v3 == "A":
-        # OPÇÃO A: Lançar PECLD (não discricionário)
         pdd -= pecld_dinamica
         score_gr += 0
     elif v3 == "B":
-        # OPÇÃO B: Securitização via FIDC (discricionário)
         juros -= pecld_dinamica
         score_gr += 2
     elif v3 == "C":
-        # OPÇÃO C: Diferimento Técnico (fraude)
         receita += pecld_dinamica
         score_gr += 3
 
-    # Cálculos finais da DRE
     lucro_bruto = receita + cmv
-    ebitda = lucro_bruto + pdd + outras_desp
-    lucro_liq = ebitda + depreciacao + juros
+    ebitda      = lucro_bruto + pdd + outras_desp
+    lucro_liq   = ebitda + depreciacao + juros
 
     return {
         "receita": receita,
@@ -292,26 +285,27 @@ def calcular_dre_dinamico(votos: dict) -> dict:
         "juros": juros,
         "lucro_liq": lucro_liq,
         "pecld_dinamica": pecld_dinamica,
-        "score_gr": score_gr,  # agora alinhado com o estado inicial
+        "score_gr": score_gr,
     }
-# ---------------------------------------------#
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int):
     dre = calcular_dre_dinamico(votos_empresa)
     st.markdown(f"### 📋 DRE Acumulada — Exercício {rodada_exibida}")
+
     def fmt(v, negativo=False):
         sinal = "-" if negativo else ""
         return f"{sinal}R$ {v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
     linhas = [
-        ("(=) Receita Bruta de Vendas",           fmt(dre["receita"]),           False),
-        ("(-) Custo das Mercadorias (CMV)",       fmt(dre["cmv"],       True),   False),
-        ("(=) Lucro Bruto Operacional",           fmt(dre["lucro_bruto"]),       True),
-        ("(-) Provisão para Calotes (PDD/PECLD)", fmt(dre["pdd"],       True),   False),
-        ("(-) Depreciação de Lojas/Ativos",       fmt(dre["depreciacao"],True),  False),
-        ("(-) Outras Despesas Operacionais",      fmt(dre["outras_desp"],True),  False),
-        ("(=) EBITDA APURADO",                    fmt(dre["ebitda"]),            True),
-        ("(-) Result. Financeiro (Dívidas/Juros)",fmt(dre["juros"],     True),   False),
-        ("(=) LUCRO LÍQUIDO DO EXERCÍCIO",        fmt(dre["lucro_liq"]),         True),
+        ("(=) Receita Bruta de Vendas",           fmt(dre["receita"]),            False),
+        ("(-) Custo das Mercadorias (CMV)",        fmt(dre["cmv"],        True),   False),
+        ("(=) Lucro Bruto Operacional",            fmt(dre["lucro_bruto"]),        True),
+        ("(-) Provisão para Calotes (PDD/PECLD)",  fmt(dre["pdd"],        True),   False),
+        ("(-) Depreciação de Lojas/Ativos",        fmt(dre["depreciacao"], True),  False),
+        ("(-) Outras Despesas Operacionais",       fmt(dre["outras_desp"], True),  False),
+        ("(=) EBITDA APURADO",                     fmt(dre["ebitda"]),             True),
+        ("(-) Result. Financeiro (Dívidas/Juros)", fmt(dre["juros"],      True),   False),
+        ("(=) LUCRO LÍQUIDO DO EXERCÍCIO",         fmt(dre["lucro_liq"]),          True),
     ]
     rows = ""
     for i, (conta, valor, destaque) in enumerate(linhas):
@@ -322,16 +316,17 @@ def exibir_dre(votos_empresa: dict, rodada_exibida: int):
                  f"<td style='padding:6px 10px;font-family:monospace;text-align:right;'>{valor}</td>"
                  f"</tr>")
     st.markdown(f"<table style='width:100%;border-collapse:collapse;'>{rows}</table><br>", unsafe_allow_html=True)
-
-    # Novo: mostrar score_gr acumulado
     st.markdown(f"**Score Ético/Discricionário acumulado:** {dre['score_gr']}")
 
-
+# ─────────────────────────────────────────────────────────────────────────────
+# CÁLCULO DE PREÇOS
+# ─────────────────────────────────────────────────────────────────────────────
 def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     d         = estado["dados_empresas"][empresa_nome]
     preco_ant = d["precos"][-1]
     voto      = d.get(f"voto_r{rodada}")
-    if voto is None: return preco_ant
+    if voto is None:
+        return preco_ant
     impacto = IMPACTOS.get(rodada, {}).get(voto, 1.0)
     novo    = preco_ant * impacto
 
@@ -343,62 +338,39 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     ]
     if len(tempos) == 3:
         ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
-        if ranking[0] == empresa_nome: novo += 0.10
-        elif ranking[-1] == empresa_nome: novo -= 0.10
+        if ranking[0] == empresa_nome:
+            novo += 0.10
+        elif ranking[-1] == empresa_nome:
+            novo -= 0.10
 
-    # Exemplo de ajuste: penalidade extra se score_gr for muito alto
-    if d["score_gr"] >= 6:  # muitas escolhas fraudulentas
-        novo *= 0.95  # queda adicional de 5%
+    if d["score_gr"] >= 6:
+        novo *= 0.95
 
     return round(novo, 2)
 
-
 def processar_rodada_4_consolidada(estado: dict, empresa_nome: str) -> float:
     d = estado["dados_empresas"][empresa_nome]
-    if len(d["precos"]) >= 5: return d["precos"][-1]
+    if len(d["precos"]) >= 5:
+        return d["precos"][-1]
     r1, r2, r3 = d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")
     combinacao = [r1, r2, r3]
     qtd_c = combinacao.count("C")
     qtd_b = combinacao.count("B")
-    if qtd_c == 3: pct = 0.70
-    elif qtd_c == 2: pct = 0.50
+    if qtd_c == 3:      pct = 0.70
+    elif qtd_c == 2:    pct = 0.50
     elif qtd_c == 1 and qtd_b >= 1: pct = 0.45
-    elif qtd_c == 1: pct = 0.40
-    elif qtd_b >= 2: pct = 0.15
-    elif qtd_b == 1: pct = 0.05
-    else: pct = 0.0
+    elif qtd_c == 1:    pct = 0.40
+    elif qtd_b >= 2:    pct = 0.15
+    elif qtd_b == 1:    pct = 0.05
+    else:               pct = 0.0
     novo_preco = round(d["precos"][-1] * (1.0 - pct), 2)
     d["precos"].append(novo_preco)
     return novo_preco
 
-def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
-    dados_fechamento = {}
-    for nome in EMPRESAS:
-        historico = estado["dados_empresas"][nome]["precos"]
-        atual     = historico[-1]
-        anterior  = historico[-2] if len(historico) > 1 else 20.0
-        variacao  = atual - anterior
-        dados_fechamento[nome] = {"atual": atual, "anterior": anterior, "var": variacao}
-    lista_ordenada  = sorted(dados_fechamento.items(), key=lambda x: x[1]["atual"], reverse=True)
-    lider_nome,    lider_dados    = lista_ordenada[0]
-    lanterna_nome, lanterna_dados = lista_ordenada[-1]
-    todos_empatados = lider_dados["atual"] == lanterna_dados["atual"]
-
-    def fmt_var(valor):
-        return f"+R$ {valor:.2f}" if valor >= 0 else f"-R$ {abs(valor):.2f}"
-
-    topo_manchete = baixo_manchete = topo_texto = baixo_texto = ""
-    secao_baixo = ""
-
+# ─────────────────────────────────────────────────────────────────────────────
+# MANCHETES
+# ─────────────────────────────────────────────────────────────────────────────
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = None) -> str:
-    """
-    Gera manchete dinâmica para cada rodada.
-    - Rodadas 1–3: uma manchete normal.
-    - Rodada 4: duas fases distintas:
-        fase="plantao"   → manchete de plantão CVM
-        fase="veredicto" → manchete final com consequências
-    """
-
     dados_fechamento = {}
     for nome in EMPRESAS:
         historico = estado["dados_empresas"][nome]["precos"]
@@ -415,20 +387,20 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = Non
     def fmt_var(valor):
         return f"+R$ {valor:.2f}" if valor >= 0 else f"-R$ {abs(valor):.2f}"
 
-    topo_manchete = baixo_manchete = topo_texto = baixo_texto = ""
-    secao_baixo = ""
+    topo_manchete = ""
+    topo_texto    = ""
+    secao_baixo   = ""
 
-    # Rodadas 1–3 → uma manchete
     if rodada_encerrada in (1, 2, 3):
         if todos_empatados:
             topo_manchete = f"EMPATE GERAL NA RODADA {rodada_encerrada}"
             topo_texto    = f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}."
         else:
-            topo_manchete  = f"{lider_nome} dispara {fmt_var(lider_dados['var'])}!"
-            topo_texto     = f"SÃO PAULO — A {lider_nome} subiu de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
+            topo_manchete = f"{lider_nome} dispara {fmt_var(lider_dados['var'])}!"
+            topo_texto    = f"SÃO PAULO — A {lider_nome} subiu de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
             baixo_manchete = f"{lanterna_nome} despenca {fmt_var(lanterna_dados['var'])}"
             baixo_texto    = f"SÃO PAULO — A {lanterna_nome} caiu para R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
+            secao_baixo = f"""
             <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;">
                 {baixo_manchete}
             </div>
@@ -436,10 +408,9 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = Non
                 <p style="font-size:13px;color:#333;margin:0;text-align:justify;">{baixo_texto}</p>
             </div>"""
 
-    # Rodada 4 — Plantão CVM + 3 manchetes
     elif rodada_encerrada == 4:
-        topo_manchete   = "🚨 URGENTE: CVM FINALIZOU A INVESTIGAÇÃO NO SETOR!"
-        topo_texto      = "SÃO PAULO — A CVM finalizou a investigação e os resultados são surpreendentes."
+        topo_manchete = "🚨 URGENTE: CVM FINALIZOU A INVESTIGAÇÃO NO SETOR!"
+        topo_texto    = "SÃO PAULO — A CVM finalizou a investigação e os resultados são surpreendentes."
 
         manchetes_empresas = []
         for nome in EMPRESAS:
@@ -449,38 +420,36 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = Non
             qtd_b = [r1, r2, r3].count("B")
 
             if qtd_c == 3:
-                baixo_manchete = f"⛓️ Prisão dos executivos da {nome}!"
-                baixo_texto    = f"A CVM e a Polícia Federal 🚓 deflagraram operação contra {nome}. Os principais dirigentes foram presos preventivamente 🔗."
+                manchete_emp = f"⛓️ Prisão dos executivos da {nome}!"
+                texto_emp    = f"A CVM e a Polícia Federal 🚓 deflagraram operação contra {nome}. Os principais dirigentes foram presos preventivamente 🔗."
             elif qtd_c == 2:
-                baixo_manchete = f"💰🚫 Justiça bloqueia bens da {nome}!"
-                baixo_texto    = f"A Justiça determinou o bloqueio cautelar dos bens dos executivos da {nome}."
+                manchete_emp = f"💰🚫 Justiça bloqueia bens da {nome}!"
+                texto_emp    = f"A Justiça determinou o bloqueio cautelar dos bens dos executivos da {nome}."
             elif qtd_c == 1 and qtd_b >= 1:
-                baixo_manchete = f"💸 {nome} multada e CEO + CFO demitidos!"
-                baixo_texto    = f"A CVM aplicou multa milionária 💸 e tanto CEO quanto CFO foram demitidos 👔."
+                manchete_emp = f"💸 {nome} multada e CEO + CFO demitidos!"
+                texto_emp    = f"A CVM aplicou multa milionária 💸 e tanto CEO quanto CFO foram demitidos 👔."
             elif qtd_c == 1:
-                baixo_manchete = f"🥲 {nome} FRAUDE OU ERRO? NÃO IMPORTA..."
-                baixo_texto    = f"Mesmo pontual, a fraude na {nome} gerou demissão imediata do CEO 👔."
+                manchete_emp = f"🥲 {nome} FRAUDE OU ERRO? NÃO IMPORTA..."
+                texto_emp    = f"Mesmo pontual, a fraude na {nome} gerou demissão imediata do CEO 👔."
             elif qtd_b >= 2:
-                baixo_manchete = f"📉 {nome} abusa dos accruals!"
-                baixo_texto    = f"O CFO da {nome} virou mestre no pôquer contábil."
+                manchete_emp = f"📉 {nome} abusa dos accruals!"
+                texto_emp    = f"O CFO da {nome} virou mestre no pôquer contábil."
             elif qtd_b == 1:
-                baixo_manchete = f"ℹ️ {nome} alega transparência!"
-                baixo_texto    = f"Houve uso de accruals em um ano, mas sem agravantes."
+                manchete_emp = f"ℹ️ {nome} alega transparência!"
+                texto_emp    = f"Houve uso de accruals em um ano, mas sem agravantes."
             else:
-                baixo_manchete = f"☠️ {nome} MORREU ABRAÇADA COM A ÉTICA!"
-                baixo_texto    = f"A empresa {nome} colapsou junto com sua reputação ética."
+                manchete_emp = f"☠️ {nome} MORREU ABRAÇADA COM A ÉTICA!"
+                texto_emp    = f"A empresa {nome} colapsou junto com sua reputação ética."
 
             manchetes_empresas.append(f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
+            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{manchete_emp}</div>
             <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{texto_emp}</p>
             </div>""")
 
-        # junta todas as manchetes das empresas
         secao_baixo = "".join(manchetes_empresas)
 
-    # Cabeçalho
-    cor_header = "#cc0000" if rodada_encerrada < 4 else "#1a1a1a"
+    cor_header   = "#cc0000" if rodada_encerrada < 4 else "#1a1a1a"
     label_header = f"EXERCÍCIO {rodada_encerrada}" if rodada_encerrada < 4 else "🏁 FIM DE JOGO"
 
     return f"""
@@ -498,41 +467,47 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int, fase: str = Non
         </div>
     </div>"""
 
-import matplotlib
-
+# ─────────────────────────────────────────────────────────────────────────────
+# GRÁFICOS
+# ─────────────────────────────────────────────────────────────────────────────
 matplotlib.use("Agg")
 
 def plotar_grafico_empresa(estado: dict, nome_empresa: str):
     precos = estado["dados_empresas"][nome_empresa]["precos"]
     fig, ax = plt.subplots(figsize=(10, 4))
-    fig.patch.set_facecolor("#0e1117"); ax.set_facecolor("#1e222b")
+    fig.patch.set_facecolor("#0e1117")
+    ax.set_facecolor("#1e222b")
     ax.plot(range(len(precos)), precos, marker="o", color="#00ffa3", linewidth=3, markersize=8)
     labels_disp = ["Abertura", "R1", "R2", "R3", "Auditoria"]
-    ax.set_xticks(range(len(precos))); ax.set_xticklabels(labels_disp[:len(precos)])
-    ax.tick_params(colors="white"); ax.grid(color="#333", linestyle="--", alpha=0.5)
-    st.pyplot(fig); plt.close(fig)
+    ax.set_xticks(range(len(precos)))
+    ax.set_xticklabels(labels_disp[:len(precos)])
+    ax.tick_params(colors="white")
+    ax.grid(color="#333", linestyle="--", alpha=0.5)
+    st.pyplot(fig)
+    plt.close(fig)
 
 def plotar_grafico_geral(estado: dict):
     tamanhos  = [len(estado["dados_empresas"][emp]["precos"]) for emp in EMPRESAS]
     maior_tam = max(tamanhos)
     labels_disp = ["Abertura", "R1", "R2", "R3", "Auditoria"]
     fig, ax = plt.subplots(figsize=(10, 4))
-    fig.patch.set_facecolor("#0e1117"); ax.set_facecolor("#1e222b")
+    fig.patch.set_facecolor("#0e1117")
+    ax.set_facecolor("#1e222b")
     cores = ["#00ffa3", "#ff6b6b", "#ffd700"]
     for i, emp in enumerate(EMPRESAS):
         precos = estado["dados_empresas"][emp]["precos"]
         ax.plot(range(len(precos)), precos, label=emp, marker="o", color=cores[i], linewidth=2.5, markersize=7)
-    ax.set_xticks(range(maior_tam)); ax.set_xticklabels(labels_disp[:maior_tam])
+    ax.set_xticks(range(maior_tam))
+    ax.set_xticklabels(labels_disp[:maior_tam])
     ax.tick_params(colors="white")
     ax.legend(facecolor="#1e222b", edgecolor="#444", labelcolor="white")
     ax.grid(color="#333", linestyle="--", alpha=0.5)
-    st.pyplot(fig); plt.close(fig)
-
+    st.pyplot(fig)
+    plt.close(fig)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 8. Navegação
+# NAVEGAÇÃO
 # ─────────────────────────────────────────────────────────────────────────────
-# 8. Navegação
 if "pagina_atual" not in st.session_state:
     st.session_state["pagina_atual"] = "🏠 Início"
 
@@ -550,143 +525,94 @@ if perfil_sidebar != st.session_state["pagina_atual"]:
     st.session_state["pagina_atual"] = perfil_sidebar
     st.rerun()
 
-# 🔴 aqui você define a variável antes de usar
 perfil = st.session_state["pagina_atual"]
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: INÍCIO
-# ─────────────────────────────────────────────────────────────────────────────
-# ________________________________________________________________
-# TELA: INÍCIO
-# ________________________________________________________________
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TELA: INÍCIO
+# ─────────────────────────────────────────────────────────────────────────────
 if perfil == "🏠 Início":
     estado = carregar_estado()
-    sessoes = estado.get("sessoes_ativas", [])
 
     st.title("🔒 Simulador de Governança")
     st.markdown("### Selecione o seu ambiente de acesso abaixo:")
 
     c1, c2, c3 = st.columns(3)
 
-    # GERENCIADOR
+    # GERENCIADOR — com senha
     with c1:
         with st.container(border=True):
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
-            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador")
+            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador_inicio")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
+                if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+                    st.session_state["gerenciador_autenticado"] = True
                     st.rerun()
                 else:
                     st.error("❌ Senha incorreta.")
 
-    # EMPRESAS
+    # EMPRESAS — acesso livre
     with c2:
         with st.container(border=True):
-            st.markdown("### 🏢 Empresas ")
+            st.markdown("### 🏢 Empresas")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
 
-            # Monta opções — vaga livre ou ocupada (com 🔒)
-            opcoes_livres = []
-            opcoes_ocupadas = []
-            for chave, nome_interno in EMPRESA_MAP.items():
-                if nome_interno in sessoes:
-                    opcoes_ocupadas.append((chave, nome_interno))
-                else:
-                    opcoes_livres.append((chave, nome_interno))
+            sessoes = estado.get("sessoes_ativas", [])
+            opcoes = list(EMPRESA_MAP.keys())
+            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+            nome_int = EMPRESA_MAP[empresa_escolhida]
 
-            todas_opcoes = (
-                [chave for chave, _ in opcoes_livres] +
-                [f"🔒 {chave}" for chave, _ in opcoes_ocupadas]
-            )
+            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+                if nome_int not in sessoes:
+                    sessoes.append(nome_int)
+                    estado["sessoes_ativas"] = sessoes
+                    salvar_estado(estado)
+                st.success(f"✅ Login realizado com sucesso na {empresa_escolhida}!")
+                st.session_state["pagina_atual"] = empresa_escolhida
+                st.rerun()
 
-            empresa_escolhida_raw = st.selectbox("Escolha sua empresa:", todas_opcoes)
-            vaga_ocupada = empresa_escolhida_raw.startswith("🔒 ")
-            chave_real = empresa_escolhida_raw.replace("🔒 ", "")
-            nome_int = EMPRESA_MAP.get(chave_real, "")
-
-            # senha correta definida aqui
-            senha_correta = SENHAS_EMPRESAS[chave_real]
-
-            if vaga_ocupada:
-                st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
-                senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
-
-                if st.button("Entrar com Senha", use_container_width=True):
-                    if senha_input and senha_input == senha_correta:
-                        st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-                        st.session_state["pagina_atual"] = chave_real
-                        st.rerun()
-                    else:
-                        st.error("❌ Senha incorreta.")
-            else:
-                if st.button("Entrar como representante da empresa", use_container_width=True):
-                    if nome_int not in sessoes:
-                        sessoes.append(nome_int)
-                        estado["sessoes_ativas"] = sessoes
-                        salvar_estado(estado)
-                    st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-                    st.session_state["pagina_atual"] = chave_real
-                    st.rerun()
-
-    # TELÃO
+    # TELÃO — acesso livre
     with c3:
         with st.container(border=True):
             st.markdown("### 📈 Projeção / Telão")
             st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True):
+            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
 
-
-
-
 # ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR
+# TELA: PAINEL DO GERENCIADOR
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
+
+    # Verificação de autenticação (persiste via session_state)
+    if not st.session_state.get("gerenciador_autenticado", False):
+        st.title("🎛️ Painel Gerenciador")
+        st.markdown("### 🔑 Acesso Restrito")
+        senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador_painel")
+        if st.button("Entrar", use_container_width=True, type="primary"):
+            if senha_g == SENHA_GERENCIADOR:
+                st.session_state["gerenciador_autenticado"] = True
+                st.rerun()
+            else:
+                st.error("❌ Senha incorreta. Tente novamente.")
+        st.stop()
+
+    # ── Painel autenticado ────────────────────────────────────────────────────
     st.title("🎛️ Painel Gerenciador")
-
-    # Campo de senha + botão Entrar
-    senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
-    if st.button("🔑 Entrar", use_container_width=True, type="primary"):
-        if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
-            st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
-
-            # Funções do Gerenciador
-            st.subheader("⚙️ Controle das Rodadas")
-            st.write("Você pode iniciar, pausar ou finalizar rodadas aqui.")
-
-            if st.button("▶️ Iniciar Rodada", use_container_width=True):
-                estado["rodada_atual"] += 1
-                salvar_estado(estado)
-                st.success(f"✅ Rodada {estado['rodada_atual']} iniciada!")
-                st.rerun()
-
-            if st.button("⏸️ Pausar Rodada", use_container_width=True):
-                st.info("Rodada pausada pelo Gerenciador.")
-
-            if st.button("🏁 Finalizar Jogo", use_container_width=True):
-                estado["jogo_finalizado"] = True
-                salvar_estado(estado)
-                st.success("🏆 Jogo finalizado com sucesso!")
-                st.rerun()
-        else:
-            st.error("❌ Senha incorreta. Tente novamente.")
-
-
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
 
-    # Botão para iniciar timer da Rodada 1
-    if rodada == 1 and not estado.get("timer_inicio_r1"):
-        if st.button("⏱️ Iniciar Rodada 1", use_container_width=True, type="primary"):
-            estado["timer_inicio_r1"] = time.time()
+    # Botão para iniciar timer da rodada atual
+    chave_timer = f"timer_inicio_r{rodada}"
+    if rodada <= 3 and not estado.get(chave_timer):
+        if st.button(f"⏱️ Iniciar Rodada {rodada}", use_container_width=True, type="primary"):
+            estado[chave_timer] = time.time()
             salvar_estado(estado)
-            st.success("⏱️ Timer da Rodada 1 iniciado!")
+            st.success(f"⏱️ Timer da Rodada {rodada} iniciado!")
             st.rerun()
 
     st.markdown("### Status de Votos")
@@ -695,8 +621,10 @@ elif perfil == "🎛️ Painel Gerenciador":
         d    = estado["dados_empresas"][emp]
         voto = d.get(f"voto_r{rodada}") if rodada <= 3 else "—"
         with cols[i]:
-            if voto: st.success(f"**{emp}**: ✅ {voto}")
-            else:    st.warning(f"**{emp}**: ⏳ Aguardando")
+            if voto:
+                st.success(f"**{emp}**: ✅ {voto}")
+            else:
+                st.warning(f"**{emp}**: ⏳ Aguardando")
 
     todos_votaram = all(
         estado["dados_empresas"][emp].get(f"voto_r{rodada}") is not None
@@ -704,12 +632,13 @@ elif perfil == "🎛️ Painel Gerenciador":
     ) if rodada <= 3 else True
 
     st.divider()
+
     if rodada <= 3:
         if not todos_votaram:
             st.info("⏳ Aguardando todas as bancadas votarem para avançar.")
-    
+
         apurado = estado.get(f"apurado_r{rodada}", False)
-    
+
         if not apurado:
             if st.button(
                 f"📊 Apurar Resultados e Mídia — Rodada {rodada}",
@@ -722,16 +651,13 @@ elif perfil == "🎛️ Painel Gerenciador":
                     if len(d["precos"]) == rodada:
                         novo = calcular_novo_preco(estado, emp, rodada)
                         d["precos"].append(novo)
-    
+
                 html_noticia = gerar_manchete_dinamica(estado, rodada)
                 estado["historico_noticias"].append(html_noticia)
                 estado[f"apurado_r{rodada}"] = True
-    
                 salvar_estado(estado)
-    
                 st.success(f"✅ Resultados apurados! Mídia {rodada} liberada.")
                 st.rerun()
-    
         else:
             st.success(f"✅ Rodada {rodada} apurada. Mídia {rodada} liberada.")
 
@@ -754,12 +680,8 @@ elif perfil == "🎛️ Painel Gerenciador":
             else:
                 st.success("🏆 Premiação dos acionistas já aplicada.")
 
-            # Avançar rodada
-            if rodada <= 3:
-                if st.button(
-                    f"▶️ Avançar para Rodada {rodada + 1}",
-                    use_container_width=True
-                ):
+            if rodada < 4:
+                if st.button(f"▶️ Avançar para Rodada {rodada + 1}", use_container_width=True):
                     estado["rodada_atual"] = rodada + 1
                     estado[f"timer_inicio_r{rodada + 1}"] = time.time()
                     salvar_estado(estado)
@@ -770,11 +692,12 @@ elif perfil == "🎛️ Painel Gerenciador":
 
         if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
             html_noticia = gerar_manchete_dinamica(estado, 4)
-            estado["historico_noticias"].append(html_noticia)
+            if html_noticia not in estado["historico_noticias"]:
+                estado["historico_noticias"].append(html_noticia)
             salvar_estado(estado)
             st.success("✅ Plantão CVM disparado! Mídia liberada.")
             st.rerun()
-        
+
         if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
             for emp in EMPRESAS:
                 processar_rodada_4_consolidada(estado, emp)
@@ -786,15 +709,13 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.divider()
     if st.button("♻️ Resetar Simulação", use_container_width=True):
         resetar_estado()
+        st.session_state["gerenciador_autenticado"] = False
         st.success("✅ Simulação resetada. Pronto para novo jogo.")
         st.rerun()
-
-          
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
-
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     st.title("📈 Telão Comercial")
@@ -813,9 +734,7 @@ elif perfil == "📈 Telão (Bolsa)":
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # ── PLOT TWIST: Suspense (30s) → Plantão → Veredito ──────────────────────
-    estado = carregar_estado()
-    fase = estado.get("fase_final", None)  # garante que existe
+    fase = estado.get("fase_final", None)
 
     if fase == "suspense":
         ts = estado.get("ts_suspense", time.time())
@@ -836,7 +755,6 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             st.rerun()
 
     elif fase == "plantao":
-        # Guarda o momento em que começou o plantão
         if "ts_plantao" not in estado:
             estado["ts_plantao"] = time.time()
             salvar_estado(estado)
@@ -851,44 +769,29 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             margin-top:120px;
             box-shadow:0px 0px 20px rgba(0,0,0,0.5);
         ">
-            <h1 style="font-size:60px;">
-                🚨 PLANTÃO URGENTE 🚨
-            </h1>
-            <h2 style="font-size:40px;">
-                FISCALIZAÇÃO CVM NAS EMPRESAS
-            </h2>
+            <h1 style="font-size:60px;">🚨 PLANTÃO URGENTE 🚨</h1>
+            <h2 style="font-size:40px;">FISCALIZAÇÃO CVM NAS EMPRESAS</h2>
         </div>
         """, unsafe_allow_html=True)
 
-        # Apenas mostra o plantão, sem aplicar auditoria automática
         html_noticia = gerar_manchete_dinamica(estado, 4, fase="plantao")
         if html_noticia not in estado["historico_noticias"]:
             estado["historico_noticias"].append(html_noticia)
             salvar_estado(estado)
 
     elif fase == "veredicto":
-        # Redireciona o gerenciador para Mídia — empresas são redirecionadas pelo auto-refresh
         st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
         st.rerun()
 
     else:
-        # fluxo normal (timer rodando)
-        time.sleep(1)
+        # Exibição normal: gráfico geral
+        plotar_grafico_geral(estado)
+        time.sleep(5)
         st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "📰 Mídia (Notícias)":
-
-    import time
-    estado = carregar_estado()
-
-    st.title("📰 GC News — Central de Notícias")
-
-    # ─────────────────────────────
-    # BOTÕES SUPERIORES
-    # ─────────────────────────────
 elif perfil == "📰 Mídia (Notícias)":
     estado = carregar_estado()
     st.title("📰 GC News — Central de Notícias")
@@ -907,13 +810,8 @@ elif perfil == "📰 Mídia (Notícias)":
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-
-    # ─────────────────────────────
-    # LÓGICA DE FASE
-    # ─────────────────────────────
     fase = estado.get("fase_final")
 
-    # 🚨 PLANTÃO (PRIORIDADE MÁXIMA)
     if fase == "plantao":
         st.markdown("""
         <div style="
@@ -924,48 +822,38 @@ elif perfil == "📰 Mídia (Notícias)":
             margin-bottom:20px;
         ">
             <h1>🚨 PLANTÃO URGENTE</h1>
-            <h2>CVM INICIA FISCALIZAÇÃO  NAS EMPRESAS LISTADAS</h2>
-            <p> Responsáveis iniciaram uma revisão emergencial. Sem mais detalhes.
+            <h2>CVM INICIA FISCALIZAÇÃO NAS EMPRESAS LISTADAS</h2>
+            <p>Responsáveis iniciaram uma revisão emergencial. Sem mais detalhes.
             O mercado aguarda os resultados da fiscalização.</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # Registrar notícia do plantão no histórico (se ainda não estiver)
         html_noticia = gerar_manchete_dinamica(estado, 4)
         if html_noticia not in estado["historico_noticias"]:
             estado["historico_noticias"].append(html_noticia)
             salvar_estado(estado)
 
-        # Não resetar fase_final aqui — o Gerenciador controla a saída do plantão
         st.session_state["ultima_atualizacao_midia"] = time.time()
         st.stop()
 
-    # 📰 NOTÍCIAS
     elif estado.get("historico_noticias"):
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
-
     else:
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    # 🔁 AUTO-REFRESH (SÓ FORA DO PLANTÃO)
+    # Auto-refresh
     now = time.time()
     if "ultima_atualizacao_midia" not in st.session_state:
         st.session_state["ultima_atualizacao_midia"] = now
-
     if now - st.session_state["ultima_atualizacao_midia"] > 8:
         st.session_state["ultima_atualizacao_midia"] = now
         st.rerun()
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS
+# TELAS DAS EMPRESAS — acesso livre, sem senha
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil in EMPRESA_MAP:
-
     estado = carregar_estado()
     nome_interno = EMPRESA_MAP[perfil]
     d = estado["dados_empresas"][nome_interno]
@@ -976,27 +864,24 @@ elif perfil in EMPRESA_MAP:
     # Navegação superior
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True,
-                     type="primary" if perfil in EMPRESA_MAP else "secondary"):
+        if st.button("📋 Rodada", use_container_width=True, type="primary"):
             st.session_state["pagina_atual"] = perfil
             st.rerun()
     with nav2:
-        if st.button("📈 Telão", use_container_width=True,
-                     type="primary" if perfil == "📈 Telão (Bolsa)" else "secondary"):
+        if st.button("📈 Telão", use_container_width=True):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     with nav3:
-        if st.button("📰 Mídia", use_container_width=True,
-                     type="primary" if perfil == "📰 Mídia (Notícias)" else "secondary"):
+        if st.button("📰 Mídia", use_container_width=True):
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # 🚨 CVM (EVENTO GLOBAL)
+    # Evento CVM global
     if st.session_state.get("evento_cvm"):
         st.markdown("<h1>🚨 AUDITORIA CVM EM ANDAMENTO</h1>", unsafe_allow_html=True)
         st.stop()
 
-    # 🏁 FIM DE JOGO
+    # Fim de jogo
     if estado.get("jogo_finalizado"):
         st.markdown("## 🏁 FIM DE JOGO — Resultado Final Consolidado")
         if st.button("🔄 Reiniciar jogo"):
@@ -1011,72 +896,65 @@ elif perfil in EMPRESA_MAP:
             st.rerun()
         st.stop()
 
-    # Campo de senha + botão Entrar
-    senha = st.text_input("Digite a senha:", type="password")
-    if st.button("🔑 Entrar", use_container_width=True):
-        if senha == "1234":   # ajuste conforme sua lógica
-            st.success("✅ Login realizado com sucesso! Acessaram a Estação de Trabalho.")
+    # Timer
+    chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+    ts_inicio = estado.get(chave_timer) if chave_timer else None
+    if ts_inicio and rodada <= 3:
+        restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+        st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
 
-            # 🔁 FLUXO NORMAL (RODADAS 1–4)
-            votos_ate_agora = {f"r{i}": d.get(f"voto_r{i}") for i in range(1, 4)}
-            dre_parcial = calcular_dre_dinamico(votos_ate_agora)
+    # Tabs
+    aba_voto, aba_jornal = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
 
-            # TIMER
-            chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
-            ts_inicio = estado.get(chave_timer) if chave_timer else None
-            if ts_inicio and rodada <= 3:
-                restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-                st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
+    with aba_voto:
+        # Narrativa
+        if rodada == 1:
+            st.markdown(narrativa_rodada_1())
+        elif rodada == 2:
+            st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
+        elif rodada == 3:
+            st.markdown(narrativa_rodada_3())
+        elif rodada == 4:
+            st.markdown(narrativa_rodada_4())
 
-            # TABS
-            aba_voto, aba_jornal = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
+        # Voto
+        voto_atual = d.get(f"voto_r{rodada}")
+        if rodada <= 3:
+            if voto_atual is None:
+                escolha = st.radio(
+                    "Selecione o tratamento contábil:",
+                    ["A", "B", "C"],
+                    format_func=lambda x: get_labels(rodada)[x]
+                )
+                if st.button("✅ Homologar Resolução", use_container_width=True):
+                    d[f"voto_r{rodada}"] = escolha
+                    d[f"tempo_voto_r{rodada}"] = time.time()
+                    salvar_estado(estado)
+                    st.rerun()
+            else:
+                st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
+                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
 
-            with aba_voto:
-                # Narrativa
-                if rodada == 1:
-                    st.markdown(narrativa_rodada_1())
-                elif rodada == 2:
-                    st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
-                elif rodada == 3:
-                    st.markdown(narrativa_rodada_3())
-                elif rodada == 4:
-                    st.markdown(narrativa_rodada_4())
-
-                # Voto
-                voto_atual = d.get(f"voto_r{rodada}")
-                if voto_atual is None:
-                    escolha = st.radio("Selecione o tratamento contábil:", ["A","B","C"],
-                                       format_func=lambda x: get_labels(rodada)[x])
-                    if st.button("✅ Homologar Resolução", use_container_width=True):
-                        d[f"voto_r{rodada}"] = escolha
-                        d[f"tempo_voto_r{rodada}"] = time.time()
-                        salvar_estado(estado)
-                        st.rerun()
-                else:
-                    st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
-                    exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada+1)}, rodada)
-
-                    if estado.get(f"apurado_r{rodada}", False):
-                        st.info(f"📢 Resultado da Apuração — Exercício {rodada}")
-
-            with aba_jornal:
-                if estado["historico_noticias"]:
-                    for n_html in estado["historico_noticias"]:
-                        st.markdown(n_html, unsafe_allow_html=True)
-                else:
-                    st.info("⏳ Nenhuma notícia publicada neste ciclo.")
-
+                if estado.get(f"apurado_r{rodada}", False):
+                    st.info(f"📢 Resultado da Apuração — Exercício {rodada}")
         else:
-            st.error("❌ Senha incorreta. Tente novamente.")
+            # Rodada 4: apenas aguardar
+            st.info("⏳ Aguardando apuração final da CVM.")
+            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
 
-    # 🔁 Auto redirect para Mídia
+    with aba_jornal:
+        if estado["historico_noticias"]:
+            for n_html in estado["historico_noticias"]:
+                st.markdown(n_html, unsafe_allow_html=True)
+        else:
+            st.info("⏳ Nenhuma notícia publicada neste ciclo.")
+
+    # Auto redirect para Mídia se fase ativa
     _fase = estado.get("fase_final")
     if _fase in ("plantao", "veredicto") and st.session_state.get("pagina_atual") != "📰 Mídia (Notícias)":
         st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
         st.rerun()
 
-    # 🔁 Auto-refresh
+    # Auto-refresh
     time.sleep(6)
-    st.rerun()
-
     st.rerun()
