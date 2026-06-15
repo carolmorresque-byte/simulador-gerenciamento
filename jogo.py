@@ -558,23 +558,42 @@ perfil = st.session_state["pagina_atual"]
 # TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TELA: PAINEL DO APRESENTADOR
+# ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
     st.title("🎛️ Painel Gerenciador")
 
-    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-    with nav1:
-        if st.button("📋 Rodada", use_container_width=True, type="primary"):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-            st.rerun()
-    with nav2:
-        if st.button("📈 Telão", use_container_width=True):
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
-    with nav3:
-        if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
+    # Campo de senha + botão Entrar
+    senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
+    if st.button("🔑 Entrar", use_container_width=True, type="primary"):
+        if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
+            st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
+
+            # Aqui você libera as funções do Gerenciador
+            st.subheader("⚙️ Controle das Rodadas")
+            st.write("Você pode iniciar, pausar ou finalizar rodadas aqui.")
+
+            # Exemplo de botões de controle
+            if st.button("▶️ Iniciar Rodada", use_container_width=True):
+                estado["rodada_atual"] += 1
+                salvar_estado(estado)
+                st.success(f"Rodada {estado['rodada_atual']} iniciada!")
+                st.rerun()
+
+            if st.button("⏸️ Pausar Rodada", use_container_width=True):
+                st.info("Rodada pausada pelo Gerenciador.")
+
+            if st.button("🏁 Finalizar Jogo", use_container_width=True):
+                estado["jogo_finalizado"] = True
+                salvar_estado(estado)
+                st.success("✅ Jogo finalizado com sucesso!")
+                st.rerun()
+
+        else:
+            st.error("❌ Senha incorreta. Tente novamente.")
+
 
 
 
