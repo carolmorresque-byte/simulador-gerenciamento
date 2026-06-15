@@ -670,16 +670,13 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             st.rerun()
         time.sleep(1)
         st.rerun()
-    # ── PLOT TWIST: Suspense (30s) → Plantão → Veredito ──────────────────────
-    elif fase == "plantao":
 
+    elif fase == "plantao":
         # Guarda o momento em que começou o plantão
         if "ts_plantao" not in estado:
             estado["ts_plantao"] = time.time()
             salvar_estado(estado)
-    
-        decorrido = time.time() - estado["ts_plantao"]
-    
+
         st.markdown("""
         <div style="
             background-color:#c00000;
@@ -693,35 +690,19 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             <h1 style="font-size:60px;">
                 🚨 PLANTÃO URGENTE 🚨
             </h1>
-    
             <h2 style="font-size:40px;">
                 FISCALIZAÇÃO CVM NAS EMPRESAS
             </h2>
-    
         </div>
         """, unsafe_allow_html=True)
-    
-        # Após 15 segundos divulga a auditoria
-        if decorrido >= 15:
-    
-            for emp in EMPRESAS:
-                processar_rodada_4_consolidada(estado, emp)
-                estado["dados_empresas"][emp]["status"] = "Auditada"
-    
-            html_noticia = gerar_manchete_dinamica(estado, 4)
-    
-            if len(estado["historico_noticias"]) < 4:
-                estado["historico_noticias"].append(html_noticia)
-    
-            estado["fase_final"] = "veredicto"
-            estado["rodada_atual"] = 5
-    
+
+        # Apenas mostra o plantão, sem aplicar auditoria automática
+        html_noticia = gerar_manchete_dinamica(estado, 4)
+        if html_noticia not in estado["historico_noticias"]:
+            estado["historico_noticias"].append(html_noticia)
             salvar_estado(estado)
-    
-            st.rerun()
-    
-        time.sleep(1)
-        st.rerun()
+
+        # O avanço para resultado final (Rodada 4) será feito pelo Gerenciador
 
     elif fase == "veredicto":
         # Redireciona o gerenciador para Mídia — empresas são redirecionadas pelo auto-refresh
@@ -745,6 +726,7 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             if st.button("📰 Mídia", use_container_width=True):
                 st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
                 st.rerun()
+
         plotar_grafico_geral(estado)
         st.markdown("### Cotações Atuais")
         cols = st.columns(3)
@@ -754,19 +736,17 @@ letter-spacing:2px;margin-bottom:20px;'>⚙️ Apurando Resultados Finais do Mer
             preco_ant= precos[-2] if len(precos) > 1 else preco_at
             with cols[i]:
                 st.metric(emp, f"R$ {preco_at:.2f}", f"{preco_at - preco_ant:+.2f}")
+
         time.sleep(8)
         st.rerun()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: MÍDIA
-# ─────────────────────────────────────────────────────────────────────────────
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "📰 Mídia (Notícias)":
 
     import time
-
     estado = carregar_estado()
 
     st.title("📰 GC News — Central de Notícias")
@@ -798,11 +778,8 @@ elif perfil == "📰 Mídia (Notícias)":
     # ─────────────────────────────
     fase = estado.get("fase_final")
 
-    # ─────────────────────────────
     # 🚨 PLANTÃO (PRIORIDADE MÁXIMA)
-    # ─────────────────────────────
     if fase == "plantao":
-
         st.markdown("""
         <div style="
             background-color:#c00000;
@@ -812,40 +789,31 @@ elif perfil == "📰 Mídia (Notícias)":
             margin-bottom:20px;
         ">
             <h1>🚨 PLANTÃO URGENTE</h1>
-
-            <h2>
-            CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA NAS EMPRESAS LISTADAS
-            </h2>
-
-            <p>
-            Equipes da autarquia iniciaram uma revisão emergencial das demonstrações financeiras.
-            O mercado aguarda os resultados da auditoria.
-            </p>
+            <h2>CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA NAS EMPRESAS LISTADAS</h2>
+            <p>Equipes da autarquia iniciaram uma revisão emergencial das demonstrações financeiras.
+            O mercado aguarda os resultados da auditoria.</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # sai do plantão (evita rerun interferindo)
-        st.session_state["fase_final"] = "rodada"
-        st.session_state["ultima_atualizacao_midia"] = time.time()
+        # Registrar notícia do plantão no histórico (se ainda não estiver)
+        html_noticia = gerar_manchete_dinamica(estado, 4)
+        if html_noticia not in estado["historico_noticias"]:
+            estado["historico_noticias"].append(html_noticia)
+            salvar_estado(estado)
 
+        # Não resetar fase_final aqui — o Gerenciador controla a saída do plantão
+        st.session_state["ultima_atualizacao_midia"] = time.time()
         st.stop()
 
-    # ─────────────────────────────
     # 📰 NOTÍCIAS
-    # ─────────────────────────────
     elif estado.get("historico_noticias"):
-
         for n_html in reversed(estado["historico_noticias"]):
             st.html(n_html)
-
     else:
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    # ─────────────────────────────
     # 🔁 AUTO-REFRESH (SÓ FORA DO PLANTÃO)
-    # ─────────────────────────────
     now = time.time()
-
     if "ultima_atualizacao_midia" not in st.session_state:
         st.session_state["ultima_atualizacao_midia"] = now
 
@@ -853,6 +821,9 @@ elif perfil == "📰 Mídia (Notícias)":
         st.session_state["ultima_atualizacao_midia"] = now
         st.rerun()
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TELAS DAS EMPRESAS
+# ──────────────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -865,11 +836,8 @@ elif perfil in EMPRESA_MAP:
 
     st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
-    # ─────────────────────────────
     # 🚨 CVM (EVENTO GLOBAL - NÃO É RODADA)
-    # ─────────────────────────────
     if st.session_state.get("evento_cvm"):
-
         st.markdown("""
         <div style="
             background-color:#1e1e1e;
@@ -883,45 +851,40 @@ elif perfil in EMPRESA_MAP:
             <h3>Fiscalização extraordinária em análise...</h3>
         </div>
         """, unsafe_allow_html=True)
+        st.stop()
+
+    # 🏁 FIM DE JOGO (controle por estado, não por rodada)
+    if estado.get("jogo_finalizado"):
+        st.markdown("""
+        <div style="
+            background-color:#1e1e1e;
+            color:white;
+            padding:60px;
+            border-radius:15px;
+            text-align:center;
+            margin-top:80px;
+        ">
+            <h1>🏁 FIM DE JOGO</h1>
+            <h2>RESULTADO FINAL CONSOLIDADO</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("🔄 Reiniciar jogo"):
+            estado["rodada_atual"] = 1
+            estado["jogo_finalizado"] = False
+            estado["resultado_liberado_todos"] = False
+
+            for emp in estado["dados_empresas"]:
+                for r in [1, 2, 3, 4]:
+                    estado["dados_empresas"][emp].pop(f"voto_r{r}", None)
+                    estado["dados_empresas"][emp].pop(f"tempo_voto_r{r}", None)
+
+            salvar_estado(estado)
+            st.rerun()
 
         st.stop()
 
-    # ─────────────────────────────
-# 🏁 FIM DE JOGO (controle por estado, não por rodada
-    # ─────────────────────────────
-if estado.get("jogo_finalizado"):
-
-    st.markdown("""
-    <div style="
-        background-color:#1e1e1e;
-        color:white;
-        padding:60px;
-        border-radius:15px;
-        text-align:center;
-        margin-top:80px;
-    ">
-        <h1>🏁 FIM DE JOGO</h1>
-        <h2>RESULTADO FINAL CONSOLIDADO</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.button("🔄 Reiniciar jogo"):
-        estado["rodada_atual"] = 1
-        estado["jogo_finalizado"] = False
-        estado["resultado_liberado_todos"] = False
-
-        for emp in estado["dados_empresas"]:
-            for r in [1, 2, 3, 4]:
-                estado["dados_empresas"][emp].pop(f"voto_r{r}", None)
-                estado["dados_empresas"][emp].pop(f"tempo_voto_r{r}", None)
-
-        salvar_estado(estado)
-        st.rerun()
-
-    st.stop()
-    # ─────────────────────────────
     # 🔁 FLUXO NORMAL (RODADAS 1–4)
-    # ─────────────────────────────
     votos_ate_agora = {
         "r1": d.get("voto_r1"),
         "r2": d.get("voto_r2"),
@@ -931,13 +894,12 @@ if estado.get("jogo_finalizado"):
     dre_parcial = calcular_dre_dinamico(votos_ate_agora)
     pecld_m = dre_parcial["pecld_dinamica"] / 1_000_000.0
 
-    # ───────────── TIMER ─────────────
+    # TIMER
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
 
     if ts_inicio and rodada <= 3:
         restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-
         if restante_i > 240:
             cor_t, bg_t, brd_t = "#1b5e20", "#e8f5e9", "#66bb6a"
         elif restante_i > 60:
@@ -960,123 +922,81 @@ if estado.get("jogo_finalizado"):
         </div>
         """, unsafe_allow_html=True)
 
-    # ───────────── BOTÕES ─────────────
+    # BOTÕES
     btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
-
     with btn_a0:
         if st.button("📋 Rodada", use_container_width=True):
             st.session_state["pagina_atual"] = perfil
             st.rerun()
-
     with btn_a1:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
-
     with btn_a2:
         if st.button("📰 Mídia", use_container_width=True):
             st.session_state["telao_origem_empresa"] = perfil
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # ───────────── TABS ─────────────
+    # TABS
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
 
     with aba_voto:
-
-        # ─────────────────────────────
         # RODADAS 1–3
-        # ─────────────────────────────
         if rodada <= 3:
-
             voto_atual = d.get(f"voto_r{rodada}")
-
             if voto_atual is None:
-
                 st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
-
                 col_prob, col_dre = st.columns([1.1, 0.9], gap="large")
-
                 with col_prob:
                     if rodada == 3:
-                        st.markdown(f"""### 🚨 RODADA 3 — PECLD""")
+                        st.markdown("### 🚨 RODADA 3 — PECLD")
                     elif rodada in NARRATIVAS:
                         st.markdown(NARRATIVAS[rodada])
-
                 with col_dre:
                     votos_sim = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada)}
                     votos_sim[f"r{rodada}"] = "B"
                     exibir_dre(votos_sim, rodada)
-
                 st.markdown("---")
-
                 escolha = st.radio(
                     "Selecione o tratamento contábil adotado:",
                     ["A", "B", "C"],
                     format_func=lambda x: get_labels(rodada, pecld_m)[x]
                 )
-
                 if st.button("✅ Homologar Resolução", use_container_width=True):
                     d[f"voto_r{rodada}"] = escolha
                     d[f"tempo_voto_r{rodada}"] = time.time()
                     salvar_estado(estado)
                     st.rerun()
-
             else:
-
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
+                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
 
-                exibir_dre(
-                    {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)},
-                    rodada
-                )
-
-        # ─────────────────────────────
         # RODADA 4 = AUDITORIA CVM
-        # ─────────────────────────────
         elif rodada == 4:
-
             st.info("⏳ Aguardando auditoria CVM ser aplicada.")
+            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
 
-            exibir_dre(
-                {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)},
-                3
-            )
-
-        # ─────────────────────────────
         # RODADA 5 = RESULTADO FINAL
-        # ─────────────────────────────
         else:
-
             preco_abertura = d["precos"][0]
             preco_final = d["precos"][-1]
-
             variacao_total = preco_final - preco_abertura
             pct_total = (variacao_total / preco_abertura) * 100
-
             sinal_total = "▲" if variacao_total >= 0 else "▼"
-
             combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
             qtd_c = combo.count("C")
             qtd_b = combo.count("B")
-
             st.markdown("## 🏁 RELATÓRIO FINAL")
-
-            exibir_dre(
-                {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)},
-                3
-            )
-
+            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
             plotar_grafico_empresa(estado, nome_interno)
 
     with aba_jornal_aluno:
-
         if estado["historico_noticias"]:
             for n_html in estado["historico_noticias"]:
                 st.html(n_html)
         else:
             st.info("⏳ Nenhuma notícia publicada neste ciclo.")
-
     # auto redirect mídia
     _fase = estado.get("fase_final")
     if _fase in ("plantao", "veredicto") and st.session_state.get("pagina_atual") != "📰 Mídia (Notícias)":
