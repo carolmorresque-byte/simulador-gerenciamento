@@ -68,11 +68,7 @@ def carregar_estado() -> dict:
         if "sessoes_ativas" not in estado:
             estado["sessoes_ativas"] = []
         # Sempre garante senhas corretas
-        estado["senhas_empresas"] = {
-            "Empresa Alfa": "Alfa1",
-            "Empresa Beta": "Beta2",
-            "Empresa Gama": "Gama3"
-        }
+        estado["senhas_empresas"] = SENHAS_EMPRESAS.copy()
         return estado
     except (json.JSONDecodeError, OSError):
         estado = _estado_inicial()
