@@ -543,6 +543,7 @@ if perfil_sidebar != st.session_state["pagina_atual"]:
 
 perfil = st.session_state["pagina_atual"]
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -630,7 +631,6 @@ if perfil == "🏠 Início":
             if st.button("Abrir Telão Comercial", use_container_width=True):
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
