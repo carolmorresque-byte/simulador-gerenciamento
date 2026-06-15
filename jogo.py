@@ -608,30 +608,27 @@ if perfil == "🏠 Início":
             chave_real = empresa_escolhida_raw.replace("🔒 ", "")
             nome_int = EMPRESA_MAP.get(chave_real, "")
 
-    if vaga_ocupada:
-        st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
-        senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
-    
-        # 🔴 aqui você define a senha correta
-        senha_correta = SENHAS_EMPRESAS[chave_real]
-    
-        if st.button("Entrar com Senha", use_container_width=True):
-            if senha_input and senha_input == senha_correta:
-                st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-                st.session_state["pagina_atual"] = chave_real
-                st.rerun()
-            else:
-                st.error("❌ Senha incorreta.")
+if vaga_ocupada:
+    st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
+    senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
+    senha_correta = SENHAS_EMPRESAS[chave_real]
 
-            else:
-                if st.button("Entrar como representante da empresa", use_container_width=True):
-                    if nome_int not in sessoes:
-                        sessoes.append(nome_int)
-                        estado["sessoes_ativas"] = sessoes
-                        salvar_estado(estado)
-                    st.success(f"✅ Login realizado com sucesso na {chave_real}!")
-                    st.session_state["pagina_atual"] = chave_real
-                    st.rerun()
+    if st.button("Entrar com Senha", use_container_width=True):
+        if senha_input and senha_input == senha_correta:
+            st.success(f"✅ Login realizado com sucesso na {chave_real}!")
+            st.session_state["pagina_atual"] = chave_real
+            st.rerun()
+        else:
+            st.error("❌ Senha incorreta.")
+else:
+    if st.button("Entrar como representante da empresa", use_container_width=True):
+        if nome_int not in sessoes:
+            sessoes.append(nome_int)
+            estado["sessoes_ativas"] = sessoes
+            salvar_estado(estado)
+        st.success(f"✅ Login realizado com sucesso na {chave_real}!")
+        st.session_state["pagina_atual"] = chave_real
+        st.rerun()
 
     # TELÃO
     with c3:
