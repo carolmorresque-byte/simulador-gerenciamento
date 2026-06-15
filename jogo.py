@@ -1048,18 +1048,18 @@ elif perfil in EMPRESA_MAP:
                 """, unsafe_allow_html=True)
 
         # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
-
-        elif rodada == 4:
-            if not estado.get("jogo_finalizado"):
-                st.markdown(narrativa_rodada_4())
-                st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
-                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
     
-            else:
-                preco_abertura = d["precos"][0]
-                preco_final = d["precos"][-1]
-                variacao_total = preco_final - preco_abertura
-                pct_total = (variacao_total / preco_abertura) * 100
+                elif rodada == 4:
+                    if not estado.get("jogo_finalizado"):
+                        st.markdown(narrativa_rodada_4())
+                        st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
+                        exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+        
+                    else:
+                        preco_abertura = d["precos"][0]
+                        preco_final = d["precos"][-1]
+                        variacao_total = preco_final - preco_abertura
+                        pct_total = (variacao_total / preco_abertura) * 100
 
                 st.markdown("## 🏁 RELATÓRIO FINAL")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
