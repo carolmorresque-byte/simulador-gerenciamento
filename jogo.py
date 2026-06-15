@@ -557,9 +557,7 @@ perfil = st.session_state["pagina_atual"]
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────
-# GERENCIADOR
-# ─────────────────────────────
+
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
     st.title("🎛️ Painel Gerenciador")
