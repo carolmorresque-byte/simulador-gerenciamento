@@ -180,6 +180,17 @@ def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
     return LABELS_R1
 
 # Narrativas iniciais
+# Narrativas iniciais
+
+def narrativa_rodada_1() -> str:
+    return """### 📰 RODADA 1: O RISCO SACADO
+
+**Cenário:** A companhia enfrenta pressão dos bancos e precisa decidir como registrar o risco sacado.
+O mercado observa atentamente se a empresa vai assumir como dívida financeira ou maquiar como fornecedor.
+
+**Sua missão:** Definir o tratamento contábil para o risco sacado e proteger os covenants da empresa.
+"""
+
 def narrativa_rodada_2(cmv_base: float, impacto_cambio: float) -> str:
     cmv_fmt = f"R$ {abs(cmv_base)/1_000_000:.0f}M".replace(",", ".")
     impacto_fmt = f"R$ {impacto_cambio/1_000_000:.0f}M".replace(",", ".")
@@ -191,7 +202,26 @@ def narrativa_rodada_2(cmv_base: float, impacto_cambio: float) -> str:
 *   **Problema Logístico:** A retenção fiscal na alfândega gerou multas de armazenagem.
 *   **Vendas Travadas:** O repasse dos custos paralisou as vendas e encalhou o estoque.
 
-**Sua missão:** Definir a manobra orçamentária para mitigar os efeitos da crise cambial."""
+**Sua missão:** Definir a manobra orçamentária para mitigar os efeitos da crise cambial.
+"""
+
+def narrativa_rodada_3() -> str:
+    return """### 📰 RODADA 3: A CRISE DOS RECEBÍVEIS
+
+**Cenário:** A inadimplência disparou e a empresa precisa decidir como tratar os recebíveis.
+O mercado aguarda se haverá reconhecimento imediato, securitização ou diferimento técnico.
+
+**Sua missão:** Escolher a estratégia para lidar com a inadimplência e preservar os indicadores financeiros.
+"""
+
+def narrativa_rodada_4() -> str:
+    return """### 📰 RODADA 4: AUDITORIA FINAL DA CVM
+
+**Cenário:** Após três exercícios de manobras contábeis, a CVM instaurou auditoria extraordinária.
+O mercado aguarda o veredito final sobre a conduta das empresas.
+
+**Sua missão:** Aguardar a apuração e verificar o impacto das escolhas anteriores na reputação e nos preços finais.
+"""
 
 
 # ---------------------------------------------#
@@ -993,24 +1023,35 @@ elif perfil in EMPRESA_MAP:
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
 
     with aba_voto:
-        # RODADAS 1–3
-        if rodada <= 3:
-            voto_atual = d.get(f"voto_r{rodada}")
-            if voto_atual is None:
-                st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
-                escolha = st.radio(
-                    "Selecione o tratamento contábil adotado:",
-                    ["A", "B", "C"],
-                    format_func=lambda x: get_labels(rodada, pecld_m)[x]
-                )
-                if st.button("✅ Homologar Resolução", use_container_width=True):
-                    d[f"voto_r{rodada}"] = escolha
-                    d[f"tempo_voto_r{rodada}"] = time.time()
-                    salvar_estado(estado)
-                    st.rerun()
-            else:
-                st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
-                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
+        # Narrativa da rodada
+        if rodada == 1:
+            st.markdown(narrativa_rodada_1())
+        elif rodada == 2:
+            cmv_base = -16_500_000_000.0
+            impacto_cambio = -300_000_000.0
+            st.markdown(narrativa_rodada_2(cmv_base, impacto_cambio))
+        elif rodada == 3:
+            st.markdown(narrativa_rodada_3())
+        elif rodada == 4:
+            st.markdown(narrativa_rodada_4())
+    
+        # Depois da narrativa vêm as opções de voto
+        voto_atual = d.get(f"voto_r{rodada}")
+        if voto_atual is None:
+            escolha = st.radio(
+                "Selecione o tratamento contábil adotado:",
+                ["A", "B", "C"],
+                format_func=lambda x: get_labels(rodada)[x]
+            )
+            if st.button("✅ Homologar Resolução", use_container_width=True):
+                d[f"voto_r{rodada}"] = escolha
+                d[f"tempo_voto_r{rodada}"] = time.time()
+                salvar_estado(estado)
+            st.rerun()
+    else:
+        st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
+        exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
+
 
             # Mensagem após apuração
             if estado.get(f"apurado_r{rodada}", False):
@@ -1022,11 +1063,13 @@ elif perfil in EMPRESA_MAP:
                 """, unsafe_allow_html=True)
 
         # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
+
         elif rodada == 4:
             if not estado.get("jogo_finalizado"):
-                st.markdown("### 🚨 Auditoria CVM em andamento")
+                st.markdown(narrativa_rodada_4())
                 st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+    
             else:
                 preco_abertura = d["precos"][0]
                 preco_final = d["precos"][-1]
