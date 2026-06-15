@@ -1033,9 +1033,9 @@ elif perfil in EMPRESA_MAP:
                 d[f"tempo_voto_r{rodada}"] = time.time()
                 salvar_estado(estado)
             st.rerun()
-    else:
-        st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
-        exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
+        else:
+            st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
+            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
 
 
             # Mensagem após apuração
