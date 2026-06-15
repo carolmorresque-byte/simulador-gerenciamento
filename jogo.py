@@ -39,11 +39,7 @@ def _estado_inicial() -> dict:
         "sessoes_ativas": [],
         "fase_final": None,          # None | "suspense" | "plantao" | "veredicto"
         "ts_suspense": None,         # timestamp quando suspense começou
-        "senhas_empresas": {
-            "Empresa Alfa": "Alfa1",
-            "Empresa Beta": "Beta2",
-            "Empresa Gama": "Gama3"
-        },
+        "senhas_empresas": SENHAS_EMPRESAS.copy(),
         "dados_empresas": {
             nome: {
                 "precos": [20.0],
