@@ -531,9 +531,31 @@ def plotar_grafico_geral(estado: dict):
     ax.grid(color="#333", linestyle="--", alpha=0.5)
     st.pyplot(fig); plt.close(fig)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Navegação
+# ─────────────────────────────────────────────────────────────────────────────
+if "pagina_atual" not in st.session_state:
+    st.session_state["pagina_atual"] = "🏠 Início"
+
+perfis_navegacao = [
+    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
+    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
+]
+perfil_sidebar = st.sidebar.selectbox(
+    "Navegação Lateral:", perfis_navegacao,
+    index=perfis_navegacao.index(st.session_state["pagina_atual"]),
+)
+if perfil_sidebar != st.session_state["pagina_atual"]:
+    st.session_state["pagina_atual"] = perfil_sidebar
+    st.rerun()
+    
+# 🔴 aqui você precisa definir perfil
+perfil = st.session_state["pagina_atual"]
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
 # ─────────────────────────────────────────────────────────────────────────────
+
 if perfil == "🏠 Início":
     estado = carregar_estado()
     sessoes = estado.get("sessoes_ativas", [])
@@ -611,27 +633,6 @@ if perfil == "🏠 Início":
             if st.button("Abrir Telão Comercial", use_container_width=True):
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 8. Navegação
-# ─────────────────────────────────────────────────────────────────────────────
-if "pagina_atual" not in st.session_state:
-    st.session_state["pagina_atual"] = "🏠 Início"
-
-perfis_navegacao = [
-    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
-    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
-]
-perfil_sidebar = st.sidebar.selectbox(
-    "Navegação Lateral:", perfis_navegacao,
-    index=perfis_navegacao.index(st.session_state["pagina_atual"]),
-)
-if perfil_sidebar != st.session_state["pagina_atual"]:
-    st.session_state["pagina_atual"] = perfil_sidebar
-    st.rerun()
-
-perfil = st.session_state["pagina_atual"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
