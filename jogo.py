@@ -1055,11 +1055,11 @@ elif perfil in EMPRESA_MAP:
                         st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
                         exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
         
-                    else:
-                        preco_abertura = d["precos"][0]
-                        preco_final = d["precos"][-1]
-                        variacao_total = preco_final - preco_abertura
-                        pct_total = (variacao_total / preco_abertura) * 100
+                 else:
+                    preco_abertura = d["precos"][0]
+                    preco_final = d["precos"][-1]
+                    variacao_total = preco_final - preco_abertura
+                    pct_total = (variacao_total / preco_abertura) * 100
 
                 st.markdown("## 🏁 RELATÓRIO FINAL")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
