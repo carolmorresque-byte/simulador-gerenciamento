@@ -553,14 +553,6 @@ perfil = st.session_state["pagina_atual"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SENHAS FIXAS
-# ─────────────────────────────────────────────────────────────────────────────
-SENHAS_EMPRESAS = {
-    "α - Empresa Alfa": "Alfa1",
-    "β - Empresa Beta": "Beta2",
-    "γ - Empresa Gama": "Gama3",
-    "🎛️ Painel Gerenciador": "G10"
-}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
