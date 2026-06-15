@@ -5,21 +5,17 @@ import time
 import json
 import os
 import fcntl
-import streamlit as st
 from streamlit.components.v1 import html
 
-import json
-import os
-import fcntl
-import streamlit as st
 st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 🔴 ADICIONA ISSO LOGO AQUI
+# 🔴 Controle da rodada no session_state
 if "rodada" not in st.session_state:
     st.session_state["rodada"] = 1
+
 # Oculta o botão de recolher a sidebar
 st.markdown("""
 <style>
@@ -29,8 +25,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Arquivo de estado
 STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
+
+# Empresas participantes
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
+
+# Estado inicial do jogo
 def _estado_inicial() -> dict:
     return {
         "rodada_atual": 1,
@@ -38,18 +39,25 @@ def _estado_inicial() -> dict:
         "sessoes_ativas": [],
         "fase_final": None,          # None | "suspense" | "plantao" | "veredicto"
         "ts_suspense": None,         # timestamp quando suspense começou
-        "senhas_empresas": {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"},
+        "senhas_empresas": {
+            "Empresa Alfa": "alfa",
+            "Empresa Beta": "beta",
+            "Empresa Gama": "gama"
+        },
         "dados_empresas": {
             nome: {
                 "precos": [20.0],
                 "voto_r1": None, "voto_r2": None, "voto_r3": None, "voto_r4": None,
                 "tempo_voto_r1": None, "tempo_voto_r2": None, "tempo_voto_r3": None,
-                "status": "Operando", "noticia_r4": "", "score_gr": 0,
+                "status": "Operando",
+                "noticia_r4": "",   # 🔴 já incluído para manchete final
+                "score_gr": 0,
             }
             for nome in EMPRESAS
         },
     }
 
+# Funções de estado
 def carregar_estado() -> dict:
     if not os.path.exists(STATE_FILE):
         estado = _estado_inicial()
@@ -63,8 +71,12 @@ def carregar_estado() -> dict:
         estado = json.loads(conteudo)
         if "sessoes_ativas" not in estado:
             estado["sessoes_ativas"] = []
-        # Sempre garante senhas corretas (sobrescreve estado antigo)
-        estado["senhas_empresas"] = {"Empresa Alfa": "alfa", "Empresa Beta": "beta", "Empresa Gama": "gama"}
+        # Sempre garante senhas corretas
+        estado["senhas_empresas"] = {
+            "Empresa Alfa": "alfa",
+            "Empresa Beta": "beta",
+            "Empresa Gama": "gama"
+        }
         return estado
     except (json.JSONDecodeError, OSError):
         estado = _estado_inicial()
@@ -81,19 +93,20 @@ def resetar_estado() -> None:
     if os.path.exists(STATE_FILE):
         os.remove(STATE_FILE)
     carregar_estado()
-
 EMPRESA_MAP = {
     "α - Empresa Alfa": "Empresa Alfa",
     "β - Empresa Beta": "Empresa Beta",
     "γ - Empresa Gama": "Empresa Gama",
 }
 
+# Impactos de preço por rodada
 IMPACTOS = {
     1: {"A": 0.75, "B": 0.95, "C": 1.05},
     2: {"A": 0.40, "B": 0.82, "C": 1.143},
     3: {"A": 0.30, "B": 0.60, "C": 1.10},
 }
 
+# Labels da Rodada 1
 LABELS_R1 = {
     "A": """Opção A — Lançar em Passivo Financeiro
 
@@ -113,6 +126,8 @@ Registra o risco sacado no Passivo Financeiro, mas a diretoria revisa e reduz a 
 
 Resultado: O EBITDA sobe para R$ 1.050M por conta do ganho operacional na PDD, amortecendo os juros no Resultado Financeiro (-R$ 310M). O Lucro Líquido sobe para R$ 740M e o covenant de alavancagem é mitigado pelo aumento do denominador (EBITDA maior).""",
 }
+
+# Labels da Rodada 2
 LABELS_R2 = {
     "A": """Opção A — Assumir a Perda Cambial Imediata
 
@@ -131,12 +146,35 @@ Resultado: O EBITDA é poupado do impacto imediato, pois os custos adicionais fi
 Registra descontos e incentivos verbais futuros de 24 meses acordados com os fabricantes internacionais como receita imediata no exercício corrente.
 
 Resultado: A linha de receita recebe uma injeção artificial de R$ 80M, inflando diretamente o Lucro Bruto e fazendo o EBITDA saltar, camuflando a crise do dólar perante auditorias e bancos credores.""",
+LABELS_R3 = {
+    "A": """Opção A — Lançar PECLD
+
+Registra o calote real na DRE conforme o CPC 48 (IFRS 9).
+
+Efeito: A conta de provisões é reduzida integralmente. O EBITDA desaba e reflete a inadimplência real do mercado.""",
+
+    "B": """Opção B — Securitização via FIDC com Deságio
+
+Transfere a carteira de recebíveis inadimplentes para um fundo. Aloca R$ 50M de prejuízo no Resultado Financeiro, blindando o EBITDA operacional.
+
+Efeito: A perda vai para abaixo da linha operacional, salvando o indicador de eficiência e preservando os covenants.""",
+
+    "C": """Opção C — Diferimento Técnico de Perdas e Linearização de Receitas
+
+Ajusta temporariamente o reconhecimento das perdas e antecipa receita de R$ 80M.
+
+Efeito: Receita inflada artificialmente, covenants preservados, risco empurrado para ciclos futuros.""",
+}
 }
 
+
+
+# Labels da Rodada 3 (dinâmico)
 def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
     if rodada == 1: return LABELS_R1
     if rodada == 2: return LABELS_R2
-    if rodada == 3:
+    if rodada == 3: return LABELS_R3
+    if rodada == 4
         pecld_fmt = f"R$ {pecld_m:,.0f}M".replace(",", ".")
         return {
             "A": f"""Opção A — Lançar PECLD
@@ -159,6 +197,7 @@ Efeito: A linha de receita é expandida artificialmente (Receita += R$ 80M). O f
         }
     return LABELS_R1
 
+# Narrativas iniciais
 NARRATIVAS = {
     1: """### 🏭 RODADA 1: RISCO SACADO E COVENANTS FINANCEIROS
 **Cenário:** A empresa enfrenta pressões de liquidez e, para manter suas operações, utilizou uma estrutura de risco sacado com o Banco Épsilon. Essa operação antecipa o recebimento para fornecedores estratégicos e estende o prazo de pagamento da companhia (com juros de R$ 10MM), evitando o desabastecimento.
@@ -168,6 +207,7 @@ O principal problema é o impacto nos covenants financeiros:
 *   **O Risco:** Se o risco sacado for reclassificado de passivo comercial para dívida financeira, o índice salta para 4,2x. Isso causará o vencimento antecipado das dívidas e travará novos créditos.
 
 **Sua missão:** Definir a classificação contábil dessa operação, ponderando a realidade técnica contra o risco de quebra de contrato e o conflito de interesses na remuneração.""",
+
     2: """### 📰 RODADA 2: A CRISE DO DÓLAR E OS CONTRATOS DE IMPORTAÇÃO
 
 **Cenário:** A companhia enfrenta uma severa crise de margem operacional. A ausência de proteção cambial (*hedge*) expôs a operação diretamente à volatilidade internacional, agravada por gargalos logísticos.
@@ -177,9 +217,24 @@ O principal problema é o impacto nos covenants financeiros:
 *   **Vendas Travadas:** A tentativa de repassar os custos paralisou as vendas e encalhou o estoque, disparando o risco de obsolescência tecnológica.
 
 A diretoria se reúne em caráter de urgência para definir a manobra orçamentária.""",
+
+    3: """### RODADA 3: INADIMPLÊNCIA E RECEBÍVEIS
+
+**Cenário:** A carteira de recebíveis da companhia entrou em colapso. A inadimplência disparou e os bancos exigem medidas urgentes.
+
+*   **Carteira de Risco:** 30% da receita está inadimplente, representando R$ 6 bilhões.
+*   **PECLD Dinâmica:** A provisão para calotes chega a R$ 80
+*   **Pressão dos Credores:** Os covenants de eficiência e liquidez estão em risco imediato.
+
+**Sua missão:** Definir como tratar os recebíveis podres e se maquiar ou não os relatórios para preservar a confiança do mercado.""",
 }
 
+
+
+
+# ---------------------------------------------#
 def calcular_dre_dinamico(votos: dict) -> dict:
+    # Valores iniciais da DRE
     receita     = 20_000_000_000.0
     cmv         = -16_500_000_000.0
     pdd         = -150_000_000.0
@@ -187,34 +242,69 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     outras_desp = -2_200_000_000.0
     juros       = -300_000_000.0
 
+    score_gr = 0  # agora usamos score_gr para alinhar com o estado inicial
+
+    # Rodada 1
     v1 = votos.get("r1")
-    if v1 == "A": juros = -310_000_000.0
-    elif v1 == "C": pdd = -100_000_000.0
+    if v1 == "A":
+        juros = -310_000_000.0
+        score_gr += 0
+    elif v1 == "B":
+        outras_desp -= 200_000_000.0   # accruals discricionários
+        score_gr += 2
+    elif v1 == "C":
+        pdd = -100_000_000.0           # fraude
+        score_gr += 3
 
+    # Rodada 2
     v2 = votos.get("r2")
-    if v2 == "A": cmv -= 30_000_000.0
-    elif v2 == "B": depreciacao += 20_000_000.0
+    if v2 == "A":
+        cmv -= 30_000_000.0
+        score_gr += 0
+    elif v2 == "B":
+        depreciacao += 20_000_000.0
+        score_gr += 2
+    elif v2 == "C":
+        pdd -= 50_000_000.0
+        score_gr += 3
 
+    # Rodada 3
+    v3 = votos.get("r3")
     carteira_recebiveis = receita * 0.30
     pecld_dinamica = carteira_recebiveis * 0.12
 
-    v3 = votos.get("r3")
-    if v3 == "A": pdd -= pecld_dinamica
-    elif v3 == "B": juros -= 50_000_000.0
-    elif v3 == "C": receita += 80_000_000.0
+    if v3 == "A":
+        # OPÇÃO A: Lançar PECLD (não discricionário)
+        pdd -= pecld_dinamica
+        score_gr += 0
+    elif v3 == "B":
+        # OPÇÃO B: Securitização via FIDC (discricionário)
+        juros -= pecld_dinamica
+        score_gr += 2
+    elif v3 == "C":
+        # OPÇÃO C: Diferimento Técnico (fraude)
+        receita += pecld_dinamica
+        score_gr += 3
 
+    # Cálculos finais da DRE
     lucro_bruto = receita + cmv
-    # EBITDA não inclui depreciação (ela é deduzida depois)
-    ebitda      = lucro_bruto + pdd + outras_desp
-    # Lucro Líquido = EBITDA - Depreciação + Resultado Financeiro
-    lucro_liq   = ebitda + depreciacao + juros
+    ebitda = lucro_bruto + pdd + outras_desp
+    lucro_liq = ebitda + depreciacao + juros
 
     return {
-        "receita": receita, "cmv": abs(cmv), "lucro_bruto": lucro_bruto,
-        "pdd": abs(pdd), "depreciacao": abs(depreciacao), "outras_desp": abs(outras_desp),
-        "ebitda": ebitda, "juros": abs(juros), "lucro_liq": lucro_liq,
+        "receita": receita,
+        "cmv": cmv,
+        "lucro_bruto": lucro_bruto,
+        "pdd": pdd,
+        "depreciacao": depreciacao,
+        "outras_desp": outras_desp,
+        "ebitda": ebitda,
+        "juros": juros,
+        "lucro_liq": lucro_liq,
         "pecld_dinamica": pecld_dinamica,
+        "score_gr": score_gr,  # agora alinhado com o estado inicial
     }
+# ---------------------------------------------#
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int):
     dre = calcular_dre_dinamico(votos_empresa)
@@ -224,14 +314,14 @@ def exibir_dre(votos_empresa: dict, rodada_exibida: int):
         return f"{sinal}R$ {v:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
     linhas = [
         ("(=) Receita Bruta de Vendas",           fmt(dre["receita"]),           False),
-        ("(-) Custo das Mercadorias (CMV)",        fmt(dre["cmv"],       True),   False),
-        ("(=) Lucro Bruto Operacional",            fmt(dre["lucro_bruto"]),       True),
-        ("(-) Provisão para Calotes (PDD/PECLD)",  fmt(dre["pdd"],       True),   False),
-        ("(-) Depreciação de Lojas/Ativos",        fmt(dre["depreciacao"],True),  False),
-        ("(-) Outras Despesas Operacionais",       fmt(dre["outras_desp"],True),  False),
+        ("(-) Custo das Mercadorias (CMV)",       fmt(dre["cmv"],       True),   False),
+        ("(=) Lucro Bruto Operacional",           fmt(dre["lucro_bruto"]),       True),
+        ("(-) Provisão para Calotes (PDD/PECLD)", fmt(dre["pdd"],       True),   False),
+        ("(-) Depreciação de Lojas/Ativos",       fmt(dre["depreciacao"],True),  False),
+        ("(-) Outras Despesas Operacionais",      fmt(dre["outras_desp"],True),  False),
         ("(=) EBITDA APURADO",                    fmt(dre["ebitda"]),            True),
-        ("(-) Result. Financeiro (Dívidas/Juros)", fmt(dre["juros"],     True),   False),
-        ("(=) LUCRO LÍQUIDO DO EXERCÍCIO",         fmt(dre["lucro_liq"]),         True),
+        ("(-) Result. Financeiro (Dívidas/Juros)",fmt(dre["juros"],     True),   False),
+        ("(=) LUCRO LÍQUIDO DO EXERCÍCIO",        fmt(dre["lucro_liq"]),         True),
     ]
     rows = ""
     for i, (conta, valor, destaque) in enumerate(linhas):
@@ -243,6 +333,10 @@ def exibir_dre(votos_empresa: dict, rodada_exibida: int):
                  f"</tr>")
     st.markdown(f"<table style='width:100%;border-collapse:collapse;'>{rows}</table><br>", unsafe_allow_html=True)
 
+    # Novo: mostrar score_gr acumulado
+    st.markdown(f"**Score Ético/Discricionário acumulado:** {dre['score_gr']}")
+
+
 def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     d         = estado["dados_empresas"][empresa_nome]
     preco_ant = d["precos"][-1]
@@ -250,6 +344,7 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     if voto is None: return preco_ant
     impacto = IMPACTOS.get(rodada, {}).get(voto, 1.0)
     novo    = preco_ant * impacto
+
     tempos = [
         (n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
         for n in EMPRESAS
@@ -260,7 +355,13 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
         ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
         if ranking[0] == empresa_nome: novo += 0.10
         elif ranking[-1] == empresa_nome: novo -= 0.10
+
+    # Exemplo de ajuste: penalidade extra se score_gr for muito alto
+    if d["score_gr"] >= 6:  # muitas escolhas fraudulentas
+        novo *= 0.95  # queda adicional de 5%
+
     return round(novo, 2)
+
 
 def processar_rodada_4_consolidada(estado: dict, empresa_nome: str) -> float:
     d = estado["dados_empresas"][empresa_nome]
