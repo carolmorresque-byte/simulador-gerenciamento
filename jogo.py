@@ -531,62 +531,62 @@ def plotar_grafico_geral(estado: dict):
     ax.grid(color="#333", linestyle="--", alpha=0.5)
     st.pyplot(fig); plt.close(fig)
 
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 8. Navegação
 # ─────────────────────────────────────────────────────────────────────────────
-    if "pagina_atual" not in st.session_state:
-        st.session_state["pagina_atual"] = "🏠 Início"
-    
-    perfis_navegacao = [
-        "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
-        "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
-    ]
-    perfil_sidebar = st.sidebar.selectbox(
-        "Navegação Lateral:", perfis_navegacao,
-        index=perfis_navegacao.index(st.session_state["pagina_atual"]),
-    )
-    if perfil_sidebar != st.session_state["pagina_atual"]:
-        st.session_state["pagina_atual"] = perfil_sidebar
-        st.rerun()
-    
-    perfil = st.session_state["pagina_atual"]
+if "pagina_atual" not in st.session_state:
+    st.session_state["pagina_atual"] = "🏠 Início"
+
+perfis_navegacao = [
+    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
+    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
+]
+perfil_sidebar = st.sidebar.selectbox(
+    "Navegação Lateral:", perfis_navegacao,
+    index=perfis_navegacao.index(st.session_state["pagina_atual"]),
+)
+if perfil_sidebar != st.session_state["pagina_atual"]:
+    st.session_state["pagina_atual"] = perfil_sidebar
+    st.rerun()
+
+perfil = st.session_state["pagina_atual"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
-    elif perfil == "🎛️ Painel Gerenciador":
-        estado = carregar_estado()
-        st.title("🎛️ Painel Gerenciador")
-    
-        # Campo de senha + botão Entrar
-        senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
-        if st.button("🔑 Entrar", use_container_width=True, type="primary"):
-            if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
-                st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
-    
-                # Funções do Gerenciador
-                st.subheader("⚙️ Controle das Rodadas")
-                st.write("Você pode iniciar, pausar ou finalizar rodadas aqui.")
-    
-                if st.button("▶️ Iniciar Rodada", use_container_width=True):
-                    estado["rodada_atual"] += 1
-                    salvar_estado(estado)
-                    st.success(f"Rodada {estado['rodada_atual']} iniciada!")
-                    st.rerun()
-    
-                if st.button("⏸️ Pausar Rodada", use_container_width=True):
-                    st.info("Rodada pausada pelo Gerenciador.")
-    
-                if st.button("🏁 Finalizar Jogo", use_container_width=True):
-                    estado["jogo_finalizado"] = True
-                    salvar_estado(estado)
-                    st.success("✅ Jogo finalizado com sucesso!")
-                    st.rerun()
-            else:
-                st.error("❌ Senha incorreta. Tente novamente.")
+elif perfil == "🎛️ Painel Gerenciador":
+    estado = carregar_estado()
+    st.title("🎛️ Painel Gerenciador")
+
+    # Campo de senha + botão Entrar
+    senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
+    if st.button("🔑 Entrar", use_container_width=True, type="primary"):
+        if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
+            st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
+
+            # Funções do Gerenciador
+            st.subheader("⚙️ Controle das Rodadas")
+            st.write("Você pode iniciar, pausar ou finalizar rodadas aqui.")
+
+            if st.button("▶️ Iniciar Rodada", use_container_width=True):
+                estado["rodada_atual"] += 1
+                salvar_estado(estado)
+                st.success(f"✅ Rodada {estado['rodada_atual']} iniciada!")
+                st.rerun()
+
+            if st.button("⏸️ Pausar Rodada", use_container_width=True):
+                st.info("Rodada pausada pelo Gerenciador.")
+
+            if st.button("🏁 Finalizar Jogo", use_container_width=True):
+                estado["jogo_finalizado"] = True
+                salvar_estado(estado)
+                st.success("🏆 Jogo finalizado com sucesso!")
+                st.rerun()
+        else:
+            st.error("❌ Senha incorreta. Tente novamente.")
 
 
     rodada = estado["rodada_atual"]
@@ -797,14 +797,7 @@ if perfil == "🏠 Início":
     estado = carregar_estado()
     sessoes = estado.get("sessoes_ativas", [])
 
-    # Definição das senhas fixas
-    SENHAS_EMPRESAS = {
-        "α - Empresa Alfa": "Alfa1",
-        "β - Empresa Beta": "Beta2",
-        "γ - Empresa Gama": "Gama3",
-        "🎛️ Painel Gerenciador": "G10"
-    }
-
+ 
     st.title("🔒 Simulador de Governança")
     st.markdown("### Selecione o seu ambiente de acesso abaixo:")
 
