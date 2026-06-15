@@ -1049,8 +1049,8 @@ elif perfil in EMPRESA_MAP:
 
         # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
     
-                elif rodada == 4:
-                    if not estado.get("jogo_finalizado"):
+            elif rodada == 4:
+                if not estado.get("jogo_finalizado"):
                         st.markdown(narrativa_rodada_4())
                         st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
                         exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
