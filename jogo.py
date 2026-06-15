@@ -562,14 +562,12 @@ SENHAS_EMPRESAS = {
     "🎛️ Painel Gerenciador": "G10"
 }
 
-
 # ─────────────────────────────────────────────────────────────────────────────
-#TELA: PAINEL DO APRESENTADOR
+# TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
-
-    elif perfil == "🎛️ Painel Gerenciador":
-        estado = carregar_estado()
-        st.title("🎛️ Painel Gerenciador")
+elif perfil == "🎛️ Painel Gerenciador":
+    estado = carregar_estado()
+    st.title("🎛️ Painel Gerenciador")
 
     # Campo de senha + botão Entrar
     senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador")
@@ -597,9 +595,6 @@ SENHAS_EMPRESAS = {
                 st.rerun()
         else:
             st.error("❌ Senha incorreta. Tente novamente.")
-
-
-
 
 
     rodada = estado["rodada_atual"]
