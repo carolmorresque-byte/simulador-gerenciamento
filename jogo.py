@@ -146,26 +146,28 @@ Resultado: O EBITDA é poupado do impacto imediato, pois os custos adicionais fi
 Registra descontos e incentivos verbais futuros de 24 meses acordados com os fabricantes internacionais como receita imediata no exercício corrente.
 
 Resultado: A linha de receita recebe uma injeção artificial de R$ 80M, inflando diretamente o Lucro Bruto e fazendo o EBITDA saltar, camuflando a crise do dólar perante auditorias e bancos credores.""",
+}
+# Labels da Rodada 3
 LABELS_R3 = {
-    "A": """Opção A — Lançar PECLD
+    "A": """Opção A — Registrar Provisão (PECLD)
 
-Registra o calote real na DRE conforme o CPC 48 (IFRS 9).
+Reconhece imediatamente a inadimplência de 12% sobre a carteira de recebíveis, lançando a provisão na DRE.
 
-Efeito: A conta de provisões é reduzida integralmente. O EBITDA desaba e reflete a inadimplência real do mercado.""",
+Resultado: O EBITDA é reduzido proporcionalmente ao valor da provisão calculada (% × recebíveis). Demonstra transparência, mas expõe a fragilidade da empresa e ameaça covenants.""",
 
-    "B": """Opção B — Securitização via FIDC com Deságio
+    "B": """Opção B — Securitização via FIDC
 
-Transfere a carteira de recebíveis inadimplentes para um fundo. Aloca R$ 50M de prejuízo no Resultado Financeiro, blindando o EBITDA operacional.
+Transfere parte dos recebíveis para um fundo, recebendo liquidez imediata em troca de juros e taxas.
 
-Efeito: A perda vai para abaixo da linha operacional, salvando o indicador de eficiência e preservando os covenants.""",
+Resultado: O EBITDA é preservado, mas há um custo financeiro (ex.: ~10% do valor securitizado). Os covenants permanecem intactos, mas a empresa aumenta sua dependência de engenharia financeira.""",
 
-    "C": """Opção C — Diferimento Técnico de Perdas e Linearização de Receitas
+    "C": """Opção C — Diferimento Técnico da Perda
 
-Ajusta temporariamente o reconhecimento das perdas e antecipa receita de R$ 80M.
+Adia o reconhecimento da inadimplência, registrando apenas uma parcela mínima e mantendo a maior parte como receita futura.
 
-Efeito: Receita inflada artificialmente, covenants preservados, risco empurrado para ciclos futuros.""",
+Resultado: A linha de receita é inflada artificialmente (+% sobre recebíveis), o EBITDA sobe e os covenants são preservados. Contudo, configura maquiagem contábil e eleva o risco de fraude.""",
 }
-}
+
 
 
 
@@ -174,62 +176,22 @@ def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
     if rodada == 1: return LABELS_R1
     if rodada == 2: return LABELS_R2
     if rodada == 3: return LABELS_R3
-    if rodada == 4
-        pecld_fmt = f"R$ {pecld_m:,.0f}M".replace(",", ".")
-        return {
-            "A": f"""Opção A — Lançar PECLD
-
-Registra o calote real de {pecld_fmt} na DRE conforme o CPC 48 (IFRS 9).
-
-Efeito: A conta de provisões é reduzida integralmente (PDD -= {pecld_fmt}). O EBITDA desaba e reflete a inadimplência real do mercado de forma automática.""",
-
-            "B": """Opção B — Securitização via FIDC com Deságio
-
-Transfere a carteira de recebíveis inadimplentes para um fundo. Aloca R$ 50M de prejuízo (deságio) no Resultado Financeiro, blindando o EBITDA operacional.
-
-Efeito: A perda vai para abaixo da linha operacional (Juros -= R$ 50M), salvando o indicador de eficiência da operação e preservando os covenants.""",
-
-            "C": """Opção C — Diferimento Técnico de Perdas e Linearização de Receitas
-
-Ajusta temporariamente o reconhecimento das perdas estressadas da carteira para os exercícios subsequentes, enquanto adota o critério de receita linear antecipada para injetar R$ 80M no faturamento do período.
-
-Efeito: A linha de receita é expandida artificialmente (Receita += R$ 80M). O faturamento do Ano 3 cresce nos relatórios oficiais, recompondo a margem operacional e mantendo os covenants em conformidade com os credores, enquanto o risco de crédito é diferido para ciclos subsequentes.""",
-        }
+   
     return LABELS_R1
 
 # Narrativas iniciais
-NARRATIVAS = {
-    1: """### 🏭 RODADA 1: RISCO SACADO E COVENANTS FINANCEIROS
-**Cenário:** A empresa enfrenta pressões de liquidez e, para manter suas operações, utilizou uma estrutura de risco sacado com o Banco Épsilon. Essa operação antecipa o recebimento para fornecedores estratégicos e estende o prazo de pagamento da companhia (com juros de R$ 10MM), evitando o desabastecimento.
+def narrativa_rodada_2(cmv_base: float, impacto_cambio: float) -> str:
+    cmv_fmt = f"R$ {abs(cmv_base)/1_000_000:.0f}M".replace(",", ".")
+    impacto_fmt = f"R$ {impacto_cambio/1_000_000:.0f}M".replace(",", ".")
+    return f"""### 📰 RODADA 2: A CRISE DO DÓLAR E OS CONTRATOS DE IMPORTAÇÃO
 
-O principal problema é o impacto nos covenants financeiros:
-*   **Situação Atual:** O índice Dívida Líquida/EBITDA está em 2,9x (o limite contratual é 3,0x).
-*   **O Risco:** Se o risco sacado for reclassificado de passivo comercial para dívida financeira, o índice salta para 4,2x. Isso causará o vencimento antecipado das dívidas e travará novos créditos.
+**Cenário:** A companhia enfrenta uma severa crise de margem operacional. A ausência de proteção cambial expôs a operação diretamente à volatilidade internacional.
 
-**Sua missão:** Definir a classificação contábil dessa operação, ponderando a realidade técnica contra o risco de quebra de contrato e o conflito de interesses na remuneração.""",
+*   **Estouro no Custo de Aquisição (CMV):** O custo de importação subiu para {cmv_fmt}, impacto de **-{impacto_fmt}**.
+*   **Problema Logístico:** A retenção fiscal na alfândega gerou multas de armazenagem.
+*   **Vendas Travadas:** O repasse dos custos paralisou as vendas e encalhou o estoque.
 
-    2: """### 📰 RODADA 2: A CRISE DO DÓLAR E OS CONTRATOS DE IMPORTAÇÃO
-
-**Cenário:** A companhia enfrenta uma severa crise de margem operacional. A ausência de proteção cambial (*hedge*) expôs a operação diretamente à volatilidade internacional, agravada por gargalos logísticos.
-
-*   **Estouro no Custo de Aquisição (CMV):** A alta do dólar (de R$ 5,00 para R$ 6,50) elevou o custo de importação de 200 mil smartphones de R$ 100MM para R$ 130MM — impacto de **-R$ 30MM no CMV**.
-*   **Problema Logístico:** A retenção fiscal na alfândega por 45 dias extras gerou pesadas multas de armazenagem (*demurrage*), inflando as despesas operacionais.
-*   **Vendas Travadas:** A tentativa de repassar os custos paralisou as vendas e encalhou o estoque, disparando o risco de obsolescência tecnológica.
-
-A diretoria se reúne em caráter de urgência para definir a manobra orçamentária.""",
-
-    3: """### RODADA 3: INADIMPLÊNCIA E RECEBÍVEIS
-
-**Cenário:** A carteira de recebíveis da companhia entrou em colapso. A inadimplência disparou e os bancos exigem medidas urgentes.
-
-*   **Carteira de Risco:** 30% da receita está inadimplente, representando R$ 6 bilhões.
-*   **PECLD Dinâmica:** A provisão para calotes chega a R$ 80
-*   **Pressão dos Credores:** Os covenants de eficiência e liquidez estão em risco imediato.
-
-**Sua missão:** Definir como tratar os recebíveis podres e se maquiar ou não os relatórios para preservar a confiança do mercado.""",
-}
-
-
+**Sua missão:** Definir a manobra orçamentária para mitigar os efeitos da crise cambial."""
 
 
 # ---------------------------------------------#
@@ -1036,10 +998,14 @@ elif perfil in EMPRESA_MAP:
                 st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
                 col_prob, col_dre = st.columns([1.1, 0.9], gap="large")
                 with col_prob:
-                    if rodada == 3:
-                        st.markdown("### 🚨 RODADA 3 — PECLD")
-                    elif rodada in NARRATIVAS:
-                        st.markdown(NARRATIVAS[rodada])
+                    if rodada == 1:
+                        st.markdown(narrativa_rodada_1())
+                    elif rodada == 2:
+                        st.markdown(narrativa_rodada_2(cmv, 30_000_000.0))
+                    elif rodada == 3:
+                        st.markdown(narrativa_rodada_3(receita))
+
+
                 with col_dre:
                     votos_sim = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada)}
                     votos_sim[f"r{rodada}"] = "B"
