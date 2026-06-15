@@ -645,7 +645,7 @@ elif perfil == "🎛️ Painel Gerenciador":
                 st.success("🏆 Premiação dos acionistas já aplicada.")
     
             # Avançar rodada
-            if rodada < 3:
+            if rodada <= 3:
     
                 if st.button(
                     f"▶️ Avançar para Rodada {rodada + 1}",
@@ -657,40 +657,31 @@ elif perfil == "🎛️ Painel Gerenciador":
     
                     salvar_estado(estado)
                     st.rerun()
+            elif rodada == 4:
+            st.markdown("## 🚨 Plantão CVM — Auditoria Final")
     
-            elif rodada == 3:
-                if st.button(
-                    "🎬 Ver Resultado Final das Ações",
-                    use_container_width=True,
-                    type="primary"
-                ):
-            
-                    estado["fase_final"] = "plantao"
-                    estado["ts_plantao"] = time.time()
-                    estado["rodada_atual"] = 4
-            
-                    salvar_estado(estado)
-            
-                    st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                    st.rerun()
-            if st.session_state.get("evento_cvm") and not estado.get("jogo_finalizado"):
-                if st.button("🔨 Aplicar Penalidade CVM e Encerrar Jogo", use_container_width=True, type="primary"):
-                    for emp in EMPRESAS:
-                        processar_rodada_4_consolidada(estado, emp)
-                        estado["dados_empresas"][emp]["status"] = "Auditada"
-                    html_noticia = gerar_manchete_dinamica(estado, 4)
-                    estado["historico_noticias"].append(html_noticia)
-                    estado["jogo_finalizado"] = True
-                    salvar_estado(estado)
-                    st.success("Auditoria concluída!")
-                    st.rerun()
-            
-            if estado.get("jogo_finalizado"):
-                st.markdown("### 🏁 Fim de Jogo")
-                if st.button("🔄 Reiniciar jogo", use_container_width=True):
-                    resetar_estado()
-                    st.session_state["pagina_atual"] = "🏠 Início"
-                    st.rerun()
+            if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
+                html_noticia = gerar_manchete_dinamica(estado, 4)
+                estado["historico_noticias"].append(html_noticia)
+                salvar_estado(estado)
+                st.success("✅ Plantão CVM disparado! Mídia liberada.")
+                st.rerun()
+        
+            if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
+                for emp in EMPRESAS:
+                    processar_rodada_4_consolidada(estado, emp)
+                    estado["dados_empresas"][emp]["noticia_r4"] = f"📢 Auditoria CVM concluiu: {emp} sob investigação."
+                salvar_estado(estado)
+                st.success("✅ Auditoria concluída! Resultados finais liberados.")
+                st.rerun()
+        
+            st.divider()
+            if st.button("♻️ Resetar Simulação", use_container_width=True):
+                resetar_estado()
+                st.success("✅ Simulação resetada. Pronto para novo jogo.")
+                st.rerun()
+
+          
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
@@ -838,9 +829,9 @@ elif perfil == "📰 Mídia (Notícias)":
             margin-bottom:20px;
         ">
             <h1>🚨 PLANTÃO URGENTE</h1>
-            <h2>CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA NAS EMPRESAS LISTADAS</h2>
-            <p>Equipes da autarquia iniciaram uma revisão emergencial das demonstrações financeiras.
-            O mercado aguarda os resultados da auditoria.</p>
+            <h2>CVM INICIA FISCALIZAÇÃO  NAS EMPRESAS LISTADAS</h2>
+            <p> Responsáveis iniciaram uma revisão emergencial. Sem mais detalhes.
+            O mercado aguarda os resultados da fiscalização.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1027,9 +1018,11 @@ elif perfil in EMPRESA_MAP:
 
         # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
         elif rodada == 4 or estado.get("jogo_finalizado"):
+        elif rodada == 4 or estado.get("jogo_finalizado"):
             if not estado.get("jogo_finalizado"):
                 # Antes da auditoria: apenas aguardando
-                st.info("⏳ Aguardando auditoria CVM ser aplicada.")
+                st.markdown("### 🚨 Auditoria CVM em andamento")
+                st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
             else:
                 # Após auditoria: relatório final + gráfico
@@ -1046,6 +1039,12 @@ elif perfil in EMPRESA_MAP:
                 st.markdown("## 🏁 RELATÓRIO FINAL")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
                 plotar_grafico_empresa(estado, nome_interno)
+        
+                noticia_final = d.get("noticia_r4", "")
+                if noticia_final:
+                    st.success("✅ Resultado final liberado!")
+                    st.markdown(noticia_final)
+
 
 
     with aba_jornal_aluno:
