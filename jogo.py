@@ -31,6 +31,16 @@ STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
 # Empresas participantes
 EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SENHAS FIXAS
+# ─────────────────────────────────────────────────────────────────────────────
+SENHAS_EMPRESAS = {
+    "α - Empresa Alfa": "Alfa1",
+    "β - Empresa Beta": "Beta2",
+    "γ - Empresa Gama": "Gama3",
+    "🎛️ Painel Gerenciador": "G10"
+}
+
 # Estado inicial do jogo
 def _estado_inicial() -> dict:
     return {
@@ -160,16 +170,6 @@ Adia o reconhecimento da inadimplência, registrando apenas uma parcela mínima 
 Resultado: A linha de receita é inflada artificialmente (+% sobre recebíveis), o EBITDA sobe e os covenants são preservados. Contudo, configura maquiagem contábil e eleva o risco de fraude.""",
 }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SENHAS FIXAS
-# ─────────────────────────────────────────────────────────────────────────────
-SENHAS_EMPRESAS = {
-    "α - Empresa Alfa": "Alfa1",
-    "β - Empresa Beta": "Beta2",
-    "γ - Empresa Gama": "Gama3",
-    "🎛️ Painel Gerenciador": "G10"
-}
 
 # Labels da Rodada 3 (dinâmico)
 def get_labels(rodada: int, pecld_m: float = 200.0) -> dict:
@@ -552,15 +552,21 @@ if perfil_sidebar != st.session_state["pagina_atual"]:
 perfil = st.session_state["pagina_atual"]
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SENHAS FIXAS
+# ─────────────────────────────────────────────────────────────────────────────
+SENHAS_EMPRESAS = {
+    "α - Empresa Alfa": "Alfa1",
+    "β - Empresa Beta": "Beta2",
+    "γ - Empresa Gama": "Gama3",
+    "🎛️ Painel Gerenciador": "G10"
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR
+#TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR
-# ─────────────────────────────────────────────────────────────────────────────
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
     st.title("🎛️ Painel Gerenciador")
@@ -571,11 +577,10 @@ elif perfil == "🎛️ Painel Gerenciador":
         if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
             st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
 
-            # Aqui você libera as funções do Gerenciador
+            # Funções do Gerenciador
             st.subheader("⚙️ Controle das Rodadas")
             st.write("Você pode iniciar, pausar ou finalizar rodadas aqui.")
 
-            # Exemplo de botões de controle
             if st.button("▶️ Iniciar Rodada", use_container_width=True):
                 estado["rodada_atual"] += 1
                 salvar_estado(estado)
@@ -590,9 +595,9 @@ elif perfil == "🎛️ Painel Gerenciador":
                 salvar_estado(estado)
                 st.success("✅ Jogo finalizado com sucesso!")
                 st.rerun()
-
         else:
             st.error("❌ Senha incorreta. Tente novamente.")
+
 
 
 
