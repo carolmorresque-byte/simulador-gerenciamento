@@ -582,8 +582,6 @@ if perfil == "🏠 Início":
                     st.rerun()
                 else:
                     st.error("❌ Senha incorreta.")
-
-    # EMPRESAS
 # EMPRESAS
     with c2:
         with st.container(border=True):
@@ -609,7 +607,7 @@ if perfil == "🏠 Início":
             chave_real = empresa_escolhida_raw.replace("🔒 ", "")
             nome_int = EMPRESA_MAP.get(chave_real, "")
     
-            # 🔴 senha correta definida aqui, dentro do mesmo escopo
+            # 🔴 senha correta definida aqui
             senha_correta = SENHAS_EMPRESAS[chave_real]
     
             if vaga_ocupada:
@@ -632,6 +630,7 @@ if perfil == "🏠 Início":
                     st.success(f"✅ Login realizado com sucesso na {chave_real}!")
                     st.session_state["pagina_atual"] = chave_real
                     st.rerun()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
