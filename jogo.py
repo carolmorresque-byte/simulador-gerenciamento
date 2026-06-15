@@ -967,9 +967,6 @@ elif perfil in EMPRESA_MAP:
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # Mensagem inicial
-    st.info("✅ Acessaram a Estação de Trabalho")
-
     # 🚨 CVM (EVENTO GLOBAL)
     if st.session_state.get("evento_cvm"):
         st.markdown("<h1>🚨 AUDITORIA CVM EM ANDAMENTO</h1>", unsafe_allow_html=True)
@@ -990,62 +987,63 @@ elif perfil in EMPRESA_MAP:
             st.rerun()
         st.stop()
 
-    # Campo de senha
+    # Campo de senha + botão Entrar
     senha = st.text_input("Digite a senha:", type="password")
-    if senha == "1234":   # ajuste conforme sua lógica
-        st.success("Acesso liberado!")
+    if st.button("🔑 Entrar", use_container_width=True):
+        if senha == "1234":   # ajuste conforme sua lógica
+            st.success("✅ Login realizado com sucesso! Acessaram a Estação de Trabalho.")
 
-        # 🔁 FLUXO NORMAL (RODADAS 1–4)
-        votos_ate_agora = {f"r{i}": d.get(f"voto_r{i}") for i in range(1, 4)}
-        dre_parcial = calcular_dre_dinamico(votos_ate_agora)
+            # 🔁 FLUXO NORMAL (RODADAS 1–4)
+            votos_ate_agora = {f"r{i}": d.get(f"voto_r{i}") for i in range(1, 4)}
+            dre_parcial = calcular_dre_dinamico(votos_ate_agora)
 
-        # TIMER
-        chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
-        ts_inicio = estado.get(chave_timer) if chave_timer else None
-        if ts_inicio and rodada <= 3:
-            restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-            st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
+            # TIMER
+            chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+            ts_inicio = estado.get(chave_timer) if chave_timer else None
+            if ts_inicio and rodada <= 3:
+                restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+                st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
 
-        # TABS
-        aba_voto, aba_jornal = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
+            # TABS
+            aba_voto, aba_jornal = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
 
-        with aba_voto:
-            # Narrativa
-            if rodada == 1:
-                st.markdown(narrativa_rodada_1())
-            elif rodada == 2:
-                st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
-            elif rodada == 3:
-                st.markdown(narrativa_rodada_3())
-            elif rodada == 4:
-                st.markdown(narrativa_rodada_4())
+            with aba_voto:
+                # Narrativa
+                if rodada == 1:
+                    st.markdown(narrativa_rodada_1())
+                elif rodada == 2:
+                    st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
+                elif rodada == 3:
+                    st.markdown(narrativa_rodada_3())
+                elif rodada == 4:
+                    st.markdown(narrativa_rodada_4())
 
-            # Voto
-            voto_atual = d.get(f"voto_r{rodada}")
-            if voto_atual is None:
-                escolha = st.radio("Selecione o tratamento contábil:", ["A","B","C"],
-                                   format_func=lambda x: get_labels(rodada)[x])
-                if st.button("✅ Homologar Resolução", use_container_width=True):
-                    d[f"voto_r{rodada}"] = escolha
-                    d[f"tempo_voto_r{rodada}"] = time.time()
-                    salvar_estado(estado)
-                    st.rerun()
-            else:
-                st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
-                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada+1)}, rodada)
+                # Voto
+                voto_atual = d.get(f"voto_r{rodada}")
+                if voto_atual is None:
+                    escolha = st.radio("Selecione o tratamento contábil:", ["A","B","C"],
+                                       format_func=lambda x: get_labels(rodada)[x])
+                    if st.button("✅ Homologar Resolução", use_container_width=True):
+                        d[f"voto_r{rodada}"] = escolha
+                        d[f"tempo_voto_r{rodada}"] = time.time()
+                        salvar_estado(estado)
+                        st.rerun()
+                else:
+                    st.success(f"📌 Estratégia Adotada: {get_labels(rodada)[voto_atual]}")
+                    exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada+1)}, rodada)
 
-                if estado.get(f"apurado_r{rodada}", False):
-                    st.info(f"📢 Resultado da Apuração — Exercício {rodada}")
+                    if estado.get(f"apurado_r{rodada}", False):
+                        st.info(f"📢 Resultado da Apuração — Exercício {rodada}")
 
-        with aba_jornal:
-            if estado["historico_noticias"]:
-                for n_html in estado["historico_noticias"]:
-                    st.markdown(n_html, unsafe_allow_html=True)
-            else:
-                st.info("⏳ Nenhuma notícia publicada neste ciclo.")
+            with aba_jornal:
+                if estado["historico_noticias"]:
+                    for n_html in estado["historico_noticias"]:
+                        st.markdown(n_html, unsafe_allow_html=True)
+                else:
+                    st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    else:
-        st.warning("Informe a senha para liberar a rodada.")
+        else:
+            st.error("❌ Senha incorreta. Tente novamente.")
 
     # 🔁 Auto redirect para Mídia
     _fase = estado.get("fase_final")
@@ -1055,4 +1053,6 @@ elif perfil in EMPRESA_MAP:
 
     # 🔁 Auto-refresh
     time.sleep(6)
+    st.rerun()
+
     st.rerun()
