@@ -612,7 +612,7 @@ if perfil == "🏠 Início":
                     else:
                         st.error("❌ Senha incorreta.")
             else:
-                if st.button("Entrar como empresario", use_container_width=True):
+                if st.button("Entrar como representante da empresa", use_container_width=True):
                     if nome_int not in sessoes:
                         sessoes.append(nome_int)
                         estado["sessoes_ativas"] = sessoes
@@ -995,13 +995,61 @@ elif perfil in EMPRESA_MAP:
         """, unsafe_allow_html=True)
 
     # BOTÕES
-    btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
-    with btn_a0:
-        botao_nav("📋 Rodada", perfil)   # aqui o destino é o próprio perfil da empresa
-    with btn_a1:
-        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
-    with btn_a2:
-        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+    # ─────────────────────────────
+    # EMPRESA ALFA
+    # ─────────────────────────────
+    elif perfil == "α - Empresa Alfa":
+        estado = carregar_estado()
+        st.title("α - Empresa Alfa")
+    
+        # Navegação superior
+        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+        with nav1:
+            botao_nav("📋 Rodada", "α - Empresa Alfa")
+        with nav2:
+            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+        with nav3:
+            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+    
+        # aqui segue a lógica da Alfa (senha, narrativa, votos...)
+    
+    # ─────────────────────────────
+    # EMPRESA BETA
+    # ─────────────────────────────
+    elif perfil == "β - Empresa Beta":
+        estado = carregar_estado()
+        st.title("β - Empresa Beta")
+    
+        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+        with nav1:
+            botao_nav("📋 Rodada", "β - Empresa Beta")
+        with nav2:
+            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+        with nav3:
+            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+    
+        # lógica da Beta...
+    
+    # ─────────────────────────────
+    # EMPRESA GAMA
+    # ─────────────────────────────
+    elif perfil == "γ - Empresa Gama":
+        estado = carregar_estado()
+        st.title("γ - Empresa Gama")
+    
+        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+        with nav1:
+            botao_nav("📋 Rodada", "γ - Empresa Gama")
+        with nav2:
+            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+        with nav3:
+            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+    
+        # lógica da Gama...
+
+
+
+
 
 
     # TABS
