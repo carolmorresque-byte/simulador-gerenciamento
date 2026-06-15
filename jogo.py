@@ -223,6 +223,13 @@ O mercado aguarda o veredito final sobre a conduta das empresas.
 **Sua missão:** Aguardar a apuração e verificar o impacto das escolhas anteriores na reputação e nos preços finais.
 """
 
+# ---------------------------------------------#
+def botao_nav(label: str, pagina_destino: str):
+    pagina = st.session_state.get("pagina_atual")
+    if st.button(label, use_container_width=True,
+                 type="primary" if pagina == pagina_destino else "secondary"):
+        st.session_state["pagina_atual"] = pagina_destino
+        st.rerun()
 
 # ---------------------------------------------#
 def calcular_dre_dinamico(votos: dict) -> dict:
@@ -621,9 +628,7 @@ if perfil == "🏠 Início":
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: PAINEL DO APRESENTADOR
-# ─────────────────────────────────────────────────────────────────────────────
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
@@ -633,19 +638,13 @@ elif perfil == "🎛️ Painel Gerenciador":
 
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-            st.rerun()
+        botao_nav("📋 Rodada", "🎛️ Painel Gerenciador")
     with nav2:
-        if st.button("📈 Telão", use_container_width=True, type="primary"):
-            st.session_state["telao_origem_empresa"] = "🎛️ Painel Gerenciador"
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
     with nav3:
-        if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["telao_origem_empresa"] = "🎛️ Painel Gerenciador"
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
+        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+
+
 
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
@@ -763,9 +762,7 @@ elif perfil == "🎛️ Painel Gerenciador":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-# TELA: TELÃO
-# ─────────────────────────────────────────────────────────────────────────────
+
 elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     fase = estado.get("fase_final")
@@ -845,24 +842,18 @@ elif perfil == "📰 Mídia (Notícias)":
     # ─────────────────────────────
     # BOTÕES SUPERIORES
     # ─────────────────────────────
-    _m0, _m1, _m2, _ = st.columns([1, 1, 1, 3])
+elif perfil == "📰 Mídia (Notícias)":
+    estado = carregar_estado()
+    st.title("📰 GC News — Central de Notícias")
 
-    with _m0:
-        _orig = st.session_state.get("telao_origem_empresa", "🎛️ Painel Gerenciador")
-        if not _orig or _orig == "📰 Mídia (Notícias)":
-            _orig = "🎛️ Painel Gerenciador"
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        botao_nav("📋 Rodada", "🎛️ Painel Gerenciador")
+    with nav2:
+        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+    with nav3:
+        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
 
-        if st.button("📋 Rodada", use_container_width=True, key="m_rodada"):
-            st.session_state["pagina_atual"] = _orig
-            st.rerun()
-
-    with _m1:
-        if st.button("📈 Telão", use_container_width=True, type="primary", key="m_telao"):
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
-
-    with _m2:
-        st.button("📰 Mídia", use_container_width=True, disabled=True, key="m_midia")
 
     # ─────────────────────────────
     # LÓGICA DE FASE
@@ -1006,18 +997,12 @@ elif perfil in EMPRESA_MAP:
     # BOTÕES
     btn_a0, btn_a1, btn_a2, _ = st.columns([1, 1, 1, 3])
     with btn_a0:
-        if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = perfil
-            st.rerun()
+        botao_nav("📋 Rodada", perfil)   # aqui o destino é o próprio perfil da empresa
     with btn_a1:
-        if st.button("📈 Telão", use_container_width=True, type="primary"):
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
     with btn_a2:
-        if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["telao_origem_empresa"] = perfil
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
+        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+
 
     # TABS
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
