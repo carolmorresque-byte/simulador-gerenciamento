@@ -224,12 +224,6 @@ O mercado aguarda o veredito final sobre a conduta das empresas.
 """
 
 # ---------------------------------------------#
-def botao_nav(label: str, pagina_destino: str):
-    pagina = st.session_state.get("pagina_atual")
-    if st.button(label, use_container_width=True,
-                 type="primary" if pagina == pagina_destino else "secondary"):
-        st.session_state["pagina_atual"] = pagina_destino
-        st.rerun()
 
 # ---------------------------------------------#
 def calcular_dre_dinamico(votos: dict) -> dict:
@@ -632,17 +626,26 @@ if perfil == "🏠 Início":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO APRESENTADOR
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────
+# GERENCIADOR
+# ─────────────────────────────
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
-    st.title("🎛️ Painel do Gerenciador")
+    st.title("🎛️ Painel Gerenciador")
 
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        botao_nav("📋 Rodada", "🎛️ Painel Gerenciador")
+        if st.button("📋 Rodada", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+            st.rerun()
     with nav2:
-        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+        if st.button("📈 Telão", use_container_width=True):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
     with nav3:
-        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
 
 
@@ -767,6 +770,26 @@ elif perfil == "📈 Telão (Bolsa)":
     estado = carregar_estado()
     fase = estado.get("fase_final")
 
+
+    # ─────────────────────────────
+elif perfil == "📈 Telão (Bolsa)":
+    estado = carregar_estado()
+    st.title("📈 Telão Comercial")
+
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        if st.button("📋 Rodada", use_container_width=True):
+            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+            st.rerun()
+    with nav2:
+        if st.button("📈 Telão", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
+    with nav3:
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
+
     # ── PLOT TWIST: Suspense (30s) → Plantão → Veredito ──────────────────────
     if fase == "suspense":
         ts = estado.get("ts_suspense", time.time())
@@ -848,11 +871,17 @@ elif perfil == "📰 Mídia (Notícias)":
 
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        botao_nav("📋 Rodada", "🎛️ Painel Gerenciador")
+        if st.button("📋 Rodada", use_container_width=True):
+            st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+            st.rerun()
     with nav2:
-        botao_nav("📈 Telão", "📈 Telão (Bolsa)")
+        if st.button("📈 Telão", use_container_width=True):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
     with nav3:
-        botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
+        if st.button("📰 Mídia", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
 
     # ─────────────────────────────
@@ -995,62 +1024,74 @@ elif perfil in EMPRESA_MAP:
         """, unsafe_allow_html=True)
 
     # BOTÕES
-    # ─────────────────────────────
-    # EMPRESA ALFA
-    # ─────────────────────────────
-    elif perfil == "α - Empresa Alfa":
-        estado = carregar_estado()
-        st.title("α - Empresa Alfa")
-    
-        # Navegação superior
-        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-        with nav1:
-            botao_nav("📋 Rodada", "α - Empresa Alfa")
-        with nav2:
-            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
-        with nav3:
-            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
-    
-        # aqui segue a lógica da Alfa (senha, narrativa, votos...)
-    
-    # ─────────────────────────────
-    # EMPRESA BETA
-    # ─────────────────────────────
-    elif perfil == "β - Empresa Beta":
-        estado = carregar_estado()
-        st.title("β - Empresa Beta")
-    
-        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-        with nav1:
-            botao_nav("📋 Rodada", "β - Empresa Beta")
-        with nav2:
-            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
-        with nav3:
-            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
-    
-        # lógica da Beta...
-    
-    # ─────────────────────────────
-    # EMPRESA GAMA
-    # ─────────────────────────────
-    elif perfil == "γ - Empresa Gama":
-        estado = carregar_estado()
-        st.title("γ - Empresa Gama")
-    
-        nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-        with nav1:
-            botao_nav("📋 Rodada", "γ - Empresa Gama")
-        with nav2:
-            botao_nav("📈 Telão", "📈 Telão (Bolsa)")
-        with nav3:
-            botao_nav("📰 Mídia", "📰 Mídia (Notícias)")
-    
-        # lógica da Gama...
+# ─────────────────────────────
+# EMPRESA ALFA
+# ─────────────────────────────
+elif perfil == "α - Empresa Alfa":
+    estado = carregar_estado()
+    st.title("α - Empresa Alfa")
 
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        if st.button("📋 Rodada", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "α - Empresa Alfa"
+            st.rerun()
+    with nav2:
+        if st.button("📈 Telão", use_container_width=True):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
+    with nav3:
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
+    # campo de senha + lógica da Alfa...
 
+# ─────────────────────────────
+# EMPRESA BETA
+# ─────────────────────────────
+elif perfil == "β - Empresa Beta":
+    estado = carregar_estado()
+    st.title("β - Empresa Beta")
 
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        if st.button("📋 Rodada", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "β - Empresa Beta"
+            st.rerun()
+    with nav2:
+        if st.button("📈 Telão", use_container_width=True):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
+    with nav3:
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
 
+    # lógica da Beta...
+
+# ─────────────────────────────
+# EMPRESA GAMA
+# ─────────────────────────────
+elif perfil == "γ - Empresa Gama":
+    estado = carregar_estado()
+    st.title("γ - Empresa Gama")
+
+    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
+    with nav1:
+        if st.button("📋 Rodada", use_container_width=True, type="primary"):
+            st.session_state["pagina_atual"] = "γ - Empresa Gama"
+            st.rerun()
+    with nav2:
+        if st.button("📈 Telão", use_container_width=True):
+            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+            st.rerun()
+    with nav3:
+        if st.button("📰 Mídia", use_container_width=True):
+            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
+            st.rerun()
+
+    # lógica da Gama...
 
     # TABS
     aba_voto, aba_jornal_aluno = st.tabs(["🗳️ Tomada de Decisão", "📰 Jornal & Mural Coletivo"])
