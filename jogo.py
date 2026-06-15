@@ -558,24 +558,38 @@ if perfil == "🏠 Início":
     estado = carregar_estado()
     sessoes = estado.get("sessoes_ativas", [])
 
+    # Definição das senhas fixas
+    SENHAS_EMPRESAS = {
+        "α - Empresa Alfa": "Alfa1",
+        "β - Empresa Beta": "Beta2",
+        "γ - Empresa Gama": "Gama3",
+        "🎛️ Painel Gerenciador": "G10"
+    }
+
     st.title("🔒 Simulador de Governança")
     st.markdown("### Selecione o seu ambiente de acesso abaixo:")
 
     c1, c2, c3 = st.columns(3)
+
+    # GERENCIADOR
     with c1:
         with st.container(border=True):
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
+            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-                st.rerun()
+                if senha_g == SENHAS_EMPRESAS["🎛️ Painel Gerenciador"]:
+                    st.success("✅ Login realizado com sucesso no Painel Gerenciador!")
+                    st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+                    st.rerun()
+                else:
+                    st.error("❌ Senha incorreta.")
 
+    # EMPRESAS
     with c2:
         with st.container(border=True):
             st.markdown("### 🏢 Empresas ")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-
-            senhas_emp = estado.get("senhas_empresas", {})
 
             # Monta opções — vaga livre ou ocupada (com 🔒)
             opcoes_livres = []
@@ -598,9 +612,11 @@ if perfil == "🏠 Início":
 
             if vaga_ocupada:
                 st.warning(f"🔒 Vaga ocupada. Se você é da **{chave_real}**, digite sua senha para entrar.")
-                senha_input = st.text_input("Senha da sua empresa:", type="password", key="senha_reentrada")
+                senha_input = st.text_input("Senha da sua empresa:", type="password", key=f"senha_{nome_int}")
                 if st.button("Entrar com Senha", use_container_width=True):
-                    if senha_input and senha_input == senhas_emp.get(nome_int):
+                    senha_correta = SENHAS_EMPRESAS.get(chave_real)
+                    if senha_input and senha_input == senha_correta:
+                        st.success(f"✅ Login realizado com sucesso na {chave_real}!")
                         st.session_state["pagina_atual"] = chave_real
                         st.rerun()
                     else:
@@ -611,9 +627,11 @@ if perfil == "🏠 Início":
                         sessoes.append(nome_int)
                         estado["sessoes_ativas"] = sessoes
                         salvar_estado(estado)
+                    st.success(f"✅ Login realizado com sucesso na {chave_real}!")
                     st.session_state["pagina_atual"] = chave_real
                     st.rerun()
 
+    # TELÃO
     with c3:
         with st.container(border=True):
             st.markdown("### 📈 Projeção / Telão")
