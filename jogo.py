@@ -563,7 +563,7 @@ if perfil == "🏠 Início":
 
     with c2:
         with st.container(border=True):
-            st.markdown("### 🏢 Empresas / Alunos")
+            st.markdown("### 🏢 Empresas ")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
 
             senhas_emp = estado.get("senhas_empresas", {})
@@ -597,7 +597,7 @@ if perfil == "🏠 Início":
                     else:
                         st.error("❌ Senha incorreta.")
             else:
-                if st.button("Entrar como Aluno", use_container_width=True):
+                if st.button("Entrar como empresario", use_container_width=True):
                     if nome_int not in sessoes:
                         sessoes.append(nome_int)
                         estado["sessoes_ativas"] = sessoes
@@ -937,6 +937,9 @@ elif perfil == "📰 Mídia (Notícias)":
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# TELAS DAS EMPRESAS
+# ─────────────────────────────────────────────────────────────────────────────
 elif perfil in EMPRESA_MAP:
 
     estado = carregar_estado()
@@ -949,31 +952,19 @@ elif perfil in EMPRESA_MAP:
     # 🚨 CVM (EVENTO GLOBAL - NÃO É RODADA)
     if st.session_state.get("evento_cvm"):
         st.markdown("""
-        <div style="
-            background-color:#1e1e1e;
-            color:white;
-            padding:60px;
-            border-radius:15px;
-            text-align:center;
-            margin-top:80px;
-        ">
+        <div style="background-color:#1e1e1e;color:white;padding:60px;border-radius:15px;
+                    text-align:center;margin-top:80px;">
             <h1>🚨 AUDITORIA CVM EM ANDAMENTO</h1>
             <h3>Fiscalização extraordinária em análise...</h3>
         </div>
         """, unsafe_allow_html=True)
         st.stop()
 
-    # 🏁 FIM DE JOGO (controle por estado, não por rodada)
+    # 🏁 FIM DE JOGO
     if estado.get("jogo_finalizado"):
         st.markdown("""
-        <div style="
-            background-color:#1e1e1e;
-            color:white;
-            padding:60px;
-            border-radius:15px;
-            text-align:center;
-            margin-top:80px;
-        ">
+        <div style="background-color:#1e1e1e;color:white;padding:60px;border-radius:15px;
+                    text-align:center;margin-top:80px;">
             <h1>🏁 FIM DE JOGO</h1>
             <h2>RESULTADO FINAL CONSOLIDADO</h2>
         </div>
@@ -1018,7 +1009,7 @@ elif perfil in EMPRESA_MAP:
             cor_t, bg_t, brd_t = "#7f0000", "#ffebee", "#c62828"
 
         st.markdown(f"""
-        <div id="timer-box" style="border:2px solid {brd_t};background:{bg_t};color:{cor_t};
+        <div style="border:2px solid {brd_t};background:{bg_t};color:{cor_t};
             border-radius:8px;padding:10px 20px;display:inline-flex;align-items:center;gap:12px;">
             <span style="font-size:22px;">⏱️</span>
             <div>
@@ -1057,21 +1048,7 @@ elif perfil in EMPRESA_MAP:
             voto_atual = d.get(f"voto_r{rodada}")
             if voto_atual is None:
                 st.markdown(f"### 📋 Deliberação Estratégica — Exercício {rodada}")
-                col_prob, col_dre = st.columns([1.1, 0.9], gap="large")
-                with col_prob:
-                    if rodada == 1:
-                        st.markdown(narrativa_rodada_1())
-                    elif rodada == 2:
-                        st.markdown(narrativa_rodada_2(cmv, 30_000_000.0))
-                    elif rodada == 3:
-                        st.markdown(narrativa_rodada_3(receita))
-
-
-                with col_dre:
-                    votos_sim = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada)}
-                    votos_sim[f"r{rodada}"] = "B"
-                    exibir_dre(votos_sim, rodada)
-                st.markdown("---")
+                # narrativa + DRE parcial
                 escolha = st.radio(
                     "Selecione o tratamento contábil adotado:",
                     ["A", "B", "C"],
@@ -1086,48 +1063,61 @@ elif perfil in EMPRESA_MAP:
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
 
+            # Mensagem após apuração
+            if estado.get(f"apurado_r{rodada}", False):
+                st.markdown(f"""
+                <div style="background-color:#c62828;color:white;padding:20px;border-radius:8px;margin-top:20px;">
+                    <h3>📢 Resultado da Apuração — Exercício {rodada}</h3>
+                    <p>Os preços foram atualizados e a mídia já publicou as manchetes desta rodada.</p>
+                </div>
+                """, unsafe_allow_html=True)
+
         # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
-        elif rodada == 4 or estado.get("jogo_finalizado"):
-        elif rodada == 4 or estado.get("jogo_finalizado"):
+        elif rodada == 4:
             if not estado.get("jogo_finalizado"):
-                # Antes da auditoria: apenas aguardando
                 st.markdown("### 🚨 Auditoria CVM em andamento")
                 st.info("A CVM instaurou investigação geral no setor. Aguarde o veredito final.")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
             else:
-                # Após auditoria: relatório final + gráfico
                 preco_abertura = d["precos"][0]
                 preco_final = d["precos"][-1]
                 variacao_total = preco_final - preco_abertura
                 pct_total = (variacao_total / preco_abertura) * 100
-                sinal_total = "▲" if variacao_total >= 0 else "▼"
-        
-                combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
-                qtd_c = combo.count("C")
-                qtd_b = combo.count("B")
-        
+
                 st.markdown("## 🏁 RELATÓRIO FINAL")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
                 plotar_grafico_empresa(estado, nome_interno)
-        
+
                 noticia_final = d.get("noticia_r4", "")
                 if noticia_final:
                     st.success("✅ Resultado final liberado!")
                     st.markdown(noticia_final)
 
+                # Carta final em quadrado amarelo
+                baixo_textoFim = d.get("texto_final", "")
+                if baixo_textoFim:
+                    st.markdown(f"""
+                    <div style="background-color:#fff3cd;color:#856404;padding:20px;border-radius:8px;
+                                margin-top:20px;border:2px solid #ffeeba;">
+                        <h3>📜 Destino dos Executivos</h3>
+                        <p>{baixo_textoFim}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
 
 
-    with aba_jornal_aluno:
+       with aba_jornal_aluno:
         if estado["historico_noticias"]:
             for n_html in estado["historico_noticias"]:
-                st.html(n_html)
+                st.markdown(n_html, unsafe_allow_html=True)
         else:
             st.info("⏳ Nenhuma notícia publicada neste ciclo.")
-    # auto redirect mídia
+
+    # 🔁 Auto redirect para Mídia se fase for plantão ou veredicto
     _fase = estado.get("fase_final")
     if _fase in ("plantao", "veredicto") and st.session_state.get("pagina_atual") != "📰 Mídia (Notícias)":
         st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
         st.rerun()
 
+    # 🔁 Auto-refresh da tela das empresas
     time.sleep(6)
     st.rerun()
