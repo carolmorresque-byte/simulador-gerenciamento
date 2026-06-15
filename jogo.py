@@ -958,24 +958,28 @@ elif perfil in EMPRESA_MAP:
                 st.success(f"📌 Estratégia Adotada: {get_labels(rodada, pecld_m)[voto_atual]}")
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada)
 
-        # RODADA 4 = AUDITORIA CVM
-        elif rodada == 4:
-            st.info("⏳ Aguardando auditoria CVM ser aplicada.")
-            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+        # RODADA 4 = AUDITORIA CVM / RESULTADO FINAL
+        elif rodada == 4 or estado.get("jogo_finalizado"):
+            if not estado.get("jogo_finalizado"):
+                # Antes da auditoria: apenas aguardando
+                st.info("⏳ Aguardando auditoria CVM ser aplicada.")
+                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+            else:
+                # Após auditoria: relatório final + gráfico
+                preco_abertura = d["precos"][0]
+                preco_final = d["precos"][-1]
+                variacao_total = preco_final - preco_abertura
+                pct_total = (variacao_total / preco_abertura) * 100
+                sinal_total = "▲" if variacao_total >= 0 else "▼"
+        
+                combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
+                qtd_c = combo.count("C")
+                qtd_b = combo.count("B")
+        
+                st.markdown("## 🏁 RELATÓRIO FINAL")
+                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
+                plotar_grafico_empresa(estado, nome_interno)
 
-        # RODADA 5 = RESULTADO FINAL
-        else:
-            preco_abertura = d["precos"][0]
-            preco_final = d["precos"][-1]
-            variacao_total = preco_final - preco_abertura
-            pct_total = (variacao_total / preco_abertura) * 100
-            sinal_total = "▲" if variacao_total >= 0 else "▼"
-            combo = [d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")]
-            qtd_c = combo.count("C")
-            qtd_b = combo.count("B")
-            st.markdown("## 🏁 RELATÓRIO FINAL")
-            exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}, 3)
-            plotar_grafico_empresa(estado, nome_interno)
 
     with aba_jornal_aluno:
         if estado["historico_noticias"]:
