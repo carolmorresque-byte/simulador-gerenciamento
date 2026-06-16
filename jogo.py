@@ -774,8 +774,6 @@ elif perfil == "🎛️ Painel Gerenciador":
 
     st.divider()
 
-    # Timer
-
 # Timer — botão de início + exibição
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
