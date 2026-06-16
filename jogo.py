@@ -474,6 +474,29 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # MANCHETES (rodadas 1-3 e plantão/veredicto R4)
 # ─────────────────────────────────────────────────────────────────────────────
+
+def gerar_manchete_plantao_cvm() -> str:
+    """Plantão CVM — fase 1 da Rodada 4 (disparado pelo Gerenciador)."""
+    return """
+    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
+        <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
+            <div style="font-size:24px;font-weight:900;letter-spacing:1px;">GC NEWS</div>
+            <div style="font-size:12px;font-weight:bold;background:rgba(255,0,0,0.5);padding:4px 8px;border-radius:4px;">🚨 AO VIVO</div>
+        </div>
+        <div style="padding:20px 15px;">
+            <div style="background-color:#b71c1c;color:#fff;padding:12px 15px;border-radius:2px;font-size:16px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
+                🚨 PLANTÃO URGENTE — CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA
+            </div>
+            <div style="margin-top:6px;border-left:4px solid #b71c1c;padding:8px 12px;background-color:#ffebee;">
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
+                    SÃO PAULO — A Comissão de Valores Mobiliários instaurou, nesta data, auditoria extraordinária
+                    em todas as companhias listadas do setor. O  mercado aguarda os resultados da fiscalização.
+                </p>
+            </div>
+        </div>
+    </div>"""
+
+
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)
        e o veredicto completo na Rodada 4."""
@@ -752,25 +775,27 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.divider()
 
     # Timer
+
+# Timer — botão de início + exibição
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
-    if ts_inicio and rodada <= 3:
+
+    if rodada <= 3 and not ts_inicio:
+        if st.button(f"⏱️ Iniciar Timer — Rodada {rodada}", use_container_width=True, type="primary"):
+            estado[chave_timer] = time.time()
+            salvar_estado(estado)
+            st.rerun()
+    elif ts_inicio and rodada <= 3:
         restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
         minutos = restante_i // 60
         segundos = restante_i % 60
 
         if restante_i >= 7 * 60:
-            cor_timer = "#2e7d32"
-            bg_timer  = "#e8f5e9"
-            emoji_timer = "🟢"
+            cor_timer, bg_timer, emoji_timer = "#2e7d32", "#e8f5e9", "🟢"
         elif restante_i >= 3 * 60:
-            cor_timer = "#f57f17"
-            bg_timer  = "#fff8e1"
-            emoji_timer = "🟡"
+            cor_timer, bg_timer, emoji_timer = "#f57f17", "#fff8e1", "🟡"
         else:
-            cor_timer = "#c62828"
-            bg_timer  = "#ffebee"
-            emoji_timer = "🔴"
+            cor_timer, bg_timer, emoji_timer = "#c62828", "#ffebee", "🔴"
 
         st.markdown(
             f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
@@ -780,6 +805,7 @@ elif perfil == "🎛️ Painel Gerenciador":
         )
 
     st.markdown("### Status de Votos")
+   
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
         d    = estado["dados_empresas"][emp]
@@ -856,8 +882,6 @@ elif perfil == "🎛️ Painel Gerenciador":
         apuracao_feita    = estado.get("apuracao_r4_feita", False)
 
         # FASE 1 — Disparar Plantão CVM
-        plantao_disparado = bool(estado.get("historico_noticias_plantao"))
-
         if not plantao_disparado:
             if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
                 html_plantao = gerar_manchete_plantao_cvm()
@@ -985,66 +1009,94 @@ elif perfil in EMPRESA_MAP:
             st.rerun()
 
     # Timer
+   
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
+
     if ts_inicio and rodada <= 3:
         restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-        st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
+        minutos = restante_i // 60
+        segundos = restante_i % 60
+
+        if restante_i >= 7 * 60:
+            cor_timer, bg_timer, emoji_timer = "#2e7d32", "#e8f5e9", "🟢"
+        elif restante_i >= 3 * 60:
+            cor_timer, bg_timer, emoji_timer = "#f57f17", "#fff8e1", "🟡"
+        else:
+            cor_timer, bg_timer, emoji_timer = "#c62828", "#ffebee", "🔴"
+
+        st.markdown(
+            f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
+            f"padding:8px 14px;color:{cor_timer};font-weight:bold;font-size:16px;display:inline-block;'>"
+            f"{emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}</div>",
+            unsafe_allow_html=True
+        )
 
     # ── RODADAS 1-3 ──────────────────────────────────────────────────────────
+
     if rodada <= 3:
-        if rodada == 1:
-            st.markdown(narrativa_rodada_1())
-        elif rodada == 2:
-            st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
-        elif rodada == 3:
-            st.markdown(narrativa_rodada_3())
-
-        voto_atual = d.get(f"voto_r{rodada}")
-        if voto_atual is None:
-            escolha = st.radio(
-                "Selecione o tratamento contábil:",
-                ["A", "B", "C"],
-                format_func=lambda x: get_labels(rodada)[x]
-            )
-            if st.button("✅ Homologar Resolução", use_container_width=True):
-                d[f"voto_r{rodada}"] = escolha
-                d[f"tempo_voto_r{rodada}"] = time.time()
-                salvar_estado(estado)
-                st.rerun()
+        if not ts_inicio:
+            # Gerenciador ainda não iniciou a rodada
+            st.markdown("""
+            <div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:16px;
+                        padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
+                        box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+                <div style="font-size:72px;margin-bottom:16px;">🔒</div>
+                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">AGUARDANDO INÍCIO</div>
+                <div style="font-size:15px;opacity:0.85;">O Gerenciador ainda não iniciou esta rodada.</div>
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
+            if rodada == 1:
+                st.markdown(narrativa_rodada_1())
+            elif rodada == 2:
+                st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
+            elif rodada == 3:
+                st.markdown(narrativa_rodada_3())
 
-            apurado = estado.get(f"apurado_r{rodada}", False)
-            if apurado:
-                # Mostra DRE apenas após apuração, SEM score
-                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
-                # Aviso de bônus/penalidade de velocidade
-                bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
-                if bonus_vel == "primeiro":
-                    st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
-                elif bonus_vel == "ultimo":
-                    st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
-                elif bonus_vel == "meio":
-                    st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
-
-                # Banner "aguarde a mídia"
-                st.markdown("""
-                <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);border-radius:12px;padding:20px 24px;margin:16px 0;text-align:center;color:#fff;">
-                    <div style="font-size:32px;margin-bottom:8px;">📰</div>
-                    <div style="font-size:18px;font-weight:bold;">Resultados apurados!</div>
-                    <div style="font-size:14px;margin-top:6px;opacity:0.9;">Acesse a aba <b>Mídia</b> para ver a cobertura completa da rodada.</div>
-                </div>
-                """, unsafe_allow_html=True)
+            voto_atual = d.get(f"voto_r{rodada}")
+            if voto_atual is None:
+                escolha = st.radio(
+                    "Selecione o tratamento contábil:",
+                    ["A", "B", "C"],
+                    format_func=lambda x: get_labels(rodada)[x]
+                )
+                if st.button("✅ Homologar Resolução", use_container_width=True):
+                    d[f"voto_r{rodada}"] = escolha
+                    d[f"tempo_voto_r{rodada}"] = time.time()
+                    salvar_estado(estado)
+                    st.rerun()
             else:
-                # Voto confirmado mas aguardando apuração
-                st.markdown("""
-                <div style="background:linear-gradient(135deg,#e65100,#bf360c);border-radius:12px;padding:24px;margin:16px 0;text-align:center;color:#fff;">
-                    <div style="font-size:48px;margin-bottom:10px;">⏳</div>
-                    <div style="font-size:20px;font-weight:bold;">Aguardando apuração...</div>
-                    <div style="font-size:14px;margin-top:8px;opacity:0.9;">Sua decisão foi registrada. Aguarde o Gerenciador apurar os resultados.</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
+
+                apurado = estado.get(f"apurado_r{rodada}", False)
+                if apurado:
+                    exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
+                    bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
+                    if bonus_vel == "primeiro":
+                        st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
+                    elif bonus_vel == "ultimo":
+                        st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
+                    elif bonus_vel == "meio":
+                        st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
+
+                    st.markdown("""
+                    <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);border-radius:12px;
+                                padding:20px 24px;margin:16px 0;text-align:center;color:#fff;">
+                        <div style="font-size:32px;margin-bottom:8px;">📰</div>
+                        <div style="font-size:18px;font-weight:bold;">Resultados apurados!</div>
+                        <div style="font-size:14px;margin-top:6px;opacity:0.9;">Acesse a aba <b>Mídia</b> para ver a cobertura completa da rodada.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown("""
+                    <div style="background:linear-gradient(135deg,#e65100,#bf360c);border-radius:12px;
+                                padding:24px;margin:16px 0;text-align:center;color:#fff;">
+                        <div style="font-size:48px;margin-bottom:10px;">⏳</div>
+                        <div style="font-size:20px;font-weight:bold;">Aguardando apuração...</div>
+                        <div style="font-size:14px;margin-top:8px;opacity:0.9;">Sua decisão foi registrada. Aguarde o Gerenciador apurar os resultados.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
     # ── RODADA 4 ──────────────────────────────────────────────────────────────
     else:
