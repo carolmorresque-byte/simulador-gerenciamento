@@ -27,6 +27,12 @@ EMPRESA_MAP = {
     "γ - Empresa Gama": "Empresa Gama",
 }
 
+SENHAS_EMPRESAS = {
+    "Empresa Alfa": "ALFA10",
+    "Empresa Beta": "BETA20",
+    "Empresa Gama": "GAMA30",
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADO INICIAL
 # ─────────────────────────────────────────────────────────────────────────────
@@ -34,8 +40,8 @@ def _estado_inicial() -> dict:
     return {
         "rodada_atual": 1,
         "historico_noticias": [],
-        "historico_noticias_plantao": [],   # notícias do plantão CVM (fase 1 da R4)
-        "historico_noticias_veredicto": [], # notícias do veredicto (fase 2 da R4)
+        "historico_noticias_plantao": [],
+        "historico_noticias_veredicto": [],
         "sessoes_ativas": [],
         "fase_final": None,
         "ts_suspense": None,
@@ -247,7 +253,6 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     }
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int, mostrar_score: bool = False):
-    """Exibe a DRE. mostrar_score=True apenas no Gerenciador."""
     dre = calcular_dre_dinamico(votos_empresa)
     st.markdown(f"### 📋 DRE Acumulada — Exercício {rodada_exibida}")
 
@@ -288,11 +293,9 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     if voto is None:
         return preco_ant
 
-    # 1) Aplica o multiplicador da rodada
     impacto = IMPACTOS.get(rodada, {}).get(voto, 1.0)
     novo    = preco_ant * impacto
 
-    # 2) Ranking de velocidade (bônus/penalidade de tempo)
     tempos = [
         (n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
         for n in EMPRESAS
@@ -310,7 +313,6 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
         else:
             d[f"bonus_velocidade_r{rodada}"] = "meio"
 
-    # 3) Penalidade por score ético alto (>= 6)
     votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
     score = calcular_dre_dinamico(votos_emp)["score_gr"]
     if score >= 6:
@@ -338,10 +340,9 @@ def processar_rodada_4_consolidada(estado: dict, empresa_nome: str) -> float:
     return novo_preco
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CARTA DO DESTINO (Rodada 4 — exibida na página da empresa após apuração)
+# CARTA DO DESTINO
 # ─────────────────────────────────────────────────────────────────────────────
 def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
-    """Retorna HTML da carta de destino da empresa na Rodada 4."""
     qtd_c = [r1, r2, r3].count("C")
     qtd_b = [r1, r2, r3].count("B")
 
@@ -373,7 +374,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     elif qtd_c == 1 and qtd_b >= 1:
         manchete = f"💸🚪 CEO E CFO DA {nome.upper()} VIRAM EX-FUNCIONÁRIOS"
         texto = (
-            f"A combinação entre ajustes por 'erro' e gerenciamento de resultados por accruals discricioários — a famosa "
+            f"A combinação entre ajustes por 'erro' e gerenciamento de resultados por accruals discricionários — a famosa "
             f"'brechinha na lei' — finalmente chegou à conta. 💸\n\n"
             f"Após pressão dos investidores, o Conselho decidiu substituir CEO e CFO 🚪👔.\n"
             f"Ambos descobriram que EBITDA ajustado não cobre honorários advocatícios ⚖️.\n"
@@ -411,7 +412,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     elif qtd_b == 1:
         manchete = f"ℹ️ {nome.upper()} — EPISÓDIO ISOLADO, VIGILÂNCIA REDOBRADA"
         texto = (
-            f"A investigação concluiu que houve apenas um episódio isolado de gerenciamento de resultados por accruals discrionários. 📚\n\n"
+            f"A investigação concluiu que houve apenas um episódio isolado de gerenciamento de resultados por accruals discricionários. 📚\n\n"
             f"CEO e CFO permaneceram nos cargos 👔.\n"
             f"Contudo, qualquer nova planilha aberta pelo financeiro agora é acompanhada por "
             f"auditoria, compliance e pelo estagiário desconfiado 👀😂.\n\n"
@@ -472,11 +473,9 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     """
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MANCHETES (rodadas 1-3 e plantão/veredicto R4)
+# MANCHETES
 # ─────────────────────────────────────────────────────────────────────────────
-
 def gerar_manchete_plantao_cvm() -> str:
-    """Plantão CVM — fase 1 da Rodada 4 (disparado pelo Gerenciador)."""
     return """
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
         <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
@@ -490,7 +489,7 @@ def gerar_manchete_plantao_cvm() -> str:
             <div style="margin-top:6px;border-left:4px solid #b71c1c;padding:8px 12px;background-color:#ffebee;">
                 <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
                     SÃO PAULO — A Comissão de Valores Mobiliários instaurou, nesta data, auditoria extraordinária
-                    em todas as companhias listadas do setor. O  mercado aguarda os resultados da fiscalização.
+                    em todas as companhias listadas do setor. O mercado aguarda os resultados da fiscalização.
                 </p>
             </div>
         </div>
@@ -498,12 +497,6 @@ def gerar_manchete_plantao_cvm() -> str:
 
 
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
-    """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)
-       e o veredicto completo na Rodada 4."""
-
-
-
-    # ── RODADAS 1-3: melhor e pior ───────────────────────────────────────────
     dados_fechamento = {}
     for nome in EMPRESAS:
         historico = estado["dados_empresas"][nome]["precos"]
@@ -560,7 +553,6 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     </div>"""
 
 def gerar_manchete_veredicto(estado: dict) -> str:
-    """Veredicto final — fase 2 da Rodada 4 (gerado após Conferir Apuração)."""
     manchetes_empresas = []
     for nome in EMPRESAS:
         d = estado["dados_empresas"][nome]
@@ -569,7 +561,6 @@ def gerar_manchete_veredicto(estado: dict) -> str:
         qtd_b = [r1, r2, r3].count("B")
         preco_final = d["precos"][-1]
 
-  
         if qtd_c == 3:
             manchete_emp = f"⛓️ PRISÃO DOS EXECUTIVOS DA {nome.upper()}!"
             texto_emp    = f"A CVM e a Polícia Federal deflagraram a Operação Excel Criativo 🚔. CEO e CFO presos preventivamente 🔗⛓️. Preço final: R$ {preco_final:.2f}."
@@ -578,16 +569,16 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             texto_emp    = f"Bloqueio cautelar dos bens dos ex-executivos 💰⚖️. CEO, CFO e Diretor de RI substituídos. Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1 and qtd_b >= 1:
             manchete_emp = f"💸 {nome.upper()} MULTADA! 🚪 CEO E CFO OS MAIS NOVOS EX-FUNCIONÁRIOS"
-            texto_emp    = f"Combinação entre fraude pontual e accruals discrionários resultou em demissão de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"Combinação entre fraude pontual e accruals discricionários resultou em demissão de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1:
             manchete_emp = f"🥲 {nome.upper()} — FRAUDE PONTUAL x ERRO? NÃO IMPORTA ...."
             texto_emp    = f"Irregularidade considerada pontual, mas o CEO foi convidado a 'buscar novos desafios' 💼. Preço final: R$ {preco_final:.2f}."
         elif qtd_b >= 2:
             manchete_emp = f"📉 {nome.upper()} — MESTRE DO PÔQUER CONTÁBIL"
-            texto_emp    = f"Sem fraude identificada, mas accruals discrionários excessivos colocam o CFO sob monitoramento permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"Sem fraude identificada, mas accruals discricionários excessivos colocam o CFO sob monitoramento permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
         elif qtd_b == 1:
-            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()} "
-            texto_emp    = f"Um episódio isolado de accruals discrionários, para um bem maior... TODOS FELIZES! Preço final: R$ {preco_final:.2f}."
+            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()}"
+            texto_emp    = f"Um episódio isolado de accruals discricionários, para um bem maior... TODOS FELIZES! Preço final: R$ {preco_final:.2f}."
         else:
             manchete_emp = f"☠️ {nome.upper()} MORREU ABRAÇADA COM A ÉTICA"
             texto_emp    = f"Transparência total, mas o mercado não perdoou as perdas reconhecidas 📉. Massacrada na Faria Lima com ação em baixa 🩸 Preço final: R$ {preco_final:.2f}."
@@ -667,7 +658,6 @@ perfis_navegacao = [
     "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
 
-# DEPOIS
 _idx_atual = perfis_navegacao.index(st.session_state["pagina_atual"]) if st.session_state["pagina_atual"] in perfis_navegacao else 0
 
 perfil_sidebar = st.sidebar.selectbox(
@@ -711,15 +701,17 @@ if perfil == "🏠 Início":
         with st.container(border=True):
             st.markdown("### 🏢 Empresas")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-            opcoes = list(EMPRESA_MAP.keys())
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-            nome_int = EMPRESA_MAP[empresa_escolhida]
+
+            sessoes_ativas_temp = estado.get("sessoes_ativas", [])
+            opcoes_display = []
+            for k, v in EMPRESA_MAP.items():
+                icone = "🔒 " if v in sessoes_ativas_temp else ""
+                opcoes_display.append(f"{icone}{k}")
+
+            empresa_display = st.selectbox("Escolha sua empresa:", opcoes_display)
+            empresa_escolhida = empresa_display.replace("🔒 ", "")
+
             if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                sessoes = estado.get("sessoes_ativas", [])
-                if nome_int not in sessoes:
-                    sessoes.append(nome_int)
-                    estado["sessoes_ativas"] = sessoes
-                    salvar_estado(estado)
                 st.session_state["empresa_origem"] = empresa_escolhida
                 st.session_state["pagina_atual"] = empresa_escolhida
                 st.rerun()
@@ -738,7 +730,6 @@ if perfil == "🏠 Início":
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
 
-    # Autenticação persistente na sessão
     if not st.session_state.get("gerenciador_autenticado", False):
         st.title("🎛️ Painel Gerenciador")
         st.markdown("### 🔑 Acesso Restrito")
@@ -755,7 +746,6 @@ elif perfil == "🎛️ Painel Gerenciador":
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
 
-    # Score geral sempre visível no gerenciador
     st.markdown("### 📊 Score Ético/Discricionário por Empresa")
     score_cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
@@ -770,11 +760,9 @@ elif perfil == "🎛️ Painel Gerenciador":
                 unsafe_allow_html=True
             )
 
-   
-
     st.divider()
 
-# Timer — botão de início + exibição
+    # Timer — botão de início + exibição
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
 
@@ -803,7 +791,6 @@ elif perfil == "🎛️ Painel Gerenciador":
         )
 
     st.markdown("### Status de Votos")
-   
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
         d    = estado["dados_empresas"][emp]
@@ -889,6 +876,7 @@ elif perfil == "🎛️ Painel Gerenciador":
                 st.rerun()
         else:
             st.success("✅ Plantão CVM já disparado.")
+
         # FASE 2 — Conferir Apuração Final
         if not apuracao_feita:
             if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
@@ -906,12 +894,13 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.divider()
 
     if st.button("♻️ Resetar Simulação", use_container_width=True):
-            resetar_estado()
-            st.session_state["gerenciador_autenticado"] = False
-            for emp in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]:
-                st.session_state.pop(f"auth_{emp}", None)
-            st.success("✅ Simulação resetada.")
-            st.rerun()
+        resetar_estado()
+        # Mantém gerenciador logado, limpa apenas empresas
+        for emp in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]:
+            st.session_state.pop(f"auth_{emp}", None)
+        st.success("✅ Simulação resetada.")
+        st.rerun()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -958,21 +947,20 @@ elif perfil == "📰 Mídia (Notícias)":
         if st.button("📰 Mídia", use_container_width=True, type="primary"):
             st.rerun()
 
-    # Veredicto final (R4 fase 2) — mostra primeiro se existir
+    # Veredicto final (R4 fase 2)
     if estado.get("historico_noticias_veredicto"):
         for n_html in reversed(estado["historico_noticias_veredicto"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
     # Plantão CVM (R4 fase 1)
-# Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
         st.markdown(gerar_manchete_plantao_cvm(), unsafe_allow_html=True)
+
     # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
-# CORRETO — time.sleep e st.rerun no nível do elif, fora de qualquer if
     if (not estado.get("historico_noticias") and
             not estado.get("historico_noticias_plantao") and
             not estado.get("historico_noticias_veredicto")):
@@ -982,7 +970,7 @@ elif perfil == "📰 Mídia (Notícias)":
     st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS — acesso livre, sem senha
+# TELAS DAS EMPRESAS
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil in EMPRESA_MAP:
     estado = carregar_estado()
@@ -994,32 +982,24 @@ elif perfil in EMPRESA_MAP:
 
     if not st.session_state.get(chave_auth, False):
 
-        # Verifica se já está ocupada por outro PC
+        # Ocupada: mostra aviso mas ainda permite login com senha
         if nome_interno in sessoes_ativas:
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,#b71c1c,#c62828);border-radius:16px;
-                        padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
+                        padding:32px;margin:24px 0;text-align:center;color:#fff;
                         box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-                <div style="font-size:72px;margin-bottom:16px;">🔒</div>
-                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">ESTAÇÃO OCUPADA</div>
-                <div style="font-size:15px;opacity:0.85;">
+                <div style="font-size:56px;margin-bottom:8px;">🔒</div>
+                <div style="font-size:20px;font-weight:900;margin-bottom:8px;">ESTAÇÃO OCUPADA</div>
+                <div style="font-size:14px;opacity:0.85;">
                     A bancada <b>{perfil}</b> já está sendo acessada em outro dispositivo.<br>
-                    Apenas um acesso simultâneo é permitido por empresa.
+                    Se você é o representante autorizado, entre com a senha abaixo.
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            st.stop()
-
-        # Tela de login
-        st.title("🔒 Acesso Restrito")
-        st.markdown(f"### Estação de Trabalho: {perfil}")
-        st.markdown("Identifique-se para acessar sua bancada corporativa.")
-
-        SENHAS_EMPRESAS = {
-            "Empresa Alfa": "ALFA10",
-            "Empresa Beta": "BETA20",
-            "Empresa Gama": "GAMA30",
-        }
+        else:
+            st.title("🔒 Acesso Restrito")
+            st.markdown(f"### Estação de Trabalho: {perfil}")
+            st.markdown("Identifique-se para acessar sua bancada corporativa.")
 
         senha_input = st.text_input("Senha da empresa:", type="password", key=f"senha_{nome_interno}")
 
@@ -1027,7 +1007,6 @@ elif perfil in EMPRESA_MAP:
             if senha_input == SENHAS_EMPRESAS.get(nome_interno, ""):
                 st.session_state[chave_auth] = True
                 st.session_state["empresa_origem"] = perfil
-                # Registra sessão ativa no estado compartilhado
                 if nome_interno not in sessoes_ativas:
                     sessoes_ativas.append(nome_interno)
                     estado["sessoes_ativas"] = sessoes_ativas
@@ -1059,7 +1038,7 @@ elif perfil in EMPRESA_MAP:
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # Timer
+    # Timer colorido
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
 
