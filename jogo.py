@@ -904,12 +904,14 @@ elif perfil == "🎛️ Painel Gerenciador":
             st.success("✅ Apuração final já realizada. Veredicto liberado na Mídia.")
 
     st.divider()
-    if st.button("♻️ Resetar Simulação", use_container_width=True):
-        resetar_estado()
-        st.session_state["gerenciador_autenticado"] = False
-        st.success("✅ Simulação resetada.")
-        st.rerun()
 
+    if st.button("♻️ Resetar Simulação", use_container_width=True):
+            resetar_estado()
+            st.session_state["gerenciador_autenticado"] = False
+            for emp in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]:
+                st.session_state.pop(f"auth_{emp}", None)
+            st.success("✅ Simulação resetada.")
+            st.rerun()
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -985,6 +987,57 @@ elif perfil == "📰 Mídia (Notícias)":
 elif perfil in EMPRESA_MAP:
     estado = carregar_estado()
     nome_interno = EMPRESA_MAP[perfil]
+
+    # ── AUTENTICAÇÃO DA EMPRESA ──────────────────────────────────────────────
+    chave_auth = f"auth_{nome_interno}"
+    sessoes_ativas = estado.get("sessoes_ativas", [])
+
+    if not st.session_state.get(chave_auth, False):
+
+        # Verifica se já está ocupada por outro PC
+        if nome_interno in sessoes_ativas:
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#b71c1c,#c62828);border-radius:16px;
+                        padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
+                        box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+                <div style="font-size:72px;margin-bottom:16px;">🔒</div>
+                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">ESTAÇÃO OCUPADA</div>
+                <div style="font-size:15px;opacity:0.85;">
+                    A bancada <b>{perfil}</b> já está sendo acessada em outro dispositivo.<br>
+                    Apenas um acesso simultâneo é permitido por empresa.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.stop()
+
+        # Tela de login
+        st.title("🔒 Acesso Restrito")
+        st.markdown(f"### Estação de Trabalho: {perfil}")
+        st.markdown("Identifique-se para acessar sua bancada corporativa.")
+
+        SENHAS_EMPRESAS = {
+            "Empresa Alfa": "ALFA10",
+            "Empresa Beta": "BETA20",
+            "Empresa Gama": "GAMA30",
+        }
+
+        senha_input = st.text_input("Senha da empresa:", type="password", key=f"senha_{nome_interno}")
+
+        if st.button("Entrar", use_container_width=True, type="primary"):
+            if senha_input == SENHAS_EMPRESAS.get(nome_interno, ""):
+                st.session_state[chave_auth] = True
+                st.session_state["empresa_origem"] = perfil
+                # Registra sessão ativa no estado compartilhado
+                if nome_interno not in sessoes_ativas:
+                    sessoes_ativas.append(nome_interno)
+                    estado["sessoes_ativas"] = sessoes_ativas
+                    salvar_estado(estado)
+                st.rerun()
+            else:
+                st.error("❌ Senha incorreta.")
+        st.stop()
+
+    # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
     d = estado["dados_empresas"][nome_interno]
     rodada = estado.get("rodada_atual", 1)
 
@@ -1007,7 +1060,6 @@ elif perfil in EMPRESA_MAP:
             st.rerun()
 
     # Timer
-   
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
 
@@ -1031,10 +1083,8 @@ elif perfil in EMPRESA_MAP:
         )
 
     # ── RODADAS 1-3 ──────────────────────────────────────────────────────────
-
     if rodada <= 3:
         if not ts_inicio:
-            # Gerenciador ainda não iniciou a rodada
             st.markdown("""
             <div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:16px;
                         padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
@@ -1101,7 +1151,6 @@ elif perfil in EMPRESA_MAP:
         apuracao_feita = estado.get("apuracao_r4_feita", False)
 
         if not apuracao_feita:
-            # Tela de espera com ampulheta animada
             st.markdown("""
             <div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:16px;padding:48px 32px;margin:24px 0;text-align:center;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
                 <div style="font-size:72px;margin-bottom:16px;animation:spin 2s linear infinite;">⏳</div>
@@ -1114,9 +1163,7 @@ elif perfil in EMPRESA_MAP:
             </style>
             """, unsafe_allow_html=True)
 
-
         else:
-            # Apuração feita — mostra resultado no quadro azul + carta do destino
             r1 = d.get("voto_r1")
             r2 = d.get("voto_r2")
             r3 = d.get("voto_r3")
@@ -1124,40 +1171,33 @@ elif perfil in EMPRESA_MAP:
             qtd_b = [r1, r2, r3].count("B")
 
             if qtd_c == 3:
-                icone_res  = "⛓️"
-                titulo_res = "OPERAÇÃO EXCEL CRIATIVO — PRISÃO DOS EXECUTIVOS!O Direito de Permanecer Calado é uma garantia fundamental que eles vão usar. "
-                texto_res  = "A CVM e a Polícia Federal deflagraram operação contra sua empresa. CEO e CFO  presos preventivamente 🔗."
-                cor_res    = "#b71c1c"
+                icone_res, cor_res = "⛓️", "#b71c1c"
+                titulo_res = "OPERAÇÃO EXCEL CRIATIVO — PRISÃO DOS EXECUTIVOS! O Direito de Permanecer Calado é uma garantia fundamental que eles vão usar."
+                texto_res  = "A CVM e a Polícia Federal deflagraram operação contra sua empresa. CEO e CFO presos preventivamente 🔗."
             elif qtd_c == 2:
-                icone_res  = "💰🚫"
+                icone_res, cor_res = "💰🚫", "#c62828"
                 titulo_res = "JUSTIÇA BLOQUEIA BENS DOS EXECUTIVOS!"
-                texto_res  = "A Justiça determinou o bloqueio cautelar dos bens dos executivos. CEO, CFO e Diretor de RI foram substituídos. Os conselheiros estão 'profundamente surpresos :O mesmo após ass'."
-                cor_res    = "#c62828"
+                texto_res  = "A Justiça determinou o bloqueio cautelar dos bens dos executivos. CEO, CFO e Diretor de RI foram substituídos. Os conselheiros estão 'profundamente surpresos'."
             elif qtd_c == 1 and qtd_b >= 1:
-                icone_res  = "💸"
+                icone_res, cor_res = "💸", "#e65100"
                 titulo_res = "CEO E CFO VIRAM EX-FUNCIONÁRIOS!"
                 texto_res  = "A CVM identificou fraude combinada com accruals. CEO e CFO foram demitidos 🚪. O LinkedIn deles foi atualizado em tempo recorde."
-                cor_res    = "#e65100"
             elif qtd_c == 1:
-                icone_res  = "🥲"
+                icone_res, cor_res = "🥲", "#f57f17"
                 titulo_res = "FRAUDE/ ERRO PONTUAL — CEO DEMITIDO!"
                 texto_res  = "Mesmo considerada pontual, a irregularidade destruiu a confiança dos investidores. CEO foi convidado a 'buscar novos desafios profissionais' 💼."
-                cor_res    = "#f57f17"
             elif qtd_b >= 2:
-                icone_res  = "📉"
+                icone_res, cor_res = "📉", "#1565c0"
                 titulo_res = "MESTRE DO PÔQUER CONTÁBIL! e VIGILÂNCIA REDOBRADA"
-                texto_res  = "Sem fraude identificada, mas o abuso de accruals  discrionário colocou o CFO sob monitoramento permanente de três auditores independentes ♠️ E do estagiário de compliance que está desconfiado 👀."
-                cor_res    = "#1565c0"
+                texto_res  = "Sem fraude identificada, mas o abuso de accruals discricionário colocou o CFO sob monitoramento permanente de três auditores independentes ♠️ e do estagiário de compliance 👀."
             elif qtd_b == 1:
-                icone_res  = "ℹ️"
+                icone_res, cor_res = "ℹ️", "#2e7d32"
                 titulo_res = "🦸‍♂️ CFO vira HERÓI/ HEROÍNA DO MERCADO!"
-                texto_res  = "Com apenas um ajuste contábil estratégico, salvou a operação de uma crise sem cruzar a linha vermelha da CVM. O que dizer? Alguns heróis usam capa!!! A empresa está salva e a gestão foi aplaudida!."
-                cor_res    = "#2e7d32"
+                texto_res  = "Com apenas um ajuste contábil estratégico, salvou a operação sem cruzar a linha vermelha da CVM. Alguns heróis usam capa!!! A empresa está salva e a gestão foi aplaudida!"
             else:
-                icone_res  = "☠️"
+                icone_res, cor_res = "☠️", "#4a148c"
                 titulo_res = "ÉTICA PRESERVADA — AÇÕES AFUNDARAM"
                 texto_res  = "Transparência total. Governança check ✅. Orgulho da professora ❤️! Os auditores aplaudiram 👏. Os investidores venderam 📉. Os bônus desapareceram 💸. A reputação sobreviveu. O preço da ação, não."
-                cor_res    = "#4a148c"
 
             st.markdown(f"""
             <div style="background:linear-gradient(135deg,{cor_res}dd,{cor_res}88);border:2px solid {cor_res};border-radius:16px;padding:32px;margin:24px 0;text-align:center;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
@@ -1169,7 +1209,6 @@ elif perfil in EMPRESA_MAP:
             </div>
             """, unsafe_allow_html=True)
 
-            # Carta do destino detalhada abaixo
             carta_html = gerar_carta_destino(nome_interno, r1, r2, r3)
             st.markdown(carta_html, unsafe_allow_html=True)
 
@@ -1178,7 +1217,6 @@ elif perfil in EMPRESA_MAP:
                 <div style="font-size:14px;">Acesse a aba <b>Mídia</b> para ver o veredicto completo de todas as empresas.</div>
             </div>
             """, unsafe_allow_html=True)
-        
 
     # Auto-refresh
     time.sleep(6)
