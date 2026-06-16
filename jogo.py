@@ -34,8 +34,8 @@ def _estado_inicial() -> dict:
     return {
         "rodada_atual": 1,
         "historico_noticias": [],
-        "historico_noticias_plantao": [],
-        "historico_noticias_veredicto": [],
+        "historico_noticias_plantao": [],   # notícias do plantão CVM (fase 1 da R4)
+        "historico_noticias_veredicto": [], # notícias do veredicto (fase 2 da R4)
         "sessoes_ativas": [],
         "fase_final": None,
         "ts_suspense": None,
@@ -247,6 +247,7 @@ def calcular_dre_dinamico(votos: dict) -> dict:
     }
 
 def exibir_dre(votos_empresa: dict, rodada_exibida: int, mostrar_score: bool = False):
+    """Exibe a DRE. mostrar_score=True apenas no Gerenciador."""
     dre = calcular_dre_dinamico(votos_empresa)
     st.markdown(f"### 📋 DRE Acumulada — Exercício {rodada_exibida}")
 
@@ -299,12 +300,8 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
         ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
         if ranking[0] == empresa_nome:
             novo += 0.10
-            estado["dados_empresas"][empresa_nome][f"bonus_velocidade_r{rodada}"] = "primeiro"
         elif ranking[-1] == empresa_nome:
             novo -= 0.10
-            estado["dados_empresas"][empresa_nome][f"bonus_velocidade_r{rodada}"] = "ultimo"
-        else:
-            estado["dados_empresas"][empresa_nome][f"bonus_velocidade_r{rodada}"] = "meio"
 
     votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
     score = calcular_dre_dinamico(votos_emp)["score_gr"]
@@ -320,21 +317,22 @@ def processar_rodada_4_consolidada(estado: dict, empresa_nome: str) -> float:
     r1, r2, r3 = d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")
     qtd_c = [r1, r2, r3].count("C")
     qtd_b = [r1, r2, r3].count("B")
-    if qtd_c == 3:                  pct = 0.70
-    elif qtd_c == 2:                pct = 0.50
+    if qtd_c == 3:              pct = 0.70
+    elif qtd_c == 2:            pct = 0.50
     elif qtd_c == 1 and qtd_b >= 1: pct = 0.45
-    elif qtd_c == 1:                pct = 0.40
-    elif qtd_b >= 2:                pct = 0.15
-    elif qtd_b == 1:                pct = 0.05
-    else:                           pct = 0.0
+    elif qtd_c == 1:            pct = 0.40
+    elif qtd_b >= 2:            pct = 0.15
+    elif qtd_b == 1:            pct = 0.05
+    else:                       pct = 0.0
     novo_preco = round(d["precos"][-1] * (1.0 - pct), 2)
     d["precos"].append(novo_preco)
     return novo_preco
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CARTA DO DESTINO
+# CARTA DO DESTINO (Rodada 4 — exibida na página da empresa após apuração)
 # ─────────────────────────────────────────────────────────────────────────────
 def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
+    """Retorna HTML da carta de destino da empresa na Rodada 4."""
     qtd_c = [r1, r2, r3].count("C")
     qtd_b = [r1, r2, r3].count("B")
 
@@ -465,9 +463,10 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     """
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MANCHETES
+# MANCHETES (rodadas 1-3 e plantão/veredicto R4)
 # ─────────────────────────────────────────────────────────────────────────────
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
+    """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)."""
     dados_fechamento = {}
     for nome in EMPRESAS:
         historico = estado["dados_empresas"][nome]["precos"]
@@ -484,95 +483,22 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     def fmt_var(valor):
         return f"+R$ {valor:.2f}" if valor >= 0 else f"-R$ {abs(valor):.2f}"
 
-    topo_manchete = ""
-    topo_texto    = ""
-    secao_baixo   = ""
-
-    if rodada_encerrada == 1:
-        if todos_empatados:
-            topo_manchete = "MAR CALMO: EMPRESAS REGISTRAM EQUILÍBRIO ABSOLUTO"
-            topo_texto    = f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}."
-        else:
-            topo_manchete  = f"MAR EM FÚRIA: {lider_nome} SURFA ONDA DE VALORIZAÇÃO E SOBE {fmt_var(lider_dados['var'])}!"
-            topo_texto     = f"SÃO PAULO — A agilidade da {lider_nome} impulsionou o papel de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
-            baixo_manchete = f"NAUFRÁGIO: {lanterna_nome} ENTRA EM REDEMOINHO E PERDE {fmt_var(lanterna_dados['var'])}"
-            baixo_texto    = f"SÃO PAULO — Investidores puniram a lentidão da {lanterna_nome}. Papel colapsou para R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
-            </div>"""
-
-    elif rodada_encerrada == 2:
-        if todos_empatados:
-            topo_manchete = "SAFETY CAR NA PISTA: GRID REPETE FECHAMENTO"
-            topo_texto    = f"SÃO PAULO — Sem ultrapassagens, os ativos congelaram em R$ {lider_dados['atual']:.2f}."
-        else:
-            topo_manchete  = f"GP DA TESOURARIA: {lider_nome} ACELERA E SALTA PARA R$ {lider_dados['atual']:.2f}!"
-            topo_texto     = f"SÃO PAULO — Com arrancada agressiva, a {lider_nome} registrou alta de {fmt_var(lider_dados['var'])}."
-            baixo_manchete = f"RODOU NA CURVA: {lanterna_nome} PERDE TRAÇÃO"
-            baixo_texto    = f"SÃO PAULO — A {lanterna_nome} viu seus papéis perderem {fmt_var(lanterna_dados['var'])}, fechando a R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
-            </div>"""
-
-    elif rodada_encerrada == 3:
-        if todos_empatados:
-            topo_manchete = "GONGADO: ÚLTIMO ROUND TERMINA EM EMPATE"
-            topo_texto    = f"SÃO PAULO — O combate contra a crise terminou sem vencedor em R$ {lider_dados['atual']:.2f}."
-        else:
-            topo_manchete  = f"NOCAUTE NA BOLSA: {lider_nome} SEGURA O CINTURÃO COM DISPARADA DE {fmt_var(lider_dados['var'])}!"
-            topo_texto     = f"SÃO PAULO — A {lider_nome} viu suas ações saltarem de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
-            baixo_manchete = f"DIRETO NO QUEIXO: {lanterna_nome} CAI À LONA"
-            baixo_texto    = f"SÃO PAULO — A {lanterna_nome} sofreu fuga de capitais. Papéis despencaram para R$ {lanterna_dados['atual']:.2f}."
-            secao_baixo    = f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{baixo_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{baixo_texto}</p>
-            </div>"""
-
-    elif rodada_encerrada == 4:
-        topo_manchete = "🚨 URGENTE: CVM FINALIZOU A INVESTIGAÇÃO NO SETOR!"
-        topo_texto    = "SÃO PAULO — A CVM finalizou a investigação e os resultados são surpreendentes."
-
-        manchetes_empresas = []
-        for nome in EMPRESAS:
-            d = estado["dados_empresas"][nome]
-            r1, r2, r3 = d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")
-            qtd_c = [r1, r2, r3].count("C")
-            qtd_b = [r1, r2, r3].count("B")
-
-            if qtd_c == 3:
-                emp_manchete = f"⛓️ Prisão dos executivos da {nome}!"
-                emp_texto    = f"A CVM e a Polícia Federal 🚓 deflagraram operação contra {nome}. Os principais dirigentes foram presos preventivamente 🔗."
-            elif qtd_c == 2:
-                emp_manchete = f"💰🚫 Justiça bloqueia bens da {nome}!"
-                emp_texto    = f"A Justiça determinou o bloqueio cautelar dos bens dos executivos da {nome}."
-            elif qtd_c == 1 and qtd_b >= 1:
-                emp_manchete = f"💸 {nome} multada e CEO + CFO demitidos!"
-                emp_texto    = f"A CVM aplicou multa milionária 💸 e tanto CEO quanto CFO foram demitidos 👔."
-            elif qtd_c == 1:
-                emp_manchete = f"🥲 {nome} — FRAUDE OU ERRO? NÃO IMPORTA..."
-                emp_texto    = f"Mesmo pontual, a fraude na {nome} gerou demissão imediata do CEO 👔."
-            elif qtd_b >= 2:
-                emp_manchete = f"📉 {nome} abusa dos accruals!"
-                emp_texto    = f"O CFO da {nome} virou mestre no pôquer contábil ♠️."
-            elif qtd_b == 1:
-                emp_manchete = f"ℹ️ {nome} alega transparência!"
-                emp_texto    = f"Houve uso de accruals em um ano, mas sem agravantes."
-            else:
-                emp_manchete = f"☠️ {nome} MORREU ABRAÇADA COM A ÉTICA!"
-                emp_texto    = f"A empresa {nome} é massacrada na Faria Lima com ação em baixa 🩸."
-
-            manchetes_empresas.append(f"""
-            <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;margin-top:14px;">{emp_manchete}</div>
-            <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{emp_texto}</p>
-            </div>""")
-
-        secao_baixo = "".join(manchetes_empresas)
+    if todos_empatados:
+        topo_manchete = f"EMPATE GERAL NA RODADA {rodada_encerrada}"
+        topo_texto    = f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}."
+        secao_baixo   = ""
+    else:
+        topo_manchete = f"{lider_nome} dispara {fmt_var(lider_dados['var'])}!"
+        topo_texto    = f"SÃO PAULO — A {lider_nome} subiu de R$ {lider_dados['anterior']:.2f} para R$ {lider_dados['atual']:.2f}."
+        baixo_manchete = f"{lanterna_nome} despenca {fmt_var(lanterna_dados['var'])}"
+        baixo_texto    = f"SÃO PAULO — A {lanterna_nome} caiu para R$ {lanterna_dados['atual']:.2f}."
+        secao_baixo = f"""
+        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;">
+            {baixo_manchete}
+        </div>
+        <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
+            <p style="font-size:13px;color:#333;margin:0;text-align:justify;">{baixo_texto}</p>
+        </div>"""
 
     return f"""
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
@@ -581,8 +507,8 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
             <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:4px;">EXERCÍCIO {rodada_encerrada}</div>
         </div>
         <div style="padding:20px 15px;">
-            <div style="background-color:#cc0000;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{topo_manchete}</div>
-            <div style="margin-top:6px;margin-bottom:12px;border-left:4px solid #cc0000;padding:8px 12px;background-color:#ffebee;">
+            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{topo_manchete}</div>
+            <div style="margin-top:6px;margin-bottom:20px;border-left:4px solid #2e7d32;padding:8px 12px;background-color:#f1f8e9;">
                 <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{topo_texto}</p>
             </div>
             {secao_baixo}
@@ -590,6 +516,7 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     </div>"""
 
 def gerar_manchete_plantao_cvm() -> str:
+    """Plantão CVM — fase 1 da Rodada 4 (disparado pelo Gerenciador)."""
     return """
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
         <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
@@ -612,6 +539,7 @@ def gerar_manchete_plantao_cvm() -> str:
     </div>"""
 
 def gerar_manchete_veredicto(estado: dict) -> str:
+    """Veredicto final — fase 2 da Rodada 4 (gerado após Conferir Apuração)."""
     manchetes_empresas = []
     for nome in EMPRESAS:
         d = estado["dados_empresas"][nome]
@@ -655,10 +583,10 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.3);padding:4px 8px;border-radius:4px;">🏁 VEREDICTO FINAL</div>
         </div>
         <div style="padding:20px 15px;">
-            <div style="background-color:#cc0000;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
-                🏁 CVM DIVULGA VEREDICTO FINAL — DESTINO DOS EXECUTIVOS
+            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
+                🏁 CVM DIVULGA VEREDITO FINAL — DESTINO DOS EXECUTIVOS
             </div>
-            <div style="margin-top:6px;margin-bottom:12px;border-left:4px solid #cc0000;padding:8px 12px;background-color:#ffebee;">
+            <div style="margin-top:6px;margin-bottom:12px;border-left:4px solid #2e7d32;padding:8px 12px;background-color:#f1f8e9;">
                 <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
                     SÃO PAULO — A CVM concluiu a auditoria extraordinária e divulgou os resultados individuais
                     de cada companhia investigada. Os mercados reagiram com volatilidade histórica.
@@ -717,6 +645,7 @@ perfis_navegacao = [
     "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
 
+# DEPOIS
 _idx_atual = perfis_navegacao.index(st.session_state["pagina_atual"]) if st.session_state["pagina_atual"] in perfis_navegacao else 0
 
 perfil_sidebar = st.sidebar.selectbox(
@@ -787,6 +716,7 @@ if perfil == "🏠 Início":
 elif perfil == "🎛️ Painel Gerenciador":
     estado = carregar_estado()
 
+    # Autenticação persistente na sessão
     if not st.session_state.get("gerenciador_autenticado", False):
         st.title("🎛️ Painel Gerenciador")
         st.markdown("### 🔑 Acesso Restrito")
@@ -803,6 +733,7 @@ elif perfil == "🎛️ Painel Gerenciador":
     rodada = estado["rodada_atual"]
     st.markdown(f"## Rodada Atual: **{rodada}**")
 
+    # Score geral sempre visível no gerenciador
     st.markdown("### 📊 Score Ético/Discricionário por Empresa")
     score_cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
@@ -819,6 +750,7 @@ elif perfil == "🎛️ Painel Gerenciador":
 
     st.divider()
 
+    # Timer
     chave_timer = f"timer_inicio_r{rodada}"
     if rodada <= 3 and not estado.get(chave_timer):
         if st.button(f"⏱️ Iniciar Rodada {rodada}", use_container_width=True, type="primary"):
@@ -903,6 +835,7 @@ elif perfil == "🎛️ Painel Gerenciador":
         plantao_disparado = bool(estado.get("historico_noticias_plantao"))
         apuracao_feita    = estado.get("apuracao_r4_feita", False)
 
+        # FASE 1 — Disparar Plantão CVM
         if not plantao_disparado:
             if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
                 html_plantao = gerar_manchete_plantao_cvm()
@@ -913,6 +846,7 @@ elif perfil == "🎛️ Painel Gerenciador":
         else:
             st.success("✅ Plantão CVM já disparado.")
 
+        # FASE 2 — Conferir Apuração Final
         if not apuracao_feita:
             if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
                 for emp in EMPRESAS:
@@ -979,14 +913,17 @@ elif perfil == "📰 Mídia (Notícias)":
         if st.button("📰 Mídia", use_container_width=True, type="primary"):
             st.rerun()
 
+    # Veredicto final (R4 fase 2) — mostra primeiro se existir
     if estado.get("historico_noticias_veredicto"):
         for n_html in reversed(estado["historico_noticias_veredicto"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
+    # Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
         for n_html in reversed(estado["historico_noticias_plantao"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
+    # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
@@ -996,11 +933,13 @@ elif perfil == "📰 Mídia (Notícias)":
             not estado.get("historico_noticias_veredicto")):
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-    time.sleep(8)
-    st.rerun()
+# DEPOIS
+        time.sleep(8)
+        st.rerun()
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS
+# TELAS DAS EMPRESAS — acesso livre, sem senha
 # ─────────────────────────────────────────────────────────────────────────────
 elif perfil in EMPRESA_MAP:
     estado = carregar_estado()
@@ -1026,35 +965,12 @@ elif perfil in EMPRESA_MAP:
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
-    # ── TIMER COLORIDO ────────────────────────────────────────────────────────
-    chave_timer  = f"timer_inicio_r{rodada}" if rodada <= 3 else None
-    ts_inicio    = estado.get(chave_timer) if chave_timer else None
+    # Timer
+    chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+    ts_inicio = estado.get(chave_timer) if chave_timer else None
     if ts_inicio and rodada <= 3:
-        restante_i   = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-        minutos_rest = restante_i // 60
-
-        if minutos_rest >= 7:
-            cor_timer   = "#2e7d32"
-            bg_timer    = "#e8f5e9"
-            emoji_timer = "🟢"
-        elif minutos_rest >= 3:
-            cor_timer   = "#f57f17"
-            bg_timer    = "#fff8e1"
-            emoji_timer = "🟡"
-        else:
-            cor_timer   = "#c62828"
-            bg_timer    = "#ffebee"
-            emoji_timer = "🔴"
-
-        st.markdown(f"""
-        <div style="background:{bg_timer};border:2px solid {cor_timer};border-radius:10px;padding:10px 20px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
-            <span style="font-size:24px;">{emoji_timer}</span>
-            <span style="font-size:20px;font-weight:900;color:{cor_timer};font-family:monospace;">
-                {restante_i//60:02d}:{restante_i%60:02d}
-            </span>
-            <span style="font-size:13px;color:{cor_timer};font-weight:600;">— Tempo restante · Rodada {rodada}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+        st.markdown(f"⏱️ Tempo restante — Rodada {rodada}: {restante_i//60:02d}:{restante_i%60:02d}")
 
     # ── RODADAS 1-3 ──────────────────────────────────────────────────────────
     if rodada <= 3:
@@ -1082,17 +998,10 @@ elif perfil in EMPRESA_MAP:
 
             apurado = estado.get(f"apurado_r{rodada}", False)
             if apurado:
-                # Bônus/penalidade de velocidade
-                bonus = d.get(f"bonus_velocidade_r{rodada}")
-                if bonus == "primeiro":
-                    st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
-                elif bonus == "ultimo":
-                    st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
-                elif bonus == "meio":
-                    st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
-
+                # Mostra DRE apenas após apuração, SEM score
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
 
+                # Banner "aguarde a mídia"
                 st.markdown("""
                 <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);border-radius:12px;padding:20px 24px;margin:16px 0;text-align:center;color:#fff;">
                     <div style="font-size:32px;margin-bottom:8px;">📰</div>
@@ -1101,6 +1010,7 @@ elif perfil in EMPRESA_MAP:
                 </div>
                 """, unsafe_allow_html=True)
             else:
+                # Voto confirmado mas aguardando apuração
                 st.markdown("""
                 <div style="background:linear-gradient(135deg,#e65100,#bf360c);border-radius:12px;padding:24px;margin:16px 0;text-align:center;color:#fff;">
                     <div style="font-size:48px;margin-bottom:10px;">⏳</div>
@@ -1111,22 +1021,13 @@ elif perfil in EMPRESA_MAP:
 
     # ── RODADA 4 ──────────────────────────────────────────────────────────────
     else:
-        apuracao_feita    = estado.get("apuracao_r4_feita", False)
-        plantao_disparado = bool(estado.get("historico_noticias_plantao"))
+        apuracao_feita = estado.get("apuracao_r4_feita", False)
 
-        if not plantao_disparado:
-            st.markdown("""
-            <div style="background:linear-gradient(135deg,#263238,#37474f);border-radius:16px;padding:48px 32px;margin:24px 0;text-align:center;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-                <div style="font-size:64px;margin-bottom:16px;">🔒</div>
-                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">AGUARDANDO PRÓXIMA FASE</div>
-                <div style="font-size:15px;opacity:0.8;">O Gerenciador irá liberar a próxima etapa em breve.</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        elif not apuracao_feita:
+        if not apuracao_feita:
+            # Tela de espera com ampulheta animada
             st.markdown("""
             <div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:16px;padding:48px 32px;margin:24px 0;text-align:center;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-                <div style="font-size:72px;margin-bottom:16px;">⏳</div>
+                <div style="font-size:72px;margin-bottom:16px;animation:spin 2s linear infinite;">⏳</div>
                 <div style="font-size:28px;font-weight:900;letter-spacing:1px;margin-bottom:12px;">AUDITORIA EM ANDAMENTO</div>
                 <div style="font-size:16px;opacity:0.85;">A CVM está analisando os demonstrativos financeiros dos últimos três exercícios.</div>
                 <div style="font-size:14px;margin-top:16px;opacity:0.7;">Aguarde o resultado...</div>
@@ -1136,7 +1037,9 @@ elif perfil in EMPRESA_MAP:
             </style>
             """, unsafe_allow_html=True)
 
+
         else:
+            # Apuração feita — mostra resultado no quadro azul + carta do destino
             r1 = d.get("voto_r1")
             r2 = d.get("voto_r2")
             r3 = d.get("voto_r3")
@@ -1189,6 +1092,7 @@ elif perfil in EMPRESA_MAP:
             </div>
             """, unsafe_allow_html=True)
 
+            # Carta do destino detalhada abaixo
             carta_html = gerar_carta_destino(nome_interno, r1, r2, r3)
             st.markdown(carta_html, unsafe_allow_html=True)
 
@@ -1197,6 +1101,8 @@ elif perfil in EMPRESA_MAP:
                 <div style="font-size:14px;">Acesse a aba <b>Mídia</b> para ver o veredicto completo de todas as empresas.</div>
             </div>
             """, unsafe_allow_html=True)
+        
 
+    # Auto-refresh
     time.sleep(6)
     st.rerun()
