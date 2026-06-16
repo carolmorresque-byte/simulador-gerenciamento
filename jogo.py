@@ -287,9 +287,12 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     voto      = d.get(f"voto_r{rodada}")
     if voto is None:
         return preco_ant
+
+    # 1) Aplica o multiplicador da rodada
     impacto = IMPACTOS.get(rodada, {}).get(voto, 1.0)
     novo    = preco_ant * impacto
 
+    # 2) Ranking de velocidade (bônus/penalidade de tempo)
     tempos = [
         (n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
         for n in EMPRESAS
@@ -300,15 +303,21 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
         ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
         if ranking[0] == empresa_nome:
             novo += 0.10
+            d[f"bonus_velocidade_r{rodada}"] = "primeiro"
         elif ranking[-1] == empresa_nome:
             novo -= 0.10
+            d[f"bonus_velocidade_r{rodada}"] = "ultimo"
+        else:
+            d[f"bonus_velocidade_r{rodada}"] = "meio"
 
+    # 3) Penalidade por score ético alto (>= 6)
     votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
     score = calcular_dre_dinamico(votos_emp)["score_gr"]
     if score >= 6:
         novo *= 0.95
 
     return round(novo, 2)
+
 
 def processar_rodada_4_consolidada(estado: dict, empresa_nome: str) -> float:
     d = estado["dados_empresas"][empresa_nome]
@@ -364,7 +373,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     elif qtd_c == 1 and qtd_b >= 1:
         manchete = f"💸🚪 CEO E CFO DA {nome.upper()} VIRAM EX-FUNCIONÁRIOS"
         texto = (
-            f"A combinação entre ajustes por 'erro' e gerenciamento de resultados — a famosa "
+            f"A combinação entre ajustes por 'erro' e gerenciamento de resultados por accruals discricioários — a famosa "
             f"'brechinha na lei' — finalmente chegou à conta. 💸\n\n"
             f"Após pressão dos investidores, o Conselho decidiu substituir CEO e CFO 🚪👔.\n"
             f"Ambos descobriram que EBITDA ajustado não cobre honorários advocatícios ⚖️.\n"
@@ -402,7 +411,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     elif qtd_b == 1:
         manchete = f"ℹ️ {nome.upper()} — EPISÓDIO ISOLADO, VIGILÂNCIA REDOBRADA"
         texto = (
-            f"A investigação concluiu que houve apenas um episódio isolado de gerenciamento de resultados. 📚\n\n"
+            f"A investigação concluiu que houve apenas um episódio isolado de gerenciamento de resultados por accruals discrionários. 📚\n\n"
             f"CEO e CFO permaneceram nos cargos 👔.\n"
             f"Contudo, qualquer nova planilha aberta pelo financeiro agora é acompanhada por "
             f"auditoria, compliance e pelo estagiário desconfiado 👀😂.\n\n"
@@ -466,7 +475,12 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
 # MANCHETES (rodadas 1-3 e plantão/veredicto R4)
 # ─────────────────────────────────────────────────────────────────────────────
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
-    """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)."""
+    """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)
+       e o veredicto completo na Rodada 4."""
+
+
+
+    # ── RODADAS 1-3: melhor e pior ───────────────────────────────────────────
     dados_fechamento = {}
     for nome in EMPRESAS:
         historico = estado["dados_empresas"][nome]["precos"]
@@ -493,48 +507,32 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
         baixo_manchete = f"{lanterna_nome} despenca {fmt_var(lanterna_dados['var'])}"
         baixo_texto    = f"SÃO PAULO — A {lanterna_nome} caiu para R$ {lanterna_dados['atual']:.2f}."
         secao_baixo = f"""
-        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;">
-            {baixo_manchete}
-        </div>
+        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;
+                    font-size:15px;font-weight:bold;text-transform:uppercase;">{baixo_manchete}</div>
         <div style="margin-top:6px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
             <p style="font-size:13px;color:#333;margin:0;text-align:justify;">{baixo_texto}</p>
         </div>"""
 
     return f"""
-    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
-        <div style="background-color:#cc0000;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
+    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;
+                max-width:600px;margin:0 auto 20px auto;
+                box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
+        <div style="background-color:#cc0000;color:#fff;display:flex;
+                    justify-content:space-between;align-items:center;padding:12px 20px;">
             <div style="font-size:24px;font-weight:900;letter-spacing:1px;">GC NEWS</div>
-            <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.2);padding:4px 8px;border-radius:4px;">EXERCÍCIO {rodada_encerrada}</div>
+            <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.2);
+                        padding:4px 8px;border-radius:4px;">EXERCÍCIO {rodada_encerrada}</div>
         </div>
         <div style="padding:20px 15px;">
-            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">{topo_manchete}</div>
-            <div style="margin-top:6px;margin-bottom:20px;border-left:4px solid #2e7d32;padding:8px 12px;background-color:#f1f8e9;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{topo_texto}</p>
+            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;
+                        font-size:15px;font-weight:bold;text-transform:uppercase;
+                        line-height:1.3;">{topo_manchete}</div>
+            <div style="margin-top:6px;margin-bottom:20px;border-left:4px solid #2e7d32;
+                        padding:8px 12px;background-color:#f1f8e9;">
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;
+                           line-height:1.4;">{topo_texto}</p>
             </div>
             {secao_baixo}
-        </div>
-    </div>"""
-
-def gerar_manchete_plantao_cvm() -> str:
-    """Plantão CVM — fase 1 da Rodada 4 (disparado pelo Gerenciador)."""
-    return """
-    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
-        <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
-            <div style="font-size:24px;font-weight:900;letter-spacing:1px;">GC NEWS</div>
-            <div style="font-size:12px;font-weight:bold;background:rgba(255,0,0,0.5);padding:4px 8px;border-radius:4px;">🚨 AO VIVO</div>
-        </div>
-        <div style="padding:20px 15px;">
-            <div style="background-color:#b71c1c;color:#fff;padding:12px 15px;border-radius:2px;font-size:16px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
-                🚨 PLANTÃO URGENTE — CVM INICIA FISCALIZAÇÃO EXTRAORDINÁRIA
-            </div>
-            <div style="margin-top:6px;border-left:4px solid #b71c1c;padding:8px 12px;background-color:#ffebee;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
-                    SÃO PAULO — A Comissão de Valores Mobiliários instaurou, nesta data, auditoria extraordinária
-                    em todas as companhias listadas do setor. A operação foi deflagrada após identificação de
-                    inconsistências nos demonstrativos financeiros dos últimos três exercícios.
-                    Responsáveis foram notificados. O mercado aguarda os resultados da fiscalização.
-                </p>
-            </div>
         </div>
     </div>"""
 
@@ -548,27 +546,28 @@ def gerar_manchete_veredicto(estado: dict) -> str:
         qtd_b = [r1, r2, r3].count("B")
         preco_final = d["precos"][-1]
 
+  
         if qtd_c == 3:
             manchete_emp = f"⛓️ PRISÃO DOS EXECUTIVOS DA {nome.upper()}!"
-            texto_emp    = f"A CVM e a Polícia Federal deflagraram a Operação Excel Criativo 🚔. CEO e CFO presos preventivamente ⛓️. Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"A CVM e a Polícia Federal deflagraram a Operação Excel Criativo 🚔. CEO e CFO presos preventivamente 🔗⛓️. Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 2:
             manchete_emp = f"💰🚫 JUSTIÇA BLOQUEIA BENS DA {nome.upper()}!"
             texto_emp    = f"Bloqueio cautelar dos bens dos ex-executivos 💰⚖️. CEO, CFO e Diretor de RI substituídos. Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1 and qtd_b >= 1:
-            manchete_emp = f"💸🚪 CEO E CFO DA {nome.upper()} VIRAM EX-FUNCIONÁRIOS"
-            texto_emp    = f"Combinação entre fraude pontual e accruals resultou em demissão de CEO e CFO 🚪👔. Preço final: R$ {preco_final:.2f}."
+            manchete_emp = f"💸 {nome.upper()} MULTADA! 🚪 CEO E CFO OS MAIS NOVOS EX-FUNCIONÁRIOS"
+            texto_emp    = f"Combinação entre fraude pontual e accruals discrionários resultou em demissão de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1:
-            manchete_emp = f"🥲 {nome.upper()} — FRAUDE PONTUAL, CEO DEMITIDO"
+            manchete_emp = f"🥲 {nome.upper()} — FRAUDE PONTUAL x ERRO? NÃO IMPORTA ...."
             texto_emp    = f"Irregularidade considerada pontual, mas o CEO foi convidado a 'buscar novos desafios' 💼. Preço final: R$ {preco_final:.2f}."
         elif qtd_b >= 2:
             manchete_emp = f"📉 {nome.upper()} — MESTRE DO PÔQUER CONTÁBIL"
-            texto_emp    = f"Sem fraude identificada, mas accruals excessivos colocam o CFO sob monitoramento permanente ♠️. Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"Sem fraude identificada, mas accruals discrionários excessivos colocam o CFO sob monitoramento permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
         elif qtd_b == 1:
-            manchete_emp = f"ℹ️ {nome.upper()} — EPISÓDIO ISOLADO, VIGILÂNCIA REDOBRADA"
-            texto_emp    = f"Um episódio isolado de gerenciamento. CEO e CFO permanecem, mas com supervisão redobrada 👀. Preço final: R$ {preco_final:.2f}."
+            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()} "
+            texto_emp    = f"Um episódio isolado de accruals discrionários, para um bem maior... TODOS FELIZES! Preço final: R$ {preco_final:.2f}."
         else:
-            manchete_emp = f"☠️ {nome.upper()} — ÉTICA PRESERVADA, AÇÕES AFUNDARAM"
-            texto_emp    = f"Transparência total, mas o mercado não perdoou as perdas reconhecidas 📉. Preço final: R$ {preco_final:.2f}."
+            manchete_emp = f"☠️ {nome.upper()} MORREU ABRAÇADA COM A ÉTICA"
+            texto_emp    = f"Transparência total, mas o mercado não perdoou as perdas reconhecidas 📉. Massacrada na Faria Lima com ação em baixa 🩸 Preço final: R$ {preco_final:.2f}."
 
         manchetes_empresas.append(f"""
         <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:14px;font-weight:bold;text-transform:uppercase;line-height:1.3;margin-top:10px;">{manchete_emp}</div>
@@ -748,16 +747,37 @@ elif perfil == "🎛️ Painel Gerenciador":
                 unsafe_allow_html=True
             )
 
+   
+
     st.divider()
 
     # Timer
-    chave_timer = f"timer_inicio_r{rodada}"
-    if rodada <= 3 and not estado.get(chave_timer):
-        if st.button(f"⏱️ Iniciar Rodada {rodada}", use_container_width=True, type="primary"):
-            estado[chave_timer] = time.time()
-            salvar_estado(estado)
-            st.success(f"⏱️ Timer da Rodada {rodada} iniciado!")
-            st.rerun()
+    chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+    ts_inicio = estado.get(chave_timer) if chave_timer else None
+    if ts_inicio and rodada <= 3:
+        restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+        minutos = restante_i // 60
+        segundos = restante_i % 60
+
+        if restante_i >= 7 * 60:
+            cor_timer = "#2e7d32"
+            bg_timer  = "#e8f5e9"
+            emoji_timer = "🟢"
+        elif restante_i >= 3 * 60:
+            cor_timer = "#f57f17"
+            bg_timer  = "#fff8e1"
+            emoji_timer = "🟡"
+        else:
+            cor_timer = "#c62828"
+            bg_timer  = "#ffebee"
+            emoji_timer = "🔴"
+
+        st.markdown(
+            f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
+            f"padding:8px 14px;color:{cor_timer};font-weight:bold;font-size:16px;display:inline-block;'>"
+            f"{emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}</div>",
+            unsafe_allow_html=True
+        )
 
     st.markdown("### Status de Votos")
     cols = st.columns(3)
@@ -836,6 +856,8 @@ elif perfil == "🎛️ Painel Gerenciador":
         apuracao_feita    = estado.get("apuracao_r4_feita", False)
 
         # FASE 1 — Disparar Plantão CVM
+        plantao_disparado = bool(estado.get("historico_noticias_plantao"))
+
         if not plantao_disparado:
             if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
                 html_plantao = gerar_manchete_plantao_cvm()
@@ -845,7 +867,6 @@ elif perfil == "🎛️ Painel Gerenciador":
                 st.rerun()
         else:
             st.success("✅ Plantão CVM já disparado.")
-
         # FASE 2 — Conferir Apuração Final
         if not apuracao_feita:
             if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
@@ -919,24 +940,22 @@ elif perfil == "📰 Mídia (Notícias)":
             st.markdown(n_html, unsafe_allow_html=True)
 
     # Plantão CVM (R4 fase 1)
+# Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
-        for n_html in reversed(estado["historico_noticias_plantao"]):
-            st.markdown(n_html, unsafe_allow_html=True)
-
+        st.markdown(gerar_manchete_plantao_cvm(), unsafe_allow_html=True)
     # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
+# CORRETO — time.sleep e st.rerun no nível do elif, fora de qualquer if
     if (not estado.get("historico_noticias") and
             not estado.get("historico_noticias_plantao") and
             not estado.get("historico_noticias_veredicto")):
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
-# DEPOIS
-        time.sleep(8)
-        st.rerun()
-
+    time.sleep(8)
+    st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELAS DAS EMPRESAS — acesso livre, sem senha
@@ -1000,6 +1019,14 @@ elif perfil in EMPRESA_MAP:
             if apurado:
                 # Mostra DRE apenas após apuração, SEM score
                 exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
+                # Aviso de bônus/penalidade de velocidade
+                bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
+                if bonus_vel == "primeiro":
+                    st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
+                elif bonus_vel == "ultimo":
+                    st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
+                elif bonus_vel == "meio":
+                    st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
 
                 # Banner "aguarde a mídia"
                 st.markdown("""
@@ -1048,13 +1075,13 @@ elif perfil in EMPRESA_MAP:
 
             if qtd_c == 3:
                 icone_res  = "⛓️"
-                titulo_res = "OPERAÇÃO EXCEL CRIATIVO — PRISÃO DOS EXECUTIVOS!"
-                texto_res  = "A CVM e a Polícia Federal deflagraram operação contra sua empresa. CEO e CFO foram presos preventivamente 🔗. O mercado entrou em colapso."
+                titulo_res = "OPERAÇÃO EXCEL CRIATIVO — PRISÃO DOS EXECUTIVOS!O Direito de Permanecer Calado é uma garantia fundamental que eles vão usar. "
+                texto_res  = "A CVM e a Polícia Federal deflagraram operação contra sua empresa. CEO e CFO  presos preventivamente 🔗."
                 cor_res    = "#b71c1c"
             elif qtd_c == 2:
                 icone_res  = "💰🚫"
                 titulo_res = "JUSTIÇA BLOQUEIA BENS DOS EXECUTIVOS!"
-                texto_res  = "A Justiça determinou o bloqueio cautelar dos bens dos executivos. CEO, CFO e Diretor de RI foram substituídos. Os conselheiros estão 'profundamente surpresos'."
+                texto_res  = "A Justiça determinou o bloqueio cautelar dos bens dos executivos. CEO, CFO e Diretor de RI foram substituídos. Os conselheiros estão 'profundamente surpresos :O mesmo após ass'."
                 cor_res    = "#c62828"
             elif qtd_c == 1 and qtd_b >= 1:
                 icone_res  = "💸"
@@ -1063,23 +1090,23 @@ elif perfil in EMPRESA_MAP:
                 cor_res    = "#e65100"
             elif qtd_c == 1:
                 icone_res  = "🥲"
-                titulo_res = "FRAUDE PONTUAL — CEO DEMITIDO!"
+                titulo_res = "FRAUDE/ ERRO PONTUAL — CEO DEMITIDO!"
                 texto_res  = "Mesmo considerada pontual, a irregularidade destruiu a confiança dos investidores. CEO foi convidado a 'buscar novos desafios profissionais' 💼."
                 cor_res    = "#f57f17"
             elif qtd_b >= 2:
                 icone_res  = "📉"
-                titulo_res = "MESTRE DO PÔQUER CONTÁBIL!"
-                texto_res  = "Sem fraude identificada, mas o abuso de accruals colocou o CFO sob monitoramento permanente de três auditores independentes ♠️."
+                titulo_res = "MESTRE DO PÔQUER CONTÁBIL! e VIGILÂNCIA REDOBRADA"
+                texto_res  = "Sem fraude identificada, mas o abuso de accruals  discrionário colocou o CFO sob monitoramento permanente de três auditores independentes ♠️ E do estagiário de compliance que está desconfiado 👀."
                 cor_res    = "#1565c0"
             elif qtd_b == 1:
                 icone_res  = "ℹ️"
-                titulo_res = "EPISÓDIO ISOLADO — VIGILÂNCIA REDOBRADA"
-                texto_res  = "Episódio isolado de gerenciamento de resultados. CEO e CFO permanecem, mas qualquer planilha aberta agora é acompanhada por auditoria, compliance e o estagiário desconfiado 👀."
+                titulo_res = "🦸‍♂️ CFO vira HERÓI/ HEROÍNA DO MERCADO!"
+                texto_res  = "Com apenas um ajuste contábil estratégico, salvou a operação de uma crise sem cruzar a linha vermelha da CVM. O que dizer? Alguns heróis usam capa!!! A empresa está salva e a gestão foi aplaudida!."
                 cor_res    = "#2e7d32"
             else:
                 icone_res  = "☠️"
                 titulo_res = "ÉTICA PRESERVADA — AÇÕES AFUNDARAM"
-                texto_res  = "Transparência total. Os auditores aplaudiram 👏. Os investidores venderam 📉. Os bônus desapareceram 💸. A reputação sobreviveu. O preço da ação, não."
+                texto_res  = "Transparência total. Governança check ✅. Orgulho da professora ❤️! Os auditores aplaudiram 👏. Os investidores venderam 📉. Os bônus desapareceram 💸. A reputação sobreviveu. O preço da ação, não."
                 cor_res    = "#4a148c"
 
             st.markdown(f"""
