@@ -85,6 +85,7 @@ def resetar_estado() -> None:
     if os.path.exists(STATE_FILE):
         os.remove(STATE_FILE)
     carregar_estado()
+    
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IMPACTOS / LABELS
@@ -559,6 +560,13 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
         </div>
     </div>"""
 
+def _limpar_html(html: str) -> str:
+    """Remove linhas vazias/só-espaço que fazem o Markdown tratar o HTML
+    como bloco de código em vez de renderizar."""
+    linhas = [linha for linha in html.split("\n") if linha.strip() != ""]
+    return "\n".join(linhas)
+
+
 def gerar_manchete_veredicto(estado: dict) -> str:
     """Veredicto final — fase 2 da Rodada 4 (gerado após Conferir Apuração)."""
     manchetes_empresas = []
@@ -569,7 +577,6 @@ def gerar_manchete_veredicto(estado: dict) -> str:
         qtd_b = [r1, r2, r3].count("B")
         preco_final = d["precos"][-1]
 
-  
         if qtd_c == 3:
             manchete_emp = f"⛓️ PRISÃO DOS EXECUTIVOS DA {nome.upper()}!"
             texto_emp    = f"A CVM e a Polícia Federal deflagraram a Operação Excel Criativo 🚔. CEO e CFO presos preventivamente 🔗⛓️. Preço final: R$ {preco_final:.2f}."
@@ -578,27 +585,26 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             texto_emp    = f"Bloqueio cautelar dos bens dos ex-executivos 💰⚖️. CEO, CFO e Diretor de RI substituídos. Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1 and qtd_b >= 1:
             manchete_emp = f"💸 {nome.upper()} MULTADA! 🚪 CEO E CFO OS MAIS NOVOS EX-FUNCIONÁRIOS"
-            texto_emp    = f"Combinação entre fraude pontual e accruals discrionários resultou em demissão de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"Combinação entre fraude pontual e accruals discricionários resultou em demissão de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
         elif qtd_c == 1:
             manchete_emp = f"🥲 {nome.upper()} — FRAUDE PONTUAL x ERRO? NÃO IMPORTA ...."
             texto_emp    = f"Irregularidade considerada pontual, mas o CEO foi convidado a 'buscar novos desafios' 💼. Preço final: R$ {preco_final:.2f}."
         elif qtd_b >= 2:
             manchete_emp = f"📉 {nome.upper()} — MESTRE DO PÔQUER CONTÁBIL"
-            texto_emp    = f"Sem fraude identificada, mas accruals discrionários excessivos colocam o CFO sob monitoramento permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
+            texto_emp    = f"Sem fraude identificada, mas accruals discricionários excessivos colocam o CFO sob monitoramento permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
         elif qtd_b == 1:
-            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()} "
-            texto_emp    = f"Um episódio isolado de accruals discrionários, para um bem maior... TODOS FELIZES! Preço final: R$ {preco_final:.2f}."
+            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()}"
+            texto_emp    = f"Um episódio isolado de accruals discricionários, para um bem maior... TODOS FELIZES! Preço final: R$ {preco_final:.2f}."
         else:
             manchete_emp = f"☠️ {nome.upper()} MORREU ABRAÇADA COM A ÉTICA"
             texto_emp    = f"Transparência total, mas o mercado não perdoou as perdas reconhecidas 📉. Massacrada na Faria Lima com ação em baixa 🩸 Preço final: R$ {preco_final:.2f}."
 
-        manchetes_empresas.append(f"""
-        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:14px;font-weight:bold;text-transform:uppercase;line-height:1.3;margin-top:10px;">{manchete_emp}</div>
+        manchetes_empresas.append(f"""<div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;font-size:14px;font-weight:bold;text-transform:uppercase;line-height:1.3;margin-top:10px;">{manchete_emp}</div>
         <div style="margin-top:4px;border-left:4px solid #c62828;padding:8px 12px;background-color:#ffebee;">
             <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">{texto_emp}</p>
         </div>""")
 
-    return f"""
+    html = f"""
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
         <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
             <div style="font-size:24px;font-weight:900;letter-spacing:1px;">GC NEWS</div>
@@ -617,6 +623,7 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             {"".join(manchetes_empresas)}
         </div>
     </div>"""
+    return _limpar_html(html)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GRÁFICOS
@@ -667,6 +674,11 @@ perfis_navegacao = [
     "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
 
+def ir_para(pagina: str) -> None:
+    st.session_state["pagina_atual"] = pagina
+    st.session_state["nav_sidebar_select"] = pagina
+    st.rerun()
+
 # DEPOIS
 _idx_atual = perfis_navegacao.index(st.session_state["pagina_atual"]) if st.session_state["pagina_atual"] in perfis_navegacao else 0
 
@@ -679,8 +691,7 @@ perfil_sidebar = st.sidebar.selectbox(
 if perfil_sidebar != st.session_state["pagina_atual"]:
     if st.session_state["pagina_atual"] == "🎛️ Painel Gerenciador" and perfil_sidebar != "🎛️ Painel Gerenciador":
         st.session_state["gerenciador_autenticado"] = False
-    st.session_state["pagina_atual"] = perfil_sidebar
-    st.rerun()
+    ir_para(perfil_sidebar)
 
 perfil = st.session_state["pagina_atual"]
 
@@ -701,33 +712,32 @@ if perfil == "🏠 Início":
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
                 if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Acesso autorizado!")
-                    st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
-                    st.session_state["nav_sidebar_select"] = "🎛️ Painel Gerenciador" # ADICIONE ESTA LINHA
                     st.session_state["gerenciador_autenticado"] = True
+                    ir_para("🎛️ Painel Gerenciador")
                     st.rerun()
                 else:
                     st.error("❌ Senha incorreta.")
 
     with c2:
-        with st.container(border=True):
-            st.markdown("### 🏢 Empresas")
-            st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-            opcoes = list(EMPRESA_MAP.keys())
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-            nome_int = EMPRESA_MAP[empresa_escolhida]
-            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                st.session_state["empresa_origem"] = empresa_escolhida
-                st.session_state["nav_sidebar_select"] = empresa_escolhida
-                st.rerun()
-
-    with c3:
-        with st.container(border=True):
-            st.markdown("### 📈 Projeção / Telão")
-            st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
-                st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                st.session_state["nav_sidebar_select"] = "📈 Telão (Bolsa)" # ADICIONE ESTA LINHA
-                st.rerun()
+            with st.container(border=True):
+                st.markdown("### 🏢 Empresas")
+                st.write("Selecione a estação de trabalho da sua bancada corporativa.")
+                opcoes = list(EMPRESA_MAP.keys())
+                empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+                nome_int = EMPRESA_MAP[empresa_escolhida]
+                if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+                    st.session_state["empresa_origem"] = empresa_escolhida
+                    st.session_state["pagina_atual"] = empresa_escolhida
+                    st.session_state["nav_sidebar_select"] = empresa_escolhida
+                    st.rerun()
+        with c3:
+            with st.container(border=True):
+                st.markdown("### 📈 Projeção / Telão")
+                st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
+                if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
+                    st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+                    st.session_state["nav_sidebar_select"] = "📈 Telão (Bolsa)"
+                    st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
@@ -933,7 +943,14 @@ elif perfil == "📈 Telão (Bolsa)":
     plotar_grafico_geral(estado)
     time.sleep(5)
     st.rerun()
+def ir_para(pagina: str):
+    st.session_state["pagina_atual"] = pagina
+    st.session_state["nav_sidebar_select"] = pagina
+    st.rerun()
 
+# uso:
+if st.button("📰 Mídia", use_container_width=True):
+    ir_para("📰 Mídia (Notícias)")
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1126,6 +1143,7 @@ elif perfil in EMPRESA_MAP:
                         chave_timer_global = f"timer_inicio_r{rodada}"
                         if estado.get(chave_timer_global):
                             estado[chave_timer_global] = time.time() - 10 * 60
+                            
                 
                     salvar_estado(estado)
                     st.rerun()
