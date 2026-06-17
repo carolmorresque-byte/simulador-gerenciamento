@@ -764,36 +764,32 @@ if perfil == "🏠 Início":
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
 
-            senha_g = st.text_input(
-                "Senha do Gerenciador:",
-                type="password",
-                key="senha_gerenciador_inicio"
-            )
-
+            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador_inicio")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
                 if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Acesso autorizado!")
+                    st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
                     st.session_state["gerenciador_autenticado"] = True
-                    ir_para("🎛️ Painel Gerenciador")
-                else:
-                    st.error("❌ Senha incorreta")
+                    st.rerun()
+
 
     # ── EMPRESAS ────────────────────────────────────────────────────────────
     with c2:
         with st.container(border=True):
             st.markdown("### 🏢 Empresas")
-
+            st.write("Selecione a estação de trabalho da sua bancada corporativa.")
             opcoes = list(EMPRESA_MAP.keys())
             empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-
-            if st.button("Entrar como representante da empresa",
-                         use_container_width=True,
-                         type="primary"):
-
-                st.session_state["empresa_logada"] = empresa_escolhida
-                st.session_state["perfil"] = empresa_escolhida
-                ir_para(empresa_escolhida)
-
+            nome_int = EMPRESA_MAP[empresa_escolhida]
+            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+                sessoes = estado.get("sessoes_ativas", [])
+                if nome_int not in sessoes:
+                    sessoes.append(nome_int)
+                    estado["sessoes_ativas"] = sessoes
+                    salvar_estado(estado)
+                st.session_state["empresa_origem"] = empresa_escolhida
+                st.session_state["pagina_atual"] = empresa_escolhida
+                st.rerun()
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1033,6 +1029,67 @@ elif perfil == "📰 Mídia (Notícias)":
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TELAS DAS EMPRESAS — acesso livre, sem senha
+# ─────────────────────────────────────────────────────────────────────────────
+elif perfil in EMPRESA_MAP:
+    estado = carregar_estado()
+    nome_interno = EMPRESA_MAP[perfil]
+
+    # ── AUTENTICAÇÃO DA EMPRESA ──────────────────────────────────────────────
+    chave_auth = f"auth_{nome_interno}"
+    sessoes_ativas = estado.get("sessoes_ativas", [])
+
+    if not st.session_state.get(chave_auth, False):
+
+        # Verifica se já está ocupada por outro PC
+        if nome_interno in sessoes_ativas:
+            st.markdown(f"""
+            <div style="background:linear-gradient(135deg,#b71c1c,#c62828);border-radius:16px;
+                        padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
+                        box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+                <div style="font-size:72px;margin-bottom:16px;">🔒</div>
+                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">ESTAÇÃO OCUPADA</div>
+                <div style="font-size:15px;opacity:0.85;">
+                    A bancada <b>{perfil}</b> já está sendo acessada em outro dispositivo.<br>
+                    Apenas um acesso simultâneo é permitido por empresa.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.stop()
+
+        # Tela de login
+        st.title("🔒 Acesso Restrito")
+        st.markdown(f"### Estação de Trabalho: {perfil}")
+        st.markdown("Identifique-se para acessar sua bancada corporativa.")
+
+        SENHAS_EMPRESAS = {
+            "Empresa Alfa": "ALFA10",
+            "Empresa Beta": "BETA20",
+            "Empresa Gama": "GAMA30",
+        }
+
+        senha_input = st.text_input("Senha da empresa:", type="password", key=f"senha_{nome_interno}")
+
+        if st.button("Entrar", use_container_width=True, type="primary"):
+            if senha_input == SENHAS_EMPRESAS.get(nome_interno, ""):
+                st.session_state[chave_auth] = True
+                st.session_state["empresa_origem"] = perfil
+                # Registra sessão ativa no estado compartilhado
+                if nome_interno not in sessoes_ativas:
+                    sessoes_ativas.append(nome_interno)
+                    estado["sessoes_ativas"] = sessoes_ativas
+                    salvar_estado(estado)
+                st.rerun()
+            else:
+                st.error("❌ Senha incorreta.")
+        st.stop()
+
+
+
+
+
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
 
 if perfil not in EMPRESA_MAP:
