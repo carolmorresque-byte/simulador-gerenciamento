@@ -471,12 +471,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
         "><p style='margin:8px 0;'>{texto_html}</p></div>
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MANCHETES
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
-# MANCHETES
-# ─────────────────────────────────────────────────────────────────────────────
+
 def gerar_manchete_plantao_cvm() -> str:
     return """
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
@@ -495,7 +490,7 @@ def gerar_manchete_plantao_cvm() -> str:
                 </p>
             </div>
         </div>
-    </div>"""
+    </div>""
 
 
 def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
@@ -609,7 +604,7 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             </div>
             {"".join(manchetes_empresas)}
         </div>
-    </div>"
+    </div>"""
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GRÁFICOS
