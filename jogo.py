@@ -1400,14 +1400,13 @@ perfis_navegacao = [
 def ir_para(pagina: str, origem: str | None = None):
     """
     Navega para outra página do app.
+    Se 'origem' for informado, registra de onde o usuário veio.
     """
     if origem is not None:
         st.session_state["empresa_origem"] = origem
     st.session_state["pagina_atual"] = pagina
+    st.session_state["nav_sidebar_select"] = pagina
     st.rerun()
-
-# ─────────────────────────────────────────────────────────────
-# SIDEBAR
 # ─────────────────────────────────────────────────────────────
 
 pagina_atual = st.session_state["pagina_atual"]
@@ -1450,10 +1449,10 @@ if perfil == "🏠 Início":
     st.title("🔒 Simulador de Governança")
     st.markdown("### Selecione o seu ambiente de acesso abaixo:")
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3 = st.columns(2)
 
     # ── GERENCIADOR ─────────────────────────────────────────────────────────
-    with c1:
+with c1:
         with st.container(border=True):
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
@@ -1461,14 +1460,13 @@ if perfil == "🏠 Início":
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
                 if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Acesso autorizado!")
-                    st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
                     st.session_state["gerenciador_autenticado"] = True
-                    st.rerun()
+                    ir_para("🎛️ Painel Gerenciador")
                 else:
                     st.error("❌ Senha incorreta.")
 
     # ── EMPRESAS ────────────────────────────────────────────────────────────
-    with c2:
+with c2:
         with st.container(border=True):
             st.markdown("### 🏢 Empresas")
             st.write("Selecione a estação de trabalho da sua bancada corporativa.")
@@ -1476,14 +1474,7 @@ if perfil == "🏠 Início":
             empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
             nome_int = EMPRESA_MAP[empresa_escolhida]
             if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                sessoes = estado.get("sessoes_ativas", [])
-                if nome_int not in sessoes:
-                    sessoes.append(nome_int)
-                    estado["sessoes_ativas"] = sessoes
-                    salvar_estado(estado)
-                st.session_state["empresa_origem"] = empresa_escolhida
-                st.session_state["pagina_atual"] = empresa_escolhida
-                st.rerun()
+                ir_para(empresa_escolhida)
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
 # ─────────────────────────────────────────────────────────────────────────────
