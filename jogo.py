@@ -1112,8 +1112,17 @@ elif perfil in EMPRESA_MAP:
                 if st.button("✅ Homologar Resolução", use_container_width=True):
                     d[f"voto_r{rodada}"] = escolha
                     d[f"tempo_voto_r{rodada}"] = time.time()
+                    
+                    # --- NOVA LÓGICA ADICIONADA AQUI ---
+                    votos_total = [estado["dados_empresas"][e].get(f"voto_r{rodada}") for e in EMPRESAS]
+                    if all(v is not None for v in votos_total):
+                        chave_timer_global = f"timer_inicio_r{rodada}"
+                        if estado.get(chave_timer_global):
+                            estado[chave_timer_global] = None
                     salvar_estado(estado)
                     st.rerun()
+
+            
             else:
                 st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
 
