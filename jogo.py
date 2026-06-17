@@ -767,16 +767,17 @@ if perfil == "🏠 Início":
                 else:
                     st.error("❌ Senha incorreta.")
 
-    with c2:
-        with st.container(border=True):
-            st.markdown("### 🏢 Empresas")
-            st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-            opcoes = list(EMPRESA_MAP.keys())
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-            nome_int = EMPRESA_MAP[empresa_escolhida]
-            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                ir_para(empresa_escolhida)
+   with c2:
+    with st.container(border=True):
+        st.markdown("### 🏢 Empresas")
 
+        opcoes = list(EMPRESA_MAP.keys())
+        empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+
+        if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+
+            st.session_state["empresa_logada"] = empresa_escolhida
+            ir_para(empresa_escolhida)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
@@ -1017,11 +1018,14 @@ elif perfil == "📰 Mídia (Notícias)":
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
-if perfil in EMPRESA_MAP:
-    empresa_nome = EMPRESA_MAP[perfil]
-    d = estado["dados_empresas"][empresa_nome]
-else:
+# ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
+
+if perfil not in EMPRESA_MAP:
     st.stop()
+
+# pega empresa corretamente
+empresa_nome = EMPRESA_MAP[perfil]
+estado = carregar_estado()
 d = estado["dados_empresas"][empresa_nome]
 rodada = estado.get("rodada_atual", 1)
 
@@ -1033,6 +1037,7 @@ if rodada > 1:
         d.pop(f"msg_bonus_r{rodada-1}", None)
         salvar_estado(estado)
 
+# origem de navegação
 st.session_state["empresa_origem"] = perfil
 st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
@@ -1053,9 +1058,13 @@ if ts_inicio and rodada <= 3:
         cor_timer, bg_timer, emoji_timer = "#c62828", "#ffebee", "🔴"
 
     st.markdown(
-        f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
-        f"padding:8px 14px;color:{cor_timer};font-weight:bold;font-size:16px;display:inline-block;'>"
-        f"{emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}</div>",
+        f"""
+        <div style='background:{bg_timer};border:1px solid {cor_timer};
+        border-radius:8px;padding:8px 14px;color:{cor_timer};
+        font-weight:bold;font-size:16px;display:inline-block;'>
+        {emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
