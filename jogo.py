@@ -755,29 +755,34 @@ if perfil == "🏠 Início":
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        with st.container(border=True):
-            st.markdown("### 🎛️ Gerenciador")
-            st.write("Acesso restrito para o Apresentador controlar as rodadas.")
-            senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador_inicio")
-            if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
-                if senha_g == SENHA_GERENCIADOR:
-                    st.success("✅ Acesso autorizado!")
-                    st.session_state["gerenciador_autenticado"] = True
-                    ir_para("🎛️ Painel Gerenciador")
-                else:
-                    st.error("❌ Senha incorreta.")
+    with st.container(border=True):
+        st.markdown("### 🎛️ Gerenciador")
+        st.write("Acesso restrito para o Apresentador controlar as rodadas.")
 
-       with c2:
-        with st.container(border=True):
-            st.markdown("### 🏢 Empresas")
-    
-            opcoes = list(EMPRESA_MAP.keys())
-            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-    
-            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-    
-                st.session_state["empresa_logada"] = empresa_escolhida
-                ir_para(empresa_escolhida)
+        senha_g = st.text_input(
+            "Senha do Gerenciador:",
+            type="password",
+            key="senha_gerenciador_inicio"
+        )
+
+        if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
+            if senha_g == SENHA_GERENCIADOR:
+                st.success("✅ Acesso autorizado!")
+                st.session_state["gerenciador_autenticado"] = True
+                ir_para("gerenciador")
+            else:
+                st.error("❌ Senha incorreta")
+      with c2:
+    with st.container(border=True):
+        st.markdown("### 🏢 Empresas")
+
+        opcoes = list(EMPRESA_MAP.keys())
+        empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+
+        if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+            st.session_state["empresa_logada"] = empresa_escolhida
+            st.session_state["perfil"] = empresa_escolhida
+            ir_para("empresa")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
