@@ -763,7 +763,6 @@ if perfil == "🏠 Início":
         with st.container(border=True):
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
-
             senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador_inicio")
             if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
                 if senha_g == SENHA_GERENCIADOR:
@@ -771,7 +770,8 @@ if perfil == "🏠 Início":
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
                     st.session_state["gerenciador_autenticado"] = True
                     st.rerun()
-
+                else:
+                    st.error("❌ Senha incorreta.")
 
     # ── EMPRESAS ────────────────────────────────────────────────────────────
     with c2:
