@@ -1329,24 +1329,50 @@ def gerar_manchete_veredicto(estado: dict) -> str:
         </div>""")
 
     html = f"""
-    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
-        <div style="background-color:#1a1a1a;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:12px 20px;">
-            <div style="font-size:24px;font-weight:900;letter-spacing:1px;">GC NEWS</div>
-            <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.3);padding:4px 8px;border-radius:4px;">🏁 VEREDICTO FINAL</div>
-        </div>
-        <div style="padding:20px 15px;">
-            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
-                🏁 CVM DIVULGA VEREDITO FINAL — DESTINO DOS EXECUTIVOS
+    <div style="display:flex;flex-direction:column;gap:12px;
+                max-width:600px;margin:0 auto 20px auto;
+                font-family:Arial;">
+    
+        <!-- CARD VERDE (TOPO / LÍDER) -->
+        <div style="background-color:#fff;border:1px solid #ddd;
+                    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+                    border-radius:4px;overflow:hidden;">
+    
+            <div style="background-color:#2e7d32;color:#fff;
+                        padding:12px 15px;font-size:15px;font-weight:bold;
+                        text-transform:uppercase;">
+                {topo_manchete}
             </div>
-            <div style="margin-top:6px;margin-bottom:12px;border-left:4px solid #2e7d32;padding:8px 12px;background-color:#f1f8e9;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
-                    SÃO PAULO — A CVM concluiu a auditoria extraordinária e divulgou os resultados individuais
-                    de cada companhia investigada. Os mercados reagiram com volatilidade histórica.
+    
+            <div style="padding:12px 15px;background-color:#f1f8e9;">
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;">
+                    {topo_texto}
                 </p>
             </div>
-            {"".join(manchetes_empresas)}
         </div>
-    </div>"""
+    
+        <!-- CARD VERMELHO (BAIXO / LANTERNA) -->
+        {f"""
+        <div style="background-color:#fff;border:1px solid #ddd;
+                    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+                    border-radius:4px;overflow:hidden;">
+    
+            <div style="background-color:#c62828;color:#fff;
+                        padding:12px 15px;font-size:15px;font-weight:bold;
+                        text-transform:uppercase;">
+                {baixo_manchete}
+            </div>
+    
+            <div style="padding:12px 15px;background-color:#ffebee;">
+                <p style="font-size:13px;color:#333;margin:0;text-align:justify;">
+                    {baixo_texto}
+                </p>
+            </div>
+        </div>
+        """ if not todos_empatados else ""}
+    
+    </div>
+    """
     return _limpar_html(html)
 
 # ─────────────────────────────────────────────────────────────────────────────
