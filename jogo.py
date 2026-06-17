@@ -1016,7 +1016,7 @@ elif perfil == "📰 Mídia (Notícias)":
         and not estado.get("historico_noticias_veredicto")
     ):
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
-```python
+
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
 d = estado["dados_empresas"][nome_interno]
 rodada = estado.get("rodada_atual", 1)
