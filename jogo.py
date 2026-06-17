@@ -1478,8 +1478,8 @@ with c2:
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
 # ─────────────────────────────────────────────────────────────────────────────
-elif perfil == "🎛️ Painel Gerenciador":
-    estado = carregar_estado()
+if perfil == "🎛️ Painel Gerenciador":
+        estado = carregar_estado()
 
     # Autenticação persistente na sessão
     if not st.session_state.get("gerenciador_autenticado", False):
