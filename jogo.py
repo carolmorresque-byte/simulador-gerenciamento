@@ -767,17 +767,17 @@ if perfil == "🏠 Início":
                 else:
                     st.error("❌ Senha incorreta.")
 
-   with c2:
-    with st.container(border=True):
-        st.markdown("### 🏢 Empresas")
-
-        opcoes = list(EMPRESA_MAP.keys())
-        empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-
-        if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-
-            st.session_state["empresa_logada"] = empresa_escolhida
-            ir_para(empresa_escolhida)
+       with c2:
+        with st.container(border=True):
+            st.markdown("### 🏢 Empresas")
+    
+            opcoes = list(EMPRESA_MAP.keys())
+            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+    
+            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+    
+                st.session_state["empresa_logada"] = empresa_escolhida
+                ir_para(empresa_escolhida)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
