@@ -6,19 +6,34 @@ import json
 import os
 import fcntl
 
-st.set_page_config(layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 if "rodada" not in st.session_state:
     st.session_state["rodada"] = 1
 
+# Página atual do sistema
+if "pagina_atual" not in st.session_state:
+    st.session_state["pagina_atual"] = "🏠 Início"
+
 st.markdown("""
 <style>
-[data-testid="collapsedControl"] { display: none; }
+[data-testid="collapsedControl"] {
+    display: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "game_state.json")
-EMPRESAS = ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]
+
+EMPRESAS = [
+    "Empresa Alfa",
+    "Empresa Beta",
+    "Empresa Gama"
+]
+
 SENHA_GERENCIADOR = "G10"
 
 EMPRESA_MAP = {
@@ -26,6 +41,7 @@ EMPRESA_MAP = {
     "β - Empresa Beta": "Empresa Beta",
     "γ - Empresa Gama": "Empresa Gama",
 }
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ESTADO INICIAL
@@ -293,24 +309,38 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
     impacto = IMPACTOS.get(rodada, {}).get(voto, 1.0)
     novo    = preco_ant * impacto
 
-    # 2) Ranking de velocidade (bônus/penalidade de tempo)
+   # 2) Ranking de velocidade (bônus/penalidade de tempo)
     tempos = [
         (n, estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}"))
         for n in EMPRESAS
-        if estado["dados_empresas"][n].get(f"voto_r{rodada}") is not None
+        if n != empresa_nome
+           and estado["dados_empresas"][n].get(f"voto_r{rodada}") is not None
            and estado["dados_empresas"][n].get(f"tempo_voto_r{rodada}") is not None
     ]
-    if len(tempos) == 3:
-        ranking = [item[0] for item in sorted(tempos, key=lambda x: x[1])]
-        if ranking[0] == empresa_nome:
-            novo += 0.10
-            d[f"bonus_velocidade_r{rodada}"] = "primeiro"
-        elif ranking[-1] == empresa_nome:
-            novo -= 0.10
-            d[f"bonus_velocidade_r{rodada}"] = "ultimo"
-        else:
-            d[f"bonus_velocidade_r{rodada}"] = "meio"
-
+    
+    ordem_resposta = len(tempos)
+    
+    if ordem_resposta == 0:
+        novo += 0.10
+        d[f"bonus_velocidade_r{rodada}"] = "primeiro"
+        d[f"msg_bonus_r{rodada}"] = (
+            "🚀 Sua empresa foi a primeira a responder e recebeu um bônus de R$ 0,10 por ação. "
+            "O mercado aprecia a agilidade."
+        )
+    
+    elif ordem_resposta == 1:
+        d[f"bonus_velocidade_r{rodada}"] = "meio"
+        d[f"msg_bonus_r{rodada}"] = (
+            "⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.."
+        )
+    
+    elif ordem_resposta == 2:
+        novo -= 0.10
+        d[f"bonus_velocidade_r{rodada}"] = "ultimo"
+        d[f"msg_bonus_r{rodada}"] = (
+            "🐢 Sua empresa foi a última a responder e sofreu uma redução de R$ 0,10 por ação. "
+            "Tempo é dinheiro!"
+        )
     # 3) Penalidade por score ético alto (>= 6)
     votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
     score = calcular_dre_dinamico(votos_emp)["score_gr"]
@@ -374,7 +404,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
     elif qtd_c == 1 and qtd_b >= 1:
         manchete = f"💸🚪 CEO E CFO DA {nome.upper()} VIRAM EX-FUNCIONÁRIOS"
         texto = (
-            f"A combinação entre ajustes por 'erro' e gerenciamento de resultados por accruals discricioários — a famosa "
+            f"A combinação entre ajustes por accruals discrionários legais e ilegais— a famosa "
             f"'brechinha na lei' — finalmente chegou à conta. 💸\n\n"
             f"Após pressão dos investidores, o Conselho decidiu substituir CEO e CFO 🚪👔.\n"
             f"Ambos descobriram que EBITDA ajustado não cobre honorários advocatícios ⚖️.\n"
@@ -669,40 +699,52 @@ if "pagina_atual" not in st.session_state:
     st.session_state["pagina_atual"] = "🏠 Início"
 
 perfis_navegacao = [
-    "🏠 Início", "🎛️ Painel Gerenciador", "📈 Telão (Bolsa)",
-    "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
+    "🏠 Início", "🎛️ Painel Gerenciador", 
+    "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
 
 def ir_para(pagina: str, origem: str | None = None):
     """
     Navega para outra página do app.
-    Se 'origem' for informado, registra de onde o usuário veio
-    (útil para um botão 'Voltar' nas telas de Telão/Mídia).
-    Também mantém o selectbox da sidebar sincronizado com a página atual,
-    já que o parâmetro 'index' do selectbox só é respeitado na primeira
-    renderização — depois disso, quem manda é o valor salvo na key.
     """
     if origem is not None:
         st.session_state["empresa_origem"] = origem
+
     st.session_state["pagina_atual"] = pagina
     st.rerun()
 
-# DEPOIS
-_idx_atual = perfis_navegacao.index(st.session_state["pagina_atual"]) if st.session_state["pagina_atual"] in perfis_navegacao else 0
+
+# ─────────────────────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────────────────────
+
+pagina_atual = st.session_state["pagina_atual"]
+
+if pagina_atual in perfis_navegacao:
+    _idx_atual = perfis_navegacao.index(pagina_atual)
+else:
+    _idx_atual = 0
 
 perfil_sidebar = st.sidebar.selectbox(
-    "Navegação Lateral:", perfis_navegacao,
+    "Navegação Lateral:",
+    perfis_navegacao,
     index=_idx_atual,
     key="nav_sidebar_select",
 )
 
-if perfil_sidebar != st.session_state["pagina_atual"]:
-    if st.session_state["pagina_atual"] == "🎛️ Painel Gerenciador" and perfil_sidebar != "🎛️ Painel Gerenciador":
+if (
+    perfil_sidebar != st.session_state["pagina_atual"]
+    and st.session_state["pagina_atual"] in perfis_navegacao
+):
+    if (
+        st.session_state["pagina_atual"] == "🎛️ Painel Gerenciador"
+        and perfil_sidebar != "🎛️ Painel Gerenciador"
+    ):
         st.session_state["gerenciador_autenticado"] = False
+
     ir_para(perfil_sidebar)
 
 perfil = st.session_state["pagina_atual"]
-
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: INÍCIO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -735,12 +777,6 @@ if perfil == "🏠 Início":
             if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
                 ir_para(empresa_escolhida)
 
-    with c3:
-        with st.container(border=True):
-            st.markdown("### 📈 Projeção / Telão")
-            st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
-                ir_para("📈 Telão (Bolsa)")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
@@ -952,134 +988,73 @@ elif perfil == "📰 Mídia (Notícias)":
     st.title("📰 GC News — Central de Notícias")
 
     _origem = st.session_state.get("empresa_origem", "🎛️ Painel Gerenciador")
-    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-    with nav1:
-        if st.button("📋 Rodada", use_container_width=True):
-            ir_para(_origem)
-    with nav2:
-        if st.button("📈 Telão", use_container_width=True):
-            ir_para("📈 Telão (Bolsa)")
-    with nav3:
-        if st.button("📰 Mídia", use_container_width=True, type="primary"):
-            st.rerun()
+    st.session_state["empresa_origem"] = perfil
+    st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
     # Veredicto final (R4 fase 2) — mostra primeiro se existir
+    # Veredicto final (R4 fase 2)
     if estado.get("historico_noticias_veredicto"):
         for n_html in reversed(estado["historico_noticias_veredicto"]):
             st.markdown(n_html, unsafe_allow_html=True)
-
+    
     # Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
-        st.markdown(gerar_manchete_plantao_cvm(), unsafe_allow_html=True)
-
+        for n_html in reversed(estado["historico_noticias_plantao"]):
+            st.markdown(n_html, unsafe_allow_html=True)
+    
     # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
+        st.write("Qtd notícias:", len(estado["historico_noticias"]))
+    
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
-
-    if (not estado.get("historico_noticias") and
-            not estado.get("historico_noticias_plantao") and
-            not estado.get("historico_noticias_veredicto")):
+    
+    # Nenhuma notícia
+    if (
+        not estado.get("historico_noticias")
+        and not estado.get("historico_noticias_plantao")
+        and not estado.get("historico_noticias_veredicto")
+    ):
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
+```python
+# ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
+d = estado["dados_empresas"][nome_interno]
+rodada = estado.get("rodada_atual", 1)
 
-    time.sleep(8)
-    st.rerun()
+# Mensagem do bônus/penalidade da rodada anterior (mostra uma única vez)
+if rodada > 1:
+    msg = d.get(f"msg_bonus_r{rodada-1}")
+    if msg:
+        st.success(msg)
+        d.pop(f"msg_bonus_r{rodada-1}", None)
+        salvar_estado(estado)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TELAS DAS EMPRESAS — acesso livre, sem senha
-# ─────────────────────────────────────────────────────────────────────────────
-elif perfil in EMPRESA_MAP:
-    estado = carregar_estado()
-    nome_interno = EMPRESA_MAP[perfil]
+st.session_state["empresa_origem"] = perfil
+st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
-    # ── AUTENTICAÇÃO DA EMPRESA ──────────────────────────────────────────────
-    chave_auth = f"auth_{nome_interno}"
-    sessoes_ativas = estado.get("sessoes_ativas", [])
+# ── TIMER ───────────────────────────────────────────────────────────────
+chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
+ts_inicio = estado.get(chave_timer) if chave_timer else None
 
-    if not st.session_state.get(chave_auth, False):
+if ts_inicio and rodada <= 3:
+    restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
+    minutos = restante_i // 60
+    segundos = restante_i % 60
 
-        # Verifica se já está ocupada por outro PC
-        if nome_interno in sessoes_ativas:
-            st.markdown(f"""
-            <div style="background:linear-gradient(135deg,#b71c1c,#c62828);border-radius:16px;
-                        padding:48px 32px;margin:24px 0;text-align:center;color:#fff;
-                        box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-                <div style="font-size:72px;margin-bottom:16px;">🔒</div>
-                <div style="font-size:24px;font-weight:900;margin-bottom:12px;">ESTAÇÃO OCUPADA</div>
-                <div style="font-size:15px;opacity:0.85;">
-                    A bancada <b>{perfil}</b> já está sendo acessada em outro dispositivo.<br>
-                    Apenas um acesso simultâneo é permitido por empresa.
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.stop()
+    if restante_i >= 7 * 60:
+        cor_timer, bg_timer, emoji_timer = "#2e7d32", "#e8f5e9", "🟢"
+    elif restante_i >= 3 * 60:
+        cor_timer, bg_timer, emoji_timer = "#f57f17", "#fff8e1", "🟡"
+    else:
+        cor_timer, bg_timer, emoji_timer = "#c62828", "#ffebee", "🔴"
 
-        # Tela de login
-        st.title("🔒 Acesso Restrito")
-        st.markdown(f"### Estação de Trabalho: {perfil}")
-        st.markdown("Identifique-se para acessar sua bancada corporativa.")
+    st.markdown(
+        f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
+        f"padding:8px 14px;color:{cor_timer};font-weight:bold;font-size:16px;display:inline-block;'>"
+        f"{emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}</div>",
+        unsafe_allow_html=True
+    )
 
-        SENHAS_EMPRESAS = {
-            "Empresa Alfa": "ALFA10",
-            "Empresa Beta": "BETA20",
-            "Empresa Gama": "GAMA30",
-        }
-
-        senha_input = st.text_input("Senha da empresa:", type="password", key=f"senha_{nome_interno}")
-
-        if st.button("Entrar", use_container_width=True, type="primary"):
-            if senha_input == SENHAS_EMPRESAS.get(nome_interno, ""):
-                st.session_state[chave_auth] = True
-                st.session_state["empresa_origem"] = perfil
-                # Registra sessão ativa no estado compartilhado
-                if nome_interno not in sessoes_ativas:
-                    sessoes_ativas.append(nome_interno)
-                    estado["sessoes_ativas"] = sessoes_ativas
-                    salvar_estado(estado)
-                st.rerun()
-            else:
-                st.error("❌ Senha incorreta.")
-        st.stop()
-
-    # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
-    d = estado["dados_empresas"][nome_interno]
-    rodada = estado.get("rodada_atual", 1)
-    st.session_state["empresa_origem"] = perfil
-    st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
-    _origem = perfil
-    nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
-    with nav1:
-        if st.button("📋 Rodada", use_container_width=True, type="primary"):
-            ir_para(_origem)
-    with nav2:
-        if st.button("📈 Telão", use_container_width=True):
-            ir_para("📈 Telão (Bolsa)", origem=_origem)
-    with nav3:
-        if st.button("📰 Mídia", use_container_width=True):
-            ir_para("📰 Mídia (Notícias)", origem=_origem)
-
-    # Timer
-    chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
-    ts_inicio = estado.get(chave_timer) if chave_timer else None
-
-    if ts_inicio and rodada <= 3:
-        restante_i = max(0, int(10 * 60 - (time.time() - ts_inicio)))
-        minutos = restante_i // 60
-        segundos = restante_i % 60
-
-        if restante_i >= 7 * 60:
-            cor_timer, bg_timer, emoji_timer = "#2e7d32", "#e8f5e9", "🟢"
-        elif restante_i >= 3 * 60:
-            cor_timer, bg_timer, emoji_timer = "#f57f17", "#fff8e1", "🟡"
-        else:
-            cor_timer, bg_timer, emoji_timer = "#c62828", "#ffebee", "🔴"
-
-        st.markdown(
-            f"<div style='background:{bg_timer};border:1px solid {cor_timer};border-radius:8px;"
-            f"padding:8px 14px;color:{cor_timer};font-weight:bold;font-size:16px;display:inline-block;'>"
-            f"{emoji_timer} Tempo restante — Rodada {rodada}: {minutos:02d}:{segundos:02d}</div>",
-            unsafe_allow_html=True
-        )
 
     # ── RODADAS 1-3 ──────────────────────────────────────────────────────────
     if rodada <= 3:
@@ -1097,7 +1072,7 @@ elif perfil in EMPRESA_MAP:
             if rodada == 1:
                 st.markdown(narrativa_rodada_1())
             elif rodada == 2:
-                st.markdown(narrativa_rodada_2(-16_500_000_000.0, -30_000_000.0))
+                st.markdown(narrativa_rodada_2())
             elif rodada == 3:
                 st.markdown(narrativa_rodada_3())
 
@@ -1139,13 +1114,6 @@ elif perfil in EMPRESA_MAP:
                 if apurado:
                     exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
                     bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
-                    if bonus_vel == "primeiro":
-                        st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
-                    elif bonus_vel == "ultimo":
-                        st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
-                    elif bonus_vel == "meio":
-                        st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
-
                     st.markdown("""
                     <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);border-radius:12px;
                                 padding:20px 24px;margin:16px 0;text-align:center;color:#fff;">
