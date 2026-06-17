@@ -1017,7 +1017,11 @@ elif perfil == "📰 Mídia (Notícias)":
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
-empresa_nome = EMPRESA_MAP[perfil]
+if perfil in EMPRESA_MAP:
+    empresa_nome = EMPRESA_MAP[perfil]
+    d = estado["dados_empresas"][empresa_nome]
+else:
+    st.stop()
 d = estado["dados_empresas"][empresa_nome]
 rodada = estado.get("rodada_atual", 1)
 
