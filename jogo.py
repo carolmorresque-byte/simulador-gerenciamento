@@ -1095,8 +1095,6 @@ elif perfil in EMPRESA_MAP:
             if rodada == 1:
                 st.markdown(narrativa_rodada_1())
             elif rodada == 2:
-                st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
-                elif rodada == 2:
                 st.markdown(narrativa_rodada_2(-16_500_000_000.0, -30_000_000.0))
             elif rodada == 3:
                 st.markdown(narrativa_rodada_3())
