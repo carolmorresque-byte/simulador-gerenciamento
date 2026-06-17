@@ -662,7 +662,6 @@ def plotar_grafico_geral(estado: dict):
     ax.grid(color="#333", linestyle="--", alpha=0.5)
     st.pyplot(fig)
     plt.close(fig)
-
 # ─────────────────────────────────────────────────────────────────────────────
 # NAVEGAÇÃO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -674,7 +673,17 @@ perfis_navegacao = [
     "📰 Mídia (Notícias)", "α - Empresa Alfa", "β - Empresa Beta", "γ - Empresa Gama",
 ]
 
-def ir_para(pagina: str) -> None:
+def ir_para(pagina: str, origem: str | None = None):
+    """
+    Navega para outra página do app.
+    Se 'origem' for informado, registra de onde o usuário veio
+    (útil para um botão 'Voltar' nas telas de Telão/Mídia).
+    Também mantém o selectbox da sidebar sincronizado com a página atual,
+    já que o parâmetro 'index' do selectbox só é respeitado na primeira
+    renderização — depois disso, quem manda é o valor salvo na key.
+    """
+    if origem is not None:
+        st.session_state["empresa_origem"] = origem
     st.session_state["pagina_atual"] = pagina
     st.session_state["nav_sidebar_select"] = pagina
     st.rerun()
@@ -714,30 +723,25 @@ if perfil == "🏠 Início":
                     st.success("✅ Acesso autorizado!")
                     st.session_state["gerenciador_autenticado"] = True
                     ir_para("🎛️ Painel Gerenciador")
-                    st.rerun()
                 else:
                     st.error("❌ Senha incorreta.")
 
     with c2:
-            with st.container(border=True):
-                st.markdown("### 🏢 Empresas")
-                st.write("Selecione a estação de trabalho da sua bancada corporativa.")
-                opcoes = list(EMPRESA_MAP.keys())
-                empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
-                nome_int = EMPRESA_MAP[empresa_escolhida]
-                if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                    st.session_state["empresa_origem"] = empresa_escolhida
-                    st.session_state["pagina_atual"] = empresa_escolhida
-                    st.session_state["nav_sidebar_select"] = empresa_escolhida
-                    st.rerun()
+        with st.container(border=True):
+            st.markdown("### 🏢 Empresas")
+            st.write("Selecione a estação de trabalho da sua bancada corporativa.")
+            opcoes = list(EMPRESA_MAP.keys())
+            empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
+            nome_int = EMPRESA_MAP[empresa_escolhida]
+            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+                ir_para(empresa_escolhida)
+
     with c3:
-            with st.container(border=True):
-                st.markdown("### 📈 Projeção / Telão")
-                st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-                if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
-                    st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-                    st.session_state["nav_sidebar_select"] = "📈 Telão (Bolsa)"
-                    st.rerun()
+        with st.container(border=True):
+            st.markdown("### 📈 Projeção / Telão")
+            st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
+            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
+                ir_para("📈 Telão (Bolsa)")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: PAINEL DO GERENCIADOR
@@ -777,11 +781,9 @@ elif perfil == "🎛️ Painel Gerenciador":
                 unsafe_allow_html=True
             )
 
-   
-
     st.divider()
 
-# Timer — botão de início + exibição
+    # Timer — botão de início + exibição
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
     ts_inicio = estado.get(chave_timer) if chave_timer else None
 
@@ -810,7 +812,7 @@ elif perfil == "🎛️ Painel Gerenciador":
         )
 
     st.markdown("### Status de Votos")
-   
+
     cols = st.columns(3)
     for i, emp in enumerate(EMPRESAS):
         d    = estado["dados_empresas"][emp]
@@ -913,12 +915,13 @@ elif perfil == "🎛️ Painel Gerenciador":
     st.divider()
 
     if st.button("♻️ Resetar Simulação", use_container_width=True):
-            resetar_estado()
-            st.session_state["gerenciador_autenticado"] = False
-            for emp in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]:
-                st.session_state.pop(f"auth_{emp}", None)
-            st.success("✅ Simulação resetada.")
-            st.rerun()
+        resetar_estado()
+        st.session_state["gerenciador_autenticado"] = False
+        for emp in ["Empresa Alfa", "Empresa Beta", "Empresa Gama"]:
+            st.session_state.pop(f"auth_{emp}", None)
+        st.success("✅ Simulação resetada.")
+        st.rerun()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: TELÃO
 # ─────────────────────────────────────────────────────────────────────────────
@@ -930,27 +933,18 @@ elif perfil == "📈 Telão (Bolsa)":
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["nav_sidebar_select"] = _origem
-            st.rerun()
+            ir_para(_origem)
     with nav2:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
             st.rerun()
     with nav3:
         if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
+            ir_para("📰 Mídia (Notícias)")
 
     plotar_grafico_geral(estado)
     time.sleep(5)
     st.rerun()
-def ir_para(pagina: str):
-    st.session_state["pagina_atual"] = pagina
-    st.session_state["nav_sidebar_select"] = pagina
-    st.rerun()
 
-# uso:
-if st.button("📰 Mídia", use_container_width=True):
-    ir_para("📰 Mídia (Notícias)")
 # ─────────────────────────────────────────────────────────────────────────────
 # TELA: MÍDIA
 # ─────────────────────────────────────────────────────────────────────────────
@@ -962,12 +956,10 @@ elif perfil == "📰 Mídia (Notícias)":
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = _origem
-            st.rerun()
+            ir_para(_origem)
     with nav2:
         if st.button("📈 Telão", use_container_width=True):
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+            ir_para("📈 Telão (Bolsa)")
     with nav3:
         if st.button("📰 Mídia", use_container_width=True, type="primary"):
             st.rerun()
@@ -978,15 +970,14 @@ elif perfil == "📰 Mídia (Notícias)":
             st.markdown(n_html, unsafe_allow_html=True)
 
     # Plantão CVM (R4 fase 1)
-# Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
         st.markdown(gerar_manchete_plantao_cvm(), unsafe_allow_html=True)
+
     # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
         for n_html in reversed(estado["historico_noticias"]):
             st.markdown(n_html, unsafe_allow_html=True)
 
-# CORRETO — time.sleep e st.rerun no nível do elif, fora de qualquer if
     if (not estado.get("historico_noticias") and
             not estado.get("historico_noticias_plantao") and
             not estado.get("historico_noticias_veredicto")):
@@ -1054,24 +1045,19 @@ elif perfil in EMPRESA_MAP:
     # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
     d = estado["dados_empresas"][nome_interno]
     rodada = estado.get("rodada_atual", 1)
-
     st.session_state["empresa_origem"] = perfil
     st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
-
     _origem = perfil
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
         if st.button("📋 Rodada", use_container_width=True, type="primary"):
-            st.session_state["pagina_atual"] = _origem
-            st.rerun()
+            ir_para(_origem)
     with nav2:
         if st.button("📈 Telão", use_container_width=True):
-            st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
-            st.rerun()
+            ir_para("📈 Telão (Bolsa)", origem=_origem)
     with nav3:
         if st.button("📰 Mídia", use_container_width=True):
-            st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
-            st.rerun()
+            ir_para("📰 Mídia (Notícias)", origem=_origem)
 
     # Timer
     chave_timer = f"timer_inicio_r{rodada}" if rodada <= 3 else None
@@ -1130,24 +1116,23 @@ elif perfil in EMPRESA_MAP:
                     )
                     d[f"voto_r{rodada}"] = escolha
                     d[f"tempo_voto_r{rodada}"] = time.time()
-                
+
                     if ja_votaram == 0:
                         d[f"bonus_velocidade_r{rodada}"] = "primeiro"
                     elif ja_votaram == 1:
                         d[f"bonus_velocidade_r{rodada}"] = "meio"
                     else:
                         d[f"bonus_velocidade_r{rodada}"] = "ultimo"
-                
+
                     votos_total = [estado["dados_empresas"][e].get(f"voto_r{rodada}") for e in EMPRESAS]
                     if all(v is not None for v in votos_total):
                         chave_timer_global = f"timer_inicio_r{rodada}"
                         if estado.get(chave_timer_global):
                             estado[chave_timer_global] = time.time() - 10 * 60
-                            
-                
+
                     salvar_estado(estado)
                     st.rerun()
-            
+
             else:
                 st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
 
