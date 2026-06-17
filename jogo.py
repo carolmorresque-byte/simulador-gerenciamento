@@ -685,7 +685,6 @@ def ir_para(pagina: str, origem: str | None = None):
     if origem is not None:
         st.session_state["empresa_origem"] = origem
     st.session_state["pagina_atual"] = pagina
-    st.session_state["nav_sidebar_select"] = pagina
     st.rerun()
 
 # DEPOIS
