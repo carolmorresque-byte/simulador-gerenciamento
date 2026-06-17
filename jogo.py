@@ -474,6 +474,9 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # MANCHETES
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# MANCHETES
+# ─────────────────────────────────────────────────────────────────────────────
 def gerar_manchete_plantao_cvm() -> str:
     return """
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;max-width:600px;margin:0 auto 20px auto;box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:4px;overflow:hidden;">
@@ -596,7 +599,7 @@ def gerar_manchete_veredicto(estado: dict) -> str:
         </div>
         <div style="padding:20px 15px;">
             <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;border-radius:2px;font-size:15px;font-weight:bold;text-transform:uppercase;line-height:1.3;">
-                🏁 CVM DIVULGA VEREDICTO FINAL — DESTINO DOS EXECUTIVOS
+                🏁 CVM DIVULGA VEREDITO FINAL — DESTINO DOS EXECUTIVOS
             </div>
             <div style="margin-top:6px;margin-bottom:12px;border-left:4px solid #2e7d32;padding:8px 12px;background-color:#f1f8e9;">
                 <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
@@ -606,7 +609,7 @@ def gerar_manchete_veredicto(estado: dict) -> str:
             </div>
             {"".join(manchetes_empresas)}
         </div>
-    </div>"""
+    </div>"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # GRÁFICOS
