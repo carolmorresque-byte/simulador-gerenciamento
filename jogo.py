@@ -313,7 +313,7 @@ def calcular_novo_preco(estado: dict, empresa_nome: str, rodada: int) -> float:
         else:
             d[f"bonus_velocidade_r{rodada}"] = "meio"
 
-    votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, 4)}
+    votos_emp = {f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}
     score = calcular_dre_dinamico(votos_emp)["score_gr"]
     if score >= 6:
         novo *= 0.95
@@ -378,7 +378,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
             f"'brechinha na lei' — finalmente chegou à conta. 💸\n\n"
             f"Após pressão dos investidores, o Conselho decidiu substituir CEO e CFO 🚪👔.\n"
             f"Ambos descobriram que EBITDA ajustado não cobre honorários advocatícios ⚖️.\n"
-            f"O Comitê de Auditoria afirmou estar 'profundamente surpreso' 🤡.\n"
+            f"O Comitê de Auditoria afirmou estar 'profundamente surpresos' 🤡.\n"
             f"Já os auditores responderam apenas: 'Nós avisamos'. 📚\n\n"
             f"O PowerPoint de Ética e Integridade foi atualizado pela quinta vez em três anos 📖.\n"
             f"E os dois executivos informaram em seus LinkedIns que estão 'abertos a novas oportunidades' 💼😂.\n\n"
@@ -688,7 +688,7 @@ if perfil == "🏠 Início":
             st.markdown("### 🎛️ Gerenciador")
             st.write("Acesso restrito para o Apresentador controlar as rodadas.")
             senha_g = st.text_input("Senha do Gerenciador:", type="password", key="senha_gerenciador_inicio")
-            if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary"):
+            if st.button("Acessar Painel Gerenciador", use_container_width=True, type="primary", key="btn_g_inicio"):
                 if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Acesso autorizado!")
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
@@ -711,7 +711,7 @@ if perfil == "🏠 Início":
             empresa_display = st.selectbox("Escolha sua empresa:", opcoes_display)
             empresa_escolhida = empresa_display.replace("🔒 ", "")
 
-            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
+            if st.button("Entrar como representante da empresa", use_container_width=True, type="primary", key="btn_emp_inicio"):
                 st.session_state["empresa_origem"] = empresa_escolhida
                 st.session_state["pagina_atual"] = empresa_escolhida
                 st.rerun()
@@ -720,7 +720,7 @@ if perfil == "🏠 Início":
         with st.container(border=True):
             st.markdown("### 📈 Projeção / Telão")
             st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
-            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
+            if st.button("Abrir Telão Comercial", use_container_width=True, type="primary", key="btn_telao_inicio"):
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
                 st.rerun()
 
@@ -734,7 +734,7 @@ elif perfil == "🎛️ Painel Gerenciador":
         st.title("🎛️ Painel Gerenciador")
         st.markdown("### 🔑 Acesso Restrito")
         senha_g = st.text_input("Digite a senha do Gerenciador:", type="password", key="senha_gerenciador_painel")
-        if st.button("Entrar", use_container_width=True, type="primary"):
+        if st.button("Entrar", use_container_width=True, type="primary", key="btn_g_login"):
             if senha_g == SENHA_GERENCIADOR:
                 st.session_state["gerenciador_autenticado"] = True
                 st.rerun()
@@ -911,14 +911,14 @@ elif perfil == "📈 Telão (Bolsa)":
     _origem = st.session_state.get("empresa_origem", "🎛️ Painel Gerenciador")
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True):
+        if st.button("📋 Rodada", use_container_width=True, key="btn_rodada_telao"):
             st.session_state["pagina_atual"] = _origem
             st.rerun()
     with nav2:
-        if st.button("📈 Telão", use_container_width=True, type="primary"):
+        if st.button("📈 Telão", use_container_width=True, type="primary", key="btn_telao_telao"):
             st.rerun()
     with nav3:
-        if st.button("📰 Mídia", use_container_width=True):
+        if st.button("📰 Mídia", use_container_width=True, key="btn_midia_telao"):
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
@@ -936,15 +936,15 @@ elif perfil == "📰 Mídia (Notícias)":
     _origem = st.session_state.get("empresa_origem", "🎛️ Painel Gerenciador")
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True):
+        if st.button("📋 Rodada", use_container_width=True, key="btn_rodada_midia"):
             st.session_state["pagina_atual"] = _origem
             st.rerun()
     with nav2:
-        if st.button("📈 Telão", use_container_width=True):
+        if st.button("📈 Telão", use_container_width=True, key="btn_telao_midia"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     with nav3:
-        if st.button("📰 Mídia", use_container_width=True, type="primary"):
+        if st.button("📰 Mídia", use_container_width=True, type="primary", key="btn_midia_midia"):
             st.rerun()
 
     # Veredicto final (R4 fase 2)
@@ -954,7 +954,8 @@ elif perfil == "📰 Mídia (Notícias)":
 
     # Plantão CVM (R4 fase 1)
     if estado.get("historico_noticias_plantao"):
-        st.markdown(gerar_manchete_plantao_cvm(), unsafe_allow_html=True)
+        for p_html in reversed(estado["historico_noticias_plantao"]):
+            st.markdown(p_html, unsafe_allow_html=True)
 
     # Notícias das rodadas 1-3
     if estado.get("historico_noticias"):
@@ -1003,7 +1004,7 @@ elif perfil in EMPRESA_MAP:
 
         senha_input = st.text_input("Senha da empresa:", type="password", key=f"senha_{nome_interno}")
 
-        if st.button("Entrar", use_container_width=True, type="primary"):
+        if st.button("Entrar", use_container_width=True, type="primary", key=f"btn_login_{nome_interno}"):
             if senha_input == SENHAS_EMPRESAS.get(nome_interno, ""):
                 st.session_state[chave_auth] = True
                 st.session_state["empresa_origem"] = perfil
@@ -1026,15 +1027,15 @@ elif perfil in EMPRESA_MAP:
     _origem = perfil
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
-        if st.button("📋 Rodada", use_container_width=True, type="primary"):
+        if st.button("📋 Rodada", use_container_width=True, type="primary", key=f"btn_rodada_{nome_interno}"):
             st.session_state["pagina_atual"] = _origem
             st.rerun()
     with nav2:
-        if st.button("📈 Telão", use_container_width=True):
+        if st.button("📈 Telão", use_container_width=True, key=f"btn_telao_{nome_interno}"):
             st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
             st.rerun()
     with nav3:
-        if st.button("📰 Mídia", use_container_width=True):
+        if st.button("📰 Mídia", use_container_width=True, key=f"btn_midia_{nome_interno}"):
             st.session_state["pagina_atual"] = "📰 Mídia (Notícias)"
             st.rerun()
 
@@ -1096,16 +1097,18 @@ elif perfil in EMPRESA_MAP:
             else:
                 st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
 
+                # MENSAGEM DE CENTAVOS (BÔNUS/PENALIDADE) - APARECE LOGO APÓS O VOTO
+                bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
+                if bonus_vel == "primeiro":
+                    st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
+                elif bonus_vel == "ultimo":
+                    st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
+                elif bonus_vel == "meio":
+                    st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
+
                 apurado = estado.get(f"apurado_r{rodada}", False)
                 if apurado:
                     exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
-                    bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
-                    if bonus_vel == "primeiro":
-                        st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
-                    elif bonus_vel == "ultimo":
-                        st.warning("⏳ Tempo é dinheiro... Vocês foram a última bancada a se posicionar. **-R$ 0,10 por ação.**")
-                    elif bonus_vel == "meio":
-                        st.info("⏱️ Posicionamento no tempo médio. Sem bônus ou penalidade de velocidade.")
 
                     st.markdown("""
                     <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);border-radius:12px;
