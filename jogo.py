@@ -702,6 +702,7 @@ if perfil == "🏠 Início":
                 if senha_g == SENHA_GERENCIADOR:
                     st.success("✅ Acesso autorizado!")
                     st.session_state["pagina_atual"] = "🎛️ Painel Gerenciador"
+                    st.session_state["nav_sidebar_select"] = "🎛️ Painel Gerenciador" # ADICIONE ESTA LINHA
                     st.session_state["gerenciador_autenticado"] = True
                     st.rerun()
                 else:
@@ -730,6 +731,7 @@ if perfil == "🏠 Início":
             st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
             if st.button("Abrir Telão Comercial", use_container_width=True, type="primary"):
                 st.session_state["pagina_atual"] = "📈 Telão (Bolsa)"
+                st.session_state["nav_sidebar_select"] = "📈 Telão (Bolsa)" # ADICIONE ESTA LINHA
                 st.rerun()
 
 # ─────────────────────────────────────────────────────────────────────────────
