@@ -709,14 +709,8 @@ def ir_para(pagina: str, origem: str | None = None):
     """
     if origem is not None:
         st.session_state["empresa_origem"] = origem
-
     st.session_state["pagina_atual"] = pagina
-    # Mantém o selectbox da sidebar sincronizado com a navegação feita por
-    # botões, senão ele guarda o valor antigo e "puxa" a página de volta.
-    if pagina in perfis_navegacao:
-        st.session_state["nav_sidebar_select"] = pagina
     st.rerun()
-
 
 # ─────────────────────────────────────────────────────────────
 # SIDEBAR
