@@ -716,11 +716,6 @@ if perfil == "🏠 Início":
             empresa_escolhida = st.selectbox("Escolha sua empresa:", opcoes)
             nome_int = EMPRESA_MAP[empresa_escolhida]
             if st.button("Entrar como representante da empresa", use_container_width=True, type="primary"):
-                sessoes = estado.get("sessoes_ativas", [])
-                if nome_int not in sessoes:
-                    sessoes.append(nome_int)
-                    estado["sessoes_ativas"] = sessoes
-                    salvar_estado(estado)
                 st.session_state["empresa_origem"] = empresa_escolhida
                 st.session_state["nav_sidebar_select"] = empresa_escolhida
                 st.rerun()
@@ -925,7 +920,7 @@ elif perfil == "📈 Telão (Bolsa)":
     nav1, nav2, nav3, _ = st.columns([1, 1, 1, 3])
     with nav1:
         if st.button("📋 Rodada", use_container_width=True):
-            st.session_state["pagina_atual"] = _origem
+            st.session_state["nav_sidebar_select"] = _origem
             st.rerun()
     with nav2:
         if st.button("📈 Telão", use_container_width=True, type="primary"):
@@ -1101,6 +1096,8 @@ elif perfil in EMPRESA_MAP:
                 st.markdown(narrativa_rodada_1())
             elif rodada == 2:
                 st.markdown(narrativa_rodada_2(-16_500_000_000.0, -300_000_000.0))
+                elif rodada == 2:
+                st.markdown(narrativa_rodada_2(-16_500_000_000.0, -30_000_000.0))
             elif rodada == 3:
                 st.markdown(narrativa_rodada_3())
 
@@ -1112,18 +1109,28 @@ elif perfil in EMPRESA_MAP:
                     format_func=lambda x: get_labels(rodada)[x]
                 )
                 if st.button("✅ Homologar Resolução", use_container_width=True):
+                    ja_votaram = sum(
+                        1 for e in EMPRESAS
+                        if estado["dados_empresas"][e].get(f"voto_r{rodada}") is not None
+                    )
                     d[f"voto_r{rodada}"] = escolha
                     d[f"tempo_voto_r{rodada}"] = time.time()
-                    
-                    # --- NOVA LÓGICA ADICIONADA AQUI ---
+                
+                    if ja_votaram == 0:
+                        d[f"bonus_velocidade_r{rodada}"] = "primeiro"
+                    elif ja_votaram == 1:
+                        d[f"bonus_velocidade_r{rodada}"] = "meio"
+                    else:
+                        d[f"bonus_velocidade_r{rodada}"] = "ultimo"
+                
                     votos_total = [estado["dados_empresas"][e].get(f"voto_r{rodada}") for e in EMPRESAS]
                     if all(v is not None for v in votos_total):
                         chave_timer_global = f"timer_inicio_r{rodada}"
                         if estado.get(chave_timer_global):
-                            estado[chave_timer_global] = None
+                            estado[chave_timer_global] = time.time() - 10 * 60
+                
                     salvar_estado(estado)
                     st.rerun()
-
             
             else:
                 st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
