@@ -722,7 +722,7 @@ if perfil == "🏠 Início":
                     estado["sessoes_ativas"] = sessoes
                     salvar_estado(estado)
                 st.session_state["empresa_origem"] = empresa_escolhida
-                st.session_state["nav_sidebar_select" = empresa_escolhida
+                st.session_state["nav_sidebar_select"] = empresa_escolhida
                 st.rerun()
 
     with c3:
