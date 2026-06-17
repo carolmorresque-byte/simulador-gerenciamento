@@ -469,8 +469,7 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
             line-height:1.7;
             white-space:pre-line;
         "><p style='margin:8px 0;'>{texto_html}</p></div>
-    </div>
-    """
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MANCHETES
