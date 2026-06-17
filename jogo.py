@@ -991,8 +991,7 @@ elif perfil == "📰 Mídia (Notícias)":
     st.session_state["empresa_origem"] = perfil
     st.markdown(f"## 🏢 Estação de Trabalho: {perfil}")
 
-    # Veredicto final (R4 fase 2) — mostra primeiro se existir
-    # Veredicto final (R4 fase 2)
+    # Veredicto final (R4 fase 2) 
     if estado.get("historico_noticias_veredicto"):
         for n_html in reversed(estado["historico_noticias_veredicto"]):
             st.markdown(n_html, unsafe_allow_html=True)
@@ -1018,7 +1017,7 @@ elif perfil == "📰 Mídia (Notícias)":
         st.info("⏳ Nenhuma notícia publicada neste ciclo.")
 
 # ── TELA DA EMPRESA (autenticada) ────────────────────────────────────────
-d = estado["dados_empresas"][nome_interno]
+d = estado["dados_empresas"][empresa_nome]
 rodada = estado.get("rodada_atual", 1)
 
 # Mensagem do bônus/penalidade da rodada anterior (mostra uma única vez)
@@ -1195,7 +1194,7 @@ if ts_inicio and rodada <= 3:
             </div>
             """, unsafe_allow_html=True)
 
-            carta_html = gerar_carta_destino(nome_interno, r1, r2, r3)
+            carta_html = gerar_carta_destino(empresa_nome, r1, r2, r3)
             st.markdown(carta_html, unsafe_allow_html=True)
 
             st.markdown("""
