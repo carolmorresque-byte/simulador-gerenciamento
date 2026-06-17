@@ -730,7 +730,7 @@ if perfil == "🏠 Início":
                     st.session_state["pagina_atual"] = empresa_escolhida
                     st.session_state["nav_sidebar_select"] = empresa_escolhida
                     st.rerun()
-        with c3:
+    with c3:
             with st.container(border=True):
                 st.markdown("### 📈 Projeção / Telão")
                 st.write("Acesso livre para abrir o gráfico dinâmico e cotações na TV/Projetor.")
