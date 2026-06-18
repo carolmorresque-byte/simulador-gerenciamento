@@ -6,7 +6,7 @@ import json
 import os
 import threading
 import time
-
+from streamlit.components.v1 import html
 LOCK_TIMEOUT = 15  # segundos (ajuste aqui)
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
@@ -1015,17 +1015,23 @@ elif perfil == "🎛️ Painel Gerenciador":
     plantao_disparado = len(estado["historico_noticias_plantao"]) > 0
     apuracao_feita = estado.get("apuracao_r4_feita", False)
 
-    # FASE 1 — Disparar Plantão CVM
-    if not plantao_disparado:
-        if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
-            html_plantao = gerar_manchete_plantao_cvm()
+# FASE 1 — Disparar Plantão CVM
+if not plantao_disparado:
+    if st.button("🔎 Disparar Plantão CVM", use_container_width=True, type="primary"):
 
-            estado["historico_noticias_plantao"].append(html_plantao)
+        html_plantao = gerar_manchete_plantao_cvm()
+        html(
+            html_plantao,
+            height=450,
+            scrolling=False
+        )
+        st.write(html_plantao[:100])
+        estado["historico_noticias_plantao"].append(html_plantao)
 
-            salvar_estado(estado)
+        salvar_estado(estado)
 
-            st.success("✅ Plantão CVM disparado! Mídia liberada.")
-            st.rerun()
+        st.success("✅ Plantão CVM disparado! Mídia liberada.")
+        st.rerun()
     else:
         st.success("✅ Plantão CVM já disparado.")
 
@@ -1034,12 +1040,12 @@ elif perfil == "🎛️ Painel Gerenciador":
         if st.button("🏁 Conferir Apuração Final", use_container_width=True, type="primary"):
             for emp in EMPRESAS:
                 processar_rodada_4_consolidada(estado, emp)
-
+            st.write(html_veredicto[:100])
             html_veredicto = gerar_manchete_veredicto(estado)
 
             if "historico_noticias_veredicto" not in estado or estado["historico_noticias_veredicto"] is None:
                 estado["historico_noticias_veredicto"] = []
-
+            st.write(historico_noticias_veredicto[:100])
             estado["historico_noticias_veredicto"].append(html_veredicto)
             estado["apuracao_r4_feita"] = True
 
@@ -1122,8 +1128,10 @@ elif perfil == "📰 Mídia (Notícias)":
 
     # Veredicto final (R4 fase 2)
     if estado["historico_noticias_veredicto"]:
+    from streamlit.components.v1 import html
+    
         for n_html in reversed(estado["historico_noticias_veredicto"]):
-            st.markdown(n_html, unsafe_allow_html=True)
+        html(n_html, height=700, scrolling=False)
 
     # Plantão CVM (R4 fase 1)
     if estado["historico_noticias_plantao"]:
@@ -1131,9 +1139,10 @@ elif perfil == "📰 Mídia (Notícias)":
 
     # Notícias das rodadas 1-3
     if estado["historico_noticias"]:
+        from streamlit.components.v1 import html
+        
         for n_html in reversed(estado["historico_noticias"]):
-            st.markdown(n_html, unsafe_allow_html=True)
-
+            html(n_html, height=700, scrolling=False)
     # Estado vazio
     if (
         not estado["historico_noticias"]
