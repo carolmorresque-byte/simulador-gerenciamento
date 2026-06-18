@@ -1418,13 +1418,14 @@ elif perfil in EMPRESA_MAP:
                     salvar_estado(estado)
                     st.rerun()
 
-            
             else:
                 st.success(f"📌 Estratégia Adotada — Opção {voto_atual}")
 
+                # DRE sempre visível e atualizada, independente da apuração
+                exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
+
                 apurado = estado.get(f"apurado_r{rodada}", False)
                 if apurado:
-                    exibir_dre({f"r{r}": d.get(f"voto_r{r}") for r in range(1, rodada + 1)}, rodada, mostrar_score=False)
                     bonus_vel = d.get(f"bonus_velocidade_r{rodada}")
                     if bonus_vel == "primeiro":
                         st.info("📈 O mercado aprecia agilidade. Por ser a primeira bancada a responder: **+R$ 0,10 por ação.**")
@@ -1450,6 +1451,23 @@ elif perfil in EMPRESA_MAP:
                         <div style="font-size:14px;margin-top:8px;opacity:0.9;">Sua decisão foi registrada. Aguarde o Gerenciador apurar os resultados.</div>
                     </div>
                     """, unsafe_allow_html=True)
+
+                    # Prévia de posição em tempo real (não muda mais depois de calculada)
+                    votados = [
+                        (e, estado["dados_empresas"][e].get(f"tempo_voto_r{rodada}"))
+                        for e in EMPRESAS
+                        if estado["dados_empresas"][e].get(f"tempo_voto_r{rodada}") is not None
+                    ]
+                    votados.sort(key=lambda x: x[1])
+                    posicao = next((i + 1 for i, (e, _) in enumerate(votados) if e == nome_interno), None)
+                    total_empresas = len(EMPRESAS)
+
+                    if posicao == 1:
+                        st.info("📈 O mercado aprecia agilidade! Vocês foram a primeira bancada a se posicionar nesta rodada.")
+                    elif posicao == total_empresas:
+                        st.warning("⏳ Vocês foram a última bancada a se posicionar nesta rodada.")
+                    else:
+                        st.info("⏱️ Posicionamento registrado. Aguarde a apuração para confirmar o efeito no resultado.")
 
     # ── RODADA 4 ──────────────────────────────────────────────────────────────
     else:
