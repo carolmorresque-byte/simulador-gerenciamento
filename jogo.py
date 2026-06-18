@@ -614,6 +614,9 @@ def gerar_carta_destino(nome: str, r1, r2, r3) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # MANCHETES (rodadas 1-3 e plantão/veredicto R4)
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# MANCHETES (rodadas 1-3 e plantão/veredicto R4)
+# ─────────────────────────────────────────────────────────────────────────────
 
 def gerar_manchete_plantao_cvm() -> str:
     """Plantão CVM — fase 1 da Rodada 4 (disparado pelo Gerenciador)."""
@@ -639,11 +642,9 @@ def gerar_manchete_plantao_cvm() -> str:
     </div>
     """
 
-def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
-    """Gera a notícia de mídia para rodadas 1-3 (melhor e pior resultado)
-       e o veredicto completo na Rodada 4."""
 
-    # ── RODADAS 1-3: melhor e pior ───────────────────────────────────────────
+def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
+
     dados_fechamento = {}
 
     for nome in EMPRESAS:
@@ -667,20 +668,14 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
     lider_nome, lider_dados = lista_ordenada[0]
     lanterna_nome, lanterna_dados = lista_ordenada[-1]
 
-    todos_empatados = (
-        lider_dados["atual"] == lanterna_dados["atual"]
-    )
+    todos_empatados = lider_dados["atual"] == lanterna_dados["atual"]
 
     def fmt_var(valor):
         return f"+R$ {valor:.2f}" if valor >= 0 else f"-R$ {abs(valor):.2f}"
 
-    # ── CASO EMPATE ──────────────────────────────────────────────────────────
     if todos_empatados:
         topo_manchete = f"EMPATE GERAL NA RODADA {rodada_encerrada}"
-        topo_texto = (
-            f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ "
-            f"{lider_dados['atual']:.2f}."
-        )
+        topo_texto = f"SÃO PAULO — Todas as companhias fecharam pareadas em R$ {lider_dados['atual']:.2f}."
 
         secao_baixo = """
         <div style="background-color:#2e7d32;color:#fff;padding:10px 15px;border-radius:2px;
@@ -695,7 +690,6 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
         </div>
         """
 
-    # ── CASO NORMAL ──────────────────────────────────────────────────────────
     else:
         topo_manchete = f"{lider_nome} dispara {fmt_var(lider_dados['var'])}!"
         topo_texto = (
@@ -709,20 +703,23 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
             f"{lanterna_dados['atual']:.2f}."
         )
 
+        # ✔ AJUSTE AQUI (CORRIGIDO)
         secao_baixo = f"""
-        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;
-                font-size:15px;font-weight:bold;text-transform:uppercase;">
+        <div style="background-color:#c62828;color:#fff;padding:12px 15px;
+                border-radius:2px;font-size:15px;font-weight:bold;
+                text-transform:uppercase;">
             {baixo_manchete}
         </div>
-    <div style="margin-top:6px;border-left:4px solid #c62828;
-            padding:8px 12px;background-color:#ffebee;">
-        <p style="font-size:13px;color:#333;margin:0;text-align:justify;">
-            {baixo_texto}
-        </p>
-    </div>
-    """
 
-    # ── RETORNO HTML ─────────────────────────────────────────────────────────
+        <div style="margin-top:6px;border-left:4px solid #c62828;
+                padding:8px 12px;background-color:#ffebee;">
+            <p style="font-size:13px;color:#333;margin:0;text-align:justify;
+                      line-height:1.4;">
+                {baixo_texto}
+            </p>
+        </div>
+        """
+
     return f"""
     <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;
                 max-width:600px;margin:0 auto 20px auto;
@@ -763,126 +760,6 @@ def gerar_manchete_dinamica(estado: dict, rodada_encerrada: int) -> str:
         </div>
     </div>
     """
-
-
-def gerar_manchete_veredicto(estado: dict) -> str:
-    """Veredicto final — fase 2 da Rodada 4 (gerado após Conferir Apuração)."""
-
-    manchetes_empresas = []
-
-    for nome in EMPRESAS:
-        d = estado["dados_empresas"][nome]
-
-        r1, r2, r3 = d.get("voto_r1"), d.get("voto_r2"), d.get("voto_r3")
-        qtd_c = [r1, r2, r3].count("C")
-        qtd_b = [r1, r2, r3].count("B")
-
-        preco_final = d["precos"][-1] if d.get("precos") else 20.0
-
-        if qtd_c == 3:
-            manchete_emp = f"⛓️ PRISÃO DOS EXECUTIVOS DA {nome.upper()}!"
-            texto_emp = (
-                f"A CVM e a Polícia Federal deflagraram a Operação Excel Criativo 🚔. "
-                f"CEO e CFO presos preventivamente 🔗⛓️. Preço final: R$ {preco_final:.2f}."
-            )
-
-        elif qtd_c == 2:
-            manchete_emp = f"💰🚫 JUSTIÇA BLOQUEIA BENS DA {nome.upper()}!"
-            texto_emp = (
-                f"Bloqueio cautelar dos bens dos ex-executivos 💰⚖️. "
-                f"CEO, CFO e Diretor de RI substituídos. Preço final: R$ {preco_final:.2f}."
-            )
-
-        elif qtd_c == 1 and qtd_b >= 1:
-            manchete_emp = f"💸 {nome.upper()} MULTADA! 🚪 CEO E CFO OS MAIS NOVOS EX-FUNCIONÁRIOS"
-            texto_emp = (
-                f"Combinação entre fraude pontual e accruals discricionários resultou em demissão "
-                f"de CEO e CFO 🚪👔. + multa milionária 💸 Preço final: R$ {preco_final:.2f}."
-            )
-
-        elif qtd_c == 1:
-            manchete_emp = f"🥲 {nome.upper()} — FRAUDE PONTUAL x ERRO? NÃO IMPORTA ...."
-            texto_emp = (
-                f"Irregularidade considerada pontual, mas o CEO foi convidado a 'buscar novos desafios' 💼. "
-                f"Preço final: R$ {preco_final:.2f}."
-            )
-
-        elif qtd_b >= 2:
-            manchete_emp = f"📉 {nome.upper()} — MESTRE DO PÔQUER CONTÁBIL"
-            texto_emp = (
-                f"Sem fraude identificada, mas accruals discricionários excessivos colocam o CFO sob monitoramento "
-                f"permanente 👀♠️. Preço final: R$ {preco_final:.2f}."
-            )
-
-        elif qtd_b == 1:
-            manchete_emp = f"ℹ️ CFO É O SALVADOR DA PÁTRIA OU APENAS DAS AÇÕES DA {nome.upper()}"
-            texto_emp = (
-                f"Um episódio isolado de accruals discricionários, para um bem maior... TODOS FELIZES! "
-                f"Preço final: R$ {preco_final:.2f}."
-            )
-
-        else:
-            manchete_emp = f"☠️ {nome.upper()} MORREU ABRAÇADA COM A ÉTICA"
-            texto_emp = (
-                f"Transparência total, mas o mercado não perdoou as perdas reconhecidas 📉. "
-                f"Massacrada na Faria Lima com ação em baixa 🩸 Preço final: R$ {preco_final:.2f}."
-            )
-
-        manchetes_empresas.append(f"""
-        <div style="background-color:#c62828;color:#fff;padding:12px 15px;border-radius:2px;
-                    font-size:14px;font-weight:bold;text-transform:uppercase;line-height:1.3;
-                    margin-top:10px;">
-            {manchete_emp}
-        </div>
-        <div style="margin-top:4px;border-left:4px solid #c62828;
-                    padding:8px 12px;background-color:#ffebee;">
-            <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
-                {texto_emp}
-            </p>
-        </div>
-        """)
-
-    return f"""
-    <div style="background-color:#fff;border:1px solid #ddd;font-family:'Arial',sans-serif;
-                max-width:600px;margin:0 auto 20px auto;
-                box-shadow:0 4px 10px rgba(0,0,0,0.15);
-                border-radius:4px;overflow:hidden;">
-
-        <div style="background-color:#1a1a1a;color:#fff;display:flex;
-                    justify-content:space-between;align-items:center;
-                    padding:12px 20px;">
-            <div style="font-size:24px;font-weight:900;letter-spacing:1px;">
-                GC NEWS
-            </div>
-            <div style="font-size:12px;font-weight:bold;background:rgba(0,0,0,0.3);
-                        padding:4px 8px;border-radius:4px;">
-                🏁 VEREDICTO FINAL
-            </div>
-        </div>
-
-        <div style="padding:20px 15px;">
-
-            <div style="background-color:#2e7d32;color:#fff;padding:12px 15px;
-                        border-radius:2px;font-size:15px;font-weight:bold;
-                        text-transform:uppercase;line-height:1.3;">
-                🏁 CVM DIVULGA VEREDITO FINAL — DESTINO DOS EXECUTIVOS
-            </div>
-
-            <div style="margin-top:6px;margin-bottom:12px;
-                        border-left:4px solid #2e7d32;
-                        padding:8px 12px;background-color:#f1f8e9;">
-                <p style="font-size:13px;color:#333;margin:0;text-align:justify;line-height:1.4;">
-                    SÃO PAULO — A CVM concluiu a auditoria extraordinária e divulgou os resultados individuais
-                    de cada companhia investigada. Os mercados reagiram com volatilidade histórica.
-                </p>
-            </div>
-
-            {"".join(manchetes_empresas)}
-
-        </div>
-    </div>
-    """
-
 # ─────────────────────────────────────────────────────────────────────────────
 # GRÁFICOS
 # ─────────────────────────────────────────────────────────────────────────────
